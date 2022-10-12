@@ -414,6 +414,8 @@ fsbl/build/cvi_board_memmap.h
 build/boards/mars/cv1811c_wevb_0006a_spinor/__pycache__/
 middleware/v2/lib_glibc_riscv64/libsns_*
 u-boot-2021.10/arch/riscv/dts/*
+middleware/v2/lib_musl_riscv64/lib_lt9611.a
+middleware/v2/lib_musl_riscv64/lib_lt9611.so
 *.bin
 *.d
 *.o

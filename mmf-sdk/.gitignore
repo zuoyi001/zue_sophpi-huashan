@@ -4,7 +4,6 @@ install/
 *.d
  build/tools/common/ota_tool/__pycache__/
 freertos/cvirtos.bin
-freertos/cvitek/build/
 !freertos/cvitek/install/
 host-tools/
 linux_5.10/build/

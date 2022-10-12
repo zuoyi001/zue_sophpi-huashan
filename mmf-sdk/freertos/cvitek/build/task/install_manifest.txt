@@ -1,0 +1,5 @@
+/data/zhenhui.huang_sophgo/sophpi-huashan_0/mmf-sdk/freertos/cvitek/install/lib/libcomm.a
+/data/zhenhui.huang_sophgo/sophpi-huashan_0/mmf-sdk/freertos/cvitek/install/lib/librgn.a
+/data/zhenhui.huang_sophgo/sophpi-huashan_0/mmf-sdk/freertos/cvitek/install/lib/libaudio.a
+/data/zhenhui.huang_sophgo/sophpi-huashan_0/mmf-sdk/freertos/cvitek/install/bin/cvirtos.elf
+/data/zhenhui.huang_sophgo/sophpi-huashan_0/mmf-sdk/freertos/cvitek/install/bin/cvirtos.map

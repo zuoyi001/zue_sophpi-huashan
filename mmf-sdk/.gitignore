@@ -346,13 +346,11 @@ u-boot-2021.10/arch/riscv/dts/cv1812h_wevb_0007a_spinand.dts
 u-boot-2021.10/arch/riscv/dts/cv1812h_wevb_0007a_spinor.dts
 middleware/v2/lib_musl_riscv64/lib_lt9611.a
 middleware/v2/lib_musl_riscv64/lib_lt9611.so
-*.bin
 *.d
 *.o
 *.ld.d
 *.dis
 *.map
-*.bin
 *.elf
 *.o.cmd
 *.mod.o.cmd

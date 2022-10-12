@@ -1,6 +1,5 @@
 install/
 *.elf
-*.o
 *.d
  build/tools/common/ota_tool/__pycache__/
 freertos/cvirtos.bin
@@ -347,7 +346,6 @@ u-boot-2021.10/arch/riscv/dts/cv1812h_wevb_0007a_spinor.dts
 middleware/v2/lib_musl_riscv64/lib_lt9611.a
 middleware/v2/lib_musl_riscv64/lib_lt9611.so
 *.d
-*.o
 *.ld.d
 *.dis
 *.map

@@ -1,0 +1,93 @@
+config ARCH_CVITEK
+    bool "Cvitek SoC Family"
+	select ION_CVITEK
+	select SCHED_CVITEK
+	help
+      This enables support for Cvitek SoC family.
+
+if ARCH_CVITEK
+choice
+	prompt "Select the chip of SoC"
+	default ARCH_MARS
+	help
+	  Select the chip for SoC
+
+config ARCH_MARS
+	bool "Cvitek Mars SoC"
+	help
+	  This enables support for Cvitek's Mars
+
+config ARCH_PHOBOS
+	bool "Cvitek Phobos SoC"
+	help
+	  This enables support for Cvitek's Mars
+
+endchoice
+
+if ARCH_MARS
+config ARCH_CVITEK_CHIP
+	string "mars"
+	help
+	  This enables support for Cvitek Mars series
+
+choice
+	prompt "Select the platform of SoC"
+	default ARCH_MARS_FPGA
+	help
+	  Select the platform of SoC
+	    FPGA
+	    PALLADIUM
+	    ASIC
+
+config ARCH_MARS_PALLADIUM
+	bool "Cvitek Mars SoC - Palladium"
+	help
+	  This enables support for Cvitek's Mars SoC on Palladium platform
+
+config ARCH_MARS_FPGA
+	bool "Cvitek Mars SoC - FPGA"
+	help
+	  This enables support for Cvitek's Mars SoC on FPGA platform
+
+config ARCH_MARS_ASIC
+	bool "Cvitek Mars SoC- ASIC"
+	help
+	  This enables support for Cvitek's Mars SoC ASIC
+
+endchoice
+endif # end ARCH_MARS
+
+if ARCH_PHOBOS
+config ARCH_CVITEK_CHIP
+	string "phobos"
+	help
+	  This enables support for Cvitek Phobos series
+
+choice
+	prompt "Select the platform of SoC"
+	default ARCH_PHOBOS_FPGA
+	help
+	  Select the platform of SoC
+	    FPGA
+	    PALLADIUM
+	    ASIC
+
+config ARCH_PHOBOS_PALLADIUM
+	bool "Cvitek Phobos SoC - Palladium"
+	help
+	  This enables support for Cvitek's Phobos SoC on Palladium platform
+
+config ARCH_PHOBOS_FPGA
+	bool "Cvitek Phobos SoC - FPGA"
+	help
+	  This enables support for Cvitek's Phobos SoC on FPGA platform
+
+config ARCH_PHOBOS_ASIC
+	bool "Cvitek Phobos SoC- ASIC"
+	help
+	  This enables support for Cvitek's Phobos SoC ASIC
+
+endchoice
+endif # end ARCH_MARS
+
+endif # end ARCH_CVITEK

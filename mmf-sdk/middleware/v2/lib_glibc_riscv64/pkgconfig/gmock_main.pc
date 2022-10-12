@@ -1,0 +1,10 @@
+libdir=/root/.jenkins/workspace/cr1821_v3.0.0_daily_build/install/soc_cv1811c_wdmb_0006a_spinor/tpu_glibc_riscv64/cvitek_ai_sdk/lib
+includedir=/root/.jenkins/workspace/cr1821_v3.0.0_daily_build/install/soc_cv1811c_wdmb_0006a_spinor/tpu_glibc_riscv64/cvitek_ai_sdk/include
+
+Name: gmock_main
+Description: GoogleMock (with main() function)
+Version: 1.11.0
+URL: https://github.com/google/googletest
+Requires: gmock = 1.11.0
+Libs: -L${libdir} -lgmock_main 
+Cflags: -I${includedir} -DGTEST_HAS_PTHREAD=1

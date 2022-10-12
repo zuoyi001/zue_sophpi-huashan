@@ -1,0 +1,4 @@
+/ {
+	/delete-node/ cvi-spif@10000000;
+};
+

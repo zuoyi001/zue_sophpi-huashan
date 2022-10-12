@@ -1,0 +1,10 @@
+/dts-v1/;
+#include "mars_base_arm.dtsi"
+#include "mars_asic_qfn.dtsi"
+#include "mars_asic_spinor.dtsi"
+#include "mars_default_memmap.dtsi"
+
+/ {
+
+};
+

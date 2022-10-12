@@ -1,0 +1,14 @@
+prefix=/root/.jenkins/workspace/third_party/oss/install/ffmpeg
+exec_prefix=${prefix}
+libdir=/root/.jenkins/workspace/third_party/oss/install/ffmpeg/lib
+includedir=/root/.jenkins/workspace/third_party/oss/install/ffmpeg/include
+
+Name: libavutil
+Description: FFmpeg utility library
+Version: 56.59.100
+Requires: 
+Requires.private: 
+Conflicts:
+Libs: -L${libdir}  -lavutil 
+Libs.private: -pthread -lm
+Cflags: -I${includedir}

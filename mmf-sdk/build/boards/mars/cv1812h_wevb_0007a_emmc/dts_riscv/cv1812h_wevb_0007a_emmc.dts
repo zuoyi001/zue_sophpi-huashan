@@ -1,0 +1,25 @@
+/dts-v1/;
+#include "mars_base_riscv.dtsi"
+#include "mars_asic_bga.dtsi"
+#include "mars_asic_emmc.dtsi"
+#include "mars_default_memmap.dtsi"
+
+/ {
+    i2c3: i2c@04030000 {
+		compatible = "snps,designware-i2c";
+		clocks = <&clk MARS_CLK_I2C>;
+		reg = <0x0 0x04030000 0x0 0x1000>;
+		clock-frequency = <400000>;
+		resets = <&rst RST_I2C3>;
+		reset-names = "i2c3";
+		interrupts = <52 IRQ_TYPE_LEVEL_HIGH>;
+		interrupt-parent = <&plic0>;
+		gt9xx: gt9xx@14 {
+			compatible = "goodix,gt9xx";
+			reg = <0x14>;
+			status = "okay";
+		};
+
+	};
+};
+

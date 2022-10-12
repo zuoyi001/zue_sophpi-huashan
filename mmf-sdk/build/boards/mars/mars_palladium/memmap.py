@@ -1,0 +1,1 @@
+../../default/memmap/mars/memmap_ddr_4g.py

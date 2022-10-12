@@ -1,0 +1,1 @@
+../../default/memmap/phobos/memmap_ddr_4g.py

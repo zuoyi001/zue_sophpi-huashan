@@ -4061,29 +4061,25 @@ CVI_S32 SAMPLE_VIO_VoRotation(void)
 	CVI_S32 s32WorkSnsId = 0;
 	SAMPLE_VI_CONFIG_S stViConfig;
 	VI_PIPE_ATTR_S     stPipeAttr;
+	SAMPLE_INI_CFG_S	   stIniCfg = {0};
+	//SAMPLE_VI_CONFIG_S stViConfig;
+
+
+
+	// Get config from ini if found.
+	if (SAMPLE_COMM_VI_ParseIni(&stIniCfg)) {
+		SAMPLE_PRT("Parse complete\n");
+	}
+
+	//Set sensor number
+	CVI_VI_SetDevNum(stIniCfg.devNum);
 
 	/************************************************
 	 * step1:  Config VI
 	 ************************************************/
-	SAMPLE_COMM_VI_GetSensorInfo(&stViConfig);
-
-	stViConfig.astViInfo[s32WorkSnsId].stSnsInfo.enSnsType	     = enSnsType;
-	stViConfig.s32WorkingViNum				     = 1;
-	stViConfig.as32WorkingViId[0]				     = 0;
-	stViConfig.astViInfo[s32WorkSnsId].stSnsInfo.MipiDev	     = 0xFF;
-	stViConfig.astViInfo[s32WorkSnsId].stSnsInfo.s32BusId	     = 3;
-	stViConfig.astViInfo[s32WorkSnsId].stDevInfo.ViDev	     = ViDev;
-	stViConfig.astViInfo[s32WorkSnsId].stDevInfo.enWDRMode	     = enWDRMode;
-	stViConfig.astViInfo[s32WorkSnsId].stPipeInfo.enMastPipeMode = enMastPipeMode;
-	stViConfig.astViInfo[s32WorkSnsId].stPipeInfo.aPipe[0]	     = ViPipe;
-	stViConfig.astViInfo[s32WorkSnsId].stPipeInfo.aPipe[1]	     = -1;
-	stViConfig.astViInfo[s32WorkSnsId].stPipeInfo.aPipe[2]	     = -1;
-	stViConfig.astViInfo[s32WorkSnsId].stPipeInfo.aPipe[3]	     = -1;
-	stViConfig.astViInfo[s32WorkSnsId].stChnInfo.ViChn	     = ViChn;
-	stViConfig.astViInfo[s32WorkSnsId].stChnInfo.enPixFormat     = enPixFormat;
-	stViConfig.astViInfo[s32WorkSnsId].stChnInfo.enDynamicRange  = enDynamicRange;
-	stViConfig.astViInfo[s32WorkSnsId].stChnInfo.enVideoFormat   = enVideoFormat;
-	stViConfig.astViInfo[s32WorkSnsId].stChnInfo.enCompressMode  = enCompressMode;
+	s32Ret = SAMPLE_COMM_VI_IniToViCfg(&stIniCfg, &stViConfig);
+	if (s32Ret != CVI_SUCCESS)
+		return s32Ret;
 
 	/************************************************
 	 * step2:  Get input size
@@ -4106,7 +4102,7 @@ CVI_S32 SAMPLE_VIO_VoRotation(void)
 	memset(&stVbConf, 0, sizeof(VB_CONFIG_S));
 	stVbConf.u32MaxPoolCnt		= 1;
 
-	u32BlkSize = COMMON_GetPicBufferSize(stSize.u32Width, stSize.u32Height, SAMPLE_PIXEL_FORMAT, DATA_BITWIDTH_8
+	u32BlkSize = COMMON_GetPicBufferSize(stSize.u32Height, stSize.u32Width, SAMPLE_PIXEL_FORMAT, DATA_BITWIDTH_8
 					    , enCompressMode, DEFAULT_ALIGN);
 	stVbConf.astCommPool[0].u32BlkSize	= u32BlkSize;
 	stVbConf.astCommPool[0].u32BlkCnt	= 8;
@@ -4187,8 +4183,8 @@ CVI_S32 SAMPLE_VIO_VoRotation(void)
 	stVpssGrpAttr.u32MaxH                        = stSize.u32Height;
 	stVpssGrpAttr.u8VpssDev                      = 0;
 
-	astVpssChnAttr[VpssChn].u32Width                    = 1280;
-	astVpssChnAttr[VpssChn].u32Height                   = 720;
+	astVpssChnAttr[VpssChn].u32Width                    = 1920;
+	astVpssChnAttr[VpssChn].u32Height                   = 1080;
 	astVpssChnAttr[VpssChn].enVideoFormat               = VIDEO_FORMAT_LINEAR;
 	astVpssChnAttr[VpssChn].enPixelFormat               = SAMPLE_PIXEL_FORMAT;
 	astVpssChnAttr[VpssChn].stFrameRate.s32SrcFrameRate = 30;
@@ -4223,8 +4219,8 @@ CVI_S32 SAMPLE_VIO_VoRotation(void)
 	 * step6:  Init VO
 	 ************************************************/
 	SAMPLE_VO_CONFIG_S stVoConfig;
-	RECT_S stDefDispRect  = {0, 0, 720, 1280};
-	SIZE_S stDefImageSize = {720, 1280};
+	RECT_S stDefDispRect  = {0, 0, 1920, 1080};
+	SIZE_S stDefImageSize = {1920, 1080};
 	VO_CHN VoChn = 0;
 
 	s32Ret = SAMPLE_COMM_VO_GetDefConfig(&stVoConfig);
@@ -4235,7 +4231,7 @@ CVI_S32 SAMPLE_VIO_VoRotation(void)
 
 	stVoConfig.VoDev	 = 0;
 	stVoConfig.stVoPubAttr.enIntfType  = VO_INTF_MIPI;
-	stVoConfig.stVoPubAttr.enIntfSync  = VO_OUTPUT_720x1280_60;
+	stVoConfig.stVoPubAttr.enIntfSync  = VO_OUTPUT_1080P60;
 	stVoConfig.stDispRect	 = stDefDispRect;
 	stVoConfig.stImageSize	 = stDefImageSize;
 	stVoConfig.enPixFormat	 = SAMPLE_PIXEL_FORMAT;
@@ -4247,7 +4243,7 @@ CVI_S32 SAMPLE_VIO_VoRotation(void)
 		return s32Ret;
 	}
 
-	CVI_VO_SetChnRotation(stVoConfig.VoDev, VoChn, ROTATION_90);
+	//CVI_VO_SetChnRotation(stVoConfig.VoDev, VoChn, ROTATION_90);
 	SAMPLE_COMM_VPSS_Bind_VO(VpssGrp, VpssChn, stVoConfig.VoDev, VoChn);
 
 	PAUSE();
@@ -4290,10 +4286,28 @@ CVI_S32 SAMPLE_VIO_ViVpssAspectRatio(void)
 	CVI_S32 s32WorkSnsId = 0;
 	SAMPLE_VI_CONFIG_S stViConfig;
 	VI_PIPE_ATTR_S     stPipeAttr;
+	SAMPLE_INI_CFG_S	   stIniCfg = {0};
+	/************************************************
+	 * step1:  Config VI
+	 ************************************************/
+
+	// Get config from ini if found.
+	if (SAMPLE_COMM_VI_ParseIni(&stIniCfg)) {
+		SAMPLE_PRT("Parse complete\n");
+	}
+
+	//Set sensor number
+	CVI_VI_SetDevNum(stIniCfg.devNum);
 
 	/************************************************
 	 * step1:  Config VI
 	 ************************************************/
+	s32Ret = SAMPLE_COMM_VI_IniToViCfg(&stIniCfg, &stViConfig);
+	if (s32Ret != CVI_SUCCESS){
+		return s32Ret;
+	}
+
+#if 0
 	SAMPLE_COMM_VI_GetSensorInfo(&stViConfig);
 
 	stViConfig.astViInfo[s32WorkSnsId].stSnsInfo.enSnsType	     = enSnsType;
@@ -4313,7 +4327,7 @@ CVI_S32 SAMPLE_VIO_ViVpssAspectRatio(void)
 	stViConfig.astViInfo[s32WorkSnsId].stChnInfo.enDynamicRange  = enDynamicRange;
 	stViConfig.astViInfo[s32WorkSnsId].stChnInfo.enVideoFormat   = enVideoFormat;
 	stViConfig.astViInfo[s32WorkSnsId].stChnInfo.enCompressMode  = enCompressMode;
-
+#endif
 	/************************************************
 	 * step2:  Get input size
 	 ************************************************/
@@ -4416,8 +4430,8 @@ CVI_S32 SAMPLE_VIO_ViVpssAspectRatio(void)
 	stVpssGrpAttr.u32MaxH                        = stSize.u32Height;
 	stVpssGrpAttr.u8VpssDev                      = 0;
 
-	astVpssChnAttr[VpssChn].u32Width                    = 720;
-	astVpssChnAttr[VpssChn].u32Height                   = 1280;
+	astVpssChnAttr[VpssChn].u32Width                    = 1920;
+	astVpssChnAttr[VpssChn].u32Height                   = 1080;
 	astVpssChnAttr[VpssChn].enVideoFormat               = VIDEO_FORMAT_LINEAR;
 	astVpssChnAttr[VpssChn].enPixelFormat               = PIXEL_FORMAT_RGB_888_PLANAR;
 	astVpssChnAttr[VpssChn].stFrameRate.s32SrcFrameRate = 30;
@@ -4454,8 +4468,8 @@ CVI_S32 SAMPLE_VIO_ViVpssAspectRatio(void)
 	 * step5:  Init VO
 	 ************************************************/
 	SAMPLE_VO_CONFIG_S stVoConfig;
-	RECT_S stDefDispRect  = {0, 0, 720, 1280};
-	SIZE_S stDefImageSize = {720, 1280};
+	RECT_S stDefDispRect  = {0, 0, 1920, 1080};
+	SIZE_S stDefImageSize = {1920, 1080};
 	VO_CHN VoChn = 0;
 
 	s32Ret = SAMPLE_COMM_VO_GetDefConfig(&stVoConfig);
@@ -4466,7 +4480,7 @@ CVI_S32 SAMPLE_VIO_ViVpssAspectRatio(void)
 
 	stVoConfig.VoDev	 = 0;
 	stVoConfig.stVoPubAttr.enIntfType  = VO_INTF_MIPI;
-	stVoConfig.stVoPubAttr.enIntfSync  = VO_OUTPUT_720x1280_60;
+	stVoConfig.stVoPubAttr.enIntfSync  = VO_OUTPUT_1080P60;
 	stVoConfig.stDispRect	 = stDefDispRect;
 	stVoConfig.stImageSize	 = stDefImageSize;
 	stVoConfig.enPixFormat	 = PIXEL_FORMAT_RGB_888_PLANAR;

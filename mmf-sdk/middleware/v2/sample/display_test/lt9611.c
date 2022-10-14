@@ -25,7 +25,7 @@
 #define YINGMA    0x01
 #define YUANWEI   0x02
 
-
+#define LT9611_BOARD_CONFIG  YUANWEI
 #define LT9611_I2C_DEV       4
 #define LT9611_I2C_ADDR      0x3B    /* 7bit addr */
 

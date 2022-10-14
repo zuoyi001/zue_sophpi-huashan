@@ -265,7 +265,7 @@
 		clock-frequency = <25000000>;
 		reg-shift = <2>;
 		reg-io-width = <4>;
-		status = "disabled";
+		status = "okay";
 	};
 
 	uart2: serial@04160000 {
@@ -274,7 +274,7 @@
 		clock-frequency = <25000000>;
 		reg-shift = <2>;
 		reg-io-width = <4>;
-		status = "disabled";
+		status = "okay";
 	};
 
 	uart3: serial@04170000 {
@@ -283,7 +283,7 @@
 		clock-frequency = <25000000>;
 		reg-shift = <2>;
 		reg-io-width = <4>;
-		status = "disabled";
+		status = "okay";
 	};
 
 	uart4: serial@041C0000 {
@@ -671,7 +671,7 @@
 		      <0x0 0x0a0c4000 0x0 0x2000>, <0x0 0x0a0c6000 0x0 0x2000>,
 		      <0x0 0x03001c30 0x0 0x30>;
 		reg-names = "csi_mac0", "csi_wrap0", "csi_mac1", "csi_mac2", "pad_ctrl";
-		snsr-reset = <&porta 2 GPIO_ACTIVE_LOW>, <&porta 2 GPIO_ACTIVE_LOW>, <&porta 2 GPIO_ACTIVE_LOW>;
+		snsr-reset = <&porta 2 GPIO_ACTIVE_LOW>, <&porta 6 GPIO_ACTIVE_LOW>, <&porta 2 GPIO_ACTIVE_LOW>;
 		resets = <&rst RST_CSIPHY0>, <&rst RST_CSIPHY1>,
 			<&rst RST_CSIPHY0RST_APB>, <&rst RST_CSIPHY1RST_APB>;
 		reset-names = "phy0", "phy1", "phy-apb0", "phy-apb1";

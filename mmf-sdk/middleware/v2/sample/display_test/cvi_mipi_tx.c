@@ -26,11 +26,7 @@
 //static struct video_timing video_1920x1080_60Hz   ={88, 44, 148,1920,  2200,  4,  5,  36, 1080,  1125, 1,1,16,AR_16_9,148500};
 static struct combo_dev_cfg_s dev_cfg_video_1920x1080_60Hz = {
 	.devno = 0,
-#if(MIPI_CONFIG == YUANWEI)
-	.lane_id = {MIPI_TX_LANE_CLK, MIPI_TX_LANE_3, MIPI_TX_LANE_1, MIPI_TX_LANE_0, MIPI_TX_LANE_2},  // yuan wei
-#elif(MIPI_CONFIG == YINGMA)
-	.lane_id = {MIPI_TX_LANE_0, MIPI_TX_LANE_1, MIPI_TX_LANE_2, MIPI_TX_LANE_3, MIPI_TX_LANE_CLK}, // ying ma
-#endif
+	.lane_id = {MIPI_TX_LANE_0, MIPI_TX_LANE_1, MIPI_TX_LANE_2, MIPI_TX_LANE_CLK, MIPI_TX_LANE_3},  // yuan wei
 	.lane_pn_swap = {false, false, false, false, false},
 	.output_mode = OUTPUT_MODE_DSI_VIDEO,
 	.video_mode = BURST_MODE,
@@ -50,14 +46,11 @@ static struct combo_dev_cfg_s dev_cfg_video_1920x1080_60Hz = {
 	.pixel_clk = 148500,
 };
 
+
 //static struct video_timing video_1920x1080_30Hz   ={88, 44, 148,1920,  2200,  4,  5,  36, 1080,  1125, 1,1,34,AR_16_9,74250};
 static struct combo_dev_cfg_s dev_cfg_video_1920x1080_30Hz = {
 	.devno = 0,
-#if(MIPI_CONFIG == YUANWEI)
-    .lane_id = {MIPI_TX_LANE_CLK, MIPI_TX_LANE_3, MIPI_TX_LANE_1, MIPI_TX_LANE_0, MIPI_TX_LANE_2},  // yuan wei
-#elif(MIPI_CONFIG == YINGMA)
-    .lane_id = {MIPI_TX_LANE_0, MIPI_TX_LANE_1, MIPI_TX_LANE_2, MIPI_TX_LANE_3, MIPI_TX_LANE_CLK}, // ying ma
-#endif
+	.lane_id = {MIPI_TX_LANE_0, MIPI_TX_LANE_1, MIPI_TX_LANE_2, MIPI_TX_LANE_CLK, MIPI_TX_LANE_3},  // yuan wei
 	.lane_pn_swap = {false, false, false, false, false},
 	.output_mode = OUTPUT_MODE_DSI_VIDEO,
 	.video_mode = BURST_MODE,
@@ -80,11 +73,7 @@ static struct combo_dev_cfg_s dev_cfg_video_1920x1080_30Hz = {
 //static struct video_timing video_1280x720_60Hz    ={110,40, 220,1280,  1650,  5,  5,  20, 720,   750, 1, 1, 4, AR_16_9,74250};
 static struct combo_dev_cfg_s dev_cfg_video_1280x720_60Hz = {
 	.devno = 0,
-#if(MIPI_CONFIG == YUANWEI)
-    .lane_id = {MIPI_TX_LANE_CLK, MIPI_TX_LANE_3, MIPI_TX_LANE_1, MIPI_TX_LANE_0, MIPI_TX_LANE_2},  // yuan wei
-#elif(MIPI_CONFIG == YINGMA)
-    .lane_id = {MIPI_TX_LANE_0, MIPI_TX_LANE_1, MIPI_TX_LANE_2, MIPI_TX_LANE_3, MIPI_TX_LANE_CLK}, // ying ma
-#endif
+	.lane_id = {MIPI_TX_LANE_0, MIPI_TX_LANE_1, MIPI_TX_LANE_2, MIPI_TX_LANE_CLK, MIPI_TX_LANE_3},  // yuan wei
 	.lane_pn_swap = {false, false, false, false, false},
 	.output_mode = OUTPUT_MODE_DSI_VIDEO,
 	.video_mode = BURST_MODE,
@@ -107,11 +96,7 @@ static struct combo_dev_cfg_s dev_cfg_video_1280x720_60Hz = {
 //static struct video_timing video_1024x768_60Hz    ={24, 136, 160, 1024, 1344,  3,  6,  29, 768, 806,   0,0,0,AR_16_9,65000};
 static struct combo_dev_cfg_s dev_cfg_video_1024x768_60Hz = {
 	.devno = 0,
-#if(MIPI_CONFIG == YUANWEI)
-    .lane_id = {MIPI_TX_LANE_CLK, MIPI_TX_LANE_3, MIPI_TX_LANE_1, MIPI_TX_LANE_0, MIPI_TX_LANE_2},  // yuan wei
-#elif(MIPI_CONFIG == YINGMA)
-    .lane_id = {MIPI_TX_LANE_0, MIPI_TX_LANE_1, MIPI_TX_LANE_2, MIPI_TX_LANE_3, MIPI_TX_LANE_CLK}, // ying ma
-#endif
+	.lane_id = {MIPI_TX_LANE_0, MIPI_TX_LANE_1, MIPI_TX_LANE_2, MIPI_TX_LANE_CLK, MIPI_TX_LANE_3},  // yuan wei
 	.lane_pn_swap = {false, false, false, false, false},
 	.output_mode = OUTPUT_MODE_DSI_VIDEO,
 	.video_mode = BURST_MODE,
@@ -136,11 +121,7 @@ static struct combo_dev_cfg_s dev_cfg_video_1024x768_60Hz = {
 //static struct video_timing video_1280x1024_60Hz   ={48, 112, 248, 1280, 1688,  1,  3,  38, 1024, 1066, 1,1,0,AR_16_9,108000};
 static struct combo_dev_cfg_s dev_cfg_video_1280x1024_60Hz = {
 	.devno = 0,
-#if(MIPI_CONFIG == YUANWEI)
-    .lane_id = {MIPI_TX_LANE_CLK, MIPI_TX_LANE_3, MIPI_TX_LANE_1, MIPI_TX_LANE_0, MIPI_TX_LANE_2},  // yuan wei
-#elif(MIPI_CONFIG == YINGMA)
-    .lane_id = {MIPI_TX_LANE_0, MIPI_TX_LANE_1, MIPI_TX_LANE_2, MIPI_TX_LANE_3, MIPI_TX_LANE_CLK}, // ying ma
-#endif
+	.lane_id = {MIPI_TX_LANE_0, MIPI_TX_LANE_1, MIPI_TX_LANE_2, MIPI_TX_LANE_CLK, MIPI_TX_LANE_3},  // yuan wei
 	.lane_pn_swap = {false, false, false, false, false},
 	.output_mode = OUTPUT_MODE_DSI_VIDEO,
 	.video_mode = BURST_MODE,
@@ -163,11 +144,7 @@ static struct combo_dev_cfg_s dev_cfg_video_1280x1024_60Hz = {
 //static struct video_timing video_1600x1200_60Hz   ={64, 192, 304, 1600, 2160,  1,  3,  46, 1200, 1250, 1,1,0,AR_16_9,162000};
 static struct combo_dev_cfg_s dev_cfg_video_1600x1200_60Hz = {
 	.devno = 0,
-#if(MIPI_CONFIG == YUANWEI)
-    .lane_id = {MIPI_TX_LANE_CLK, MIPI_TX_LANE_3, MIPI_TX_LANE_1, MIPI_TX_LANE_0, MIPI_TX_LANE_2},  // yuan wei
-#elif(MIPI_CONFIG == YINGMA)
-    .lane_id = {MIPI_TX_LANE_0, MIPI_TX_LANE_1, MIPI_TX_LANE_2, MIPI_TX_LANE_3, MIPI_TX_LANE_CLK}, // ying ma
-#endif
+	.lane_id = {MIPI_TX_LANE_0, MIPI_TX_LANE_1, MIPI_TX_LANE_2, MIPI_TX_LANE_CLK, MIPI_TX_LANE_3},  // yuan wei
 	.lane_pn_swap = {false, false, false, false, false},
 	.output_mode = OUTPUT_MODE_DSI_VIDEO,
 	.video_mode = BURST_MODE,

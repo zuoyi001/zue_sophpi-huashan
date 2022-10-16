@@ -344,6 +344,10 @@ u-boot-2021.10/arch/riscv/dts/cv1812h_wevb_0007a_spinand.dts
 u-boot-2021.10/arch/riscv/dts/cv1812h_wevb_0007a_spinor.dts
 middleware/v2/lib_musl_riscv64/lib_lt9611.a
 middleware/v2/lib_musl_riscv64/lib_lt9611.so
+middleware/v2/sample/tp/libtp.a
+middleware/v2/sample/tp/libtp.so
+middleware/v2/sample/tp/tp
+middleware/v2/sample/rtk_hciattach/rtk_hciattach
 *.ld.d
 *.dis
 *.map

@@ -50,6 +50,7 @@ hub_off() {
 }
 
 inst_mod() {
+  insmod /mnt/system/ko/videobuf2-vmalloc.ko
   insmod /mnt/system/ko/configfs.ko
   insmod /mnt/system/ko/libcomposite.ko
   insmod /mnt/system/ko/u_serial.ko

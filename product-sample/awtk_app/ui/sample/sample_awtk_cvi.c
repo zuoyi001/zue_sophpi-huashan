@@ -9,18 +9,21 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <sys/ioctl.h>
+#include <semaphore.h>
 
 #include "window_common.h"
 
+static sem_t s_ExitSem;
 
 int main(int argc, char *argv[])
 {
-	// SAMPLE_AWTK_initCVI();
+	sem_init(&s_ExitSem, 0, 0);
+
 	uiapp_start();
 
-	while(1);
+	while((0 != sem_wait(&s_ExitSem)) && (errno == EINTR));
+
 	uiapp_stop();
-	// SAMPLE_AWTK_stopCVI();
 
 	return 0;
 }

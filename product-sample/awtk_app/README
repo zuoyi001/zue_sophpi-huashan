@@ -15,7 +15,7 @@ insmod /mnt/system/ko/cvi_fb.ko
 
 
 进入/mnt/data/install/bin
-执行./sample_awtk
+
 就可以显示gui
 
 

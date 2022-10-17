@@ -1,0 +1,29 @@
+1.首先在环境变量中配置交叉编译工具的路径
+执行
+make clean&&make all&&make install
+把install目录拷贝到板端/mnt/sd/，配置下export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/mnt/data/install/lib
+其中LD_LIBRARY_PATH 是instal目录放的路径
+
+./sample_dsi
+devmem 0x0a088000 32 0xC0
+
+板端执行
+insmod /mnt/system/ko/cfbcopyarea.ko 
+insmod /mnt/system/ko/cfbfillrect.ko 
+insmod /mnt/system/ko/cfbimgblt.ko 
+insmod /mnt/system/ko/cvi_fb.ko
+
+
+进入/mnt/data/install/bin
+执行./sample_awtk
+就可以显示gui
+
+
+2.开发中主要是配合awtk提供的ide进行开发的
+首先在ide上绘画完成ui界面后，左上角目录选项有个打包的动作，点击打包后
+会在项目文件夹里面生成一个res的目录，这个文件夹里面就是ui的资源文件，
+awtk_app/ui/cardv/res 文件夹替换掉
+
+3.ui界面完成后需要在awtk_app/ui/cardv/src，改对应的界面操作
+
+4.在awtk_app_conf.h中更改屏幕对应的分辨率，和资源文件的放置路径

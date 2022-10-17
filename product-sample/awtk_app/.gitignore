@@ -1,0 +1,9 @@
+install
+__pycache__
+*.o
+*.a
+*.so
+touchpad/obj/
+ui/cardv/obj/
+ui/sample/sample_awtk
+ui/sample/sample_awtk_cvi.d

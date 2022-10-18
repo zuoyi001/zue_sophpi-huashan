@@ -55,9 +55,7 @@ clean:
 install:
 	mkdir -p $(INSTALL_DIR)
 	mkdir -p $(INSTALL_DIR)/lib
-	mkdir -p $(INSTALL_DIR)/include
 	cp $(TARGET) $(INSTALL_DIR)/lib
 	cp $(TARGET_SO) $(INSTALL_DIR)/lib
-	cp include/cvi_hal_touchpad.h $(INSTALL_DIR)/include/
 
 -include $(DEPS)

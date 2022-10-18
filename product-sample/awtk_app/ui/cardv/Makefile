@@ -70,12 +70,10 @@ clean:
 
 install:
 	mkdir -p $(INSTALL_DIR)/lib
-	mkdir -p $(INSTALL_DIR)/include
 	mkdir -p $(INSTALL_DIR)/bin
 	cd $(CUR_DIR)/cardvres/;./xml2bin.sh $(RESRAWDIR);cd -
 	cp $(TARGET) $(INSTALL_DIR)/lib
 	cp $(TARGET_SO) $(INSTALL_DIR)/lib
-	cp $(CUR_DIR)/include/* $(INSTALL_DIR)/include
-	cp $(CUR_DIR)/res $(INSTALL_DIR)/bin/ -a
+	cp $(CUR_DIR)/res $(INSTALL_DIR)/bin/ -rf
 
 -include $(DEPS)

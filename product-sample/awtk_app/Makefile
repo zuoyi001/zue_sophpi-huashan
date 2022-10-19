@@ -18,3 +18,4 @@ install:
 	cp $(CUR_DIR)/awtkcode/awtk-linux-fb/build/lib/*.so $(CUR_DIR)/install/lib
 	make -C touchpad install
 	make -C ui install
+	tar -cf install.tar install/

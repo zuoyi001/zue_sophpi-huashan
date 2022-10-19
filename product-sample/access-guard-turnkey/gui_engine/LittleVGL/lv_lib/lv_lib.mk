@@ -1,0 +1,1 @@
+include $(LVGL_DIR)/lv_lib/lv_lib_lodepng/lv_lodepng.mk

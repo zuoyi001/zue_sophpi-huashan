@@ -1,0 +1,141 @@
+##
+menu "Main app config"
+
+config DUAL_SENSOR_SUPPORT
+    bool "dual sensor (rgb+ir) support"
+	default y
+	help
+        dual sensor (rgb+ir) support.
+
+choice
+    prompt "gui engine config"
+    default ENABLE_GUI_LVGL
+config ENABLE_GUI_LVGL
+    bool "LittleVGL"
+config ENABLE_GUI_AWTK
+    bool "AWTK"
+endchoice
+
+choice
+    prompt "vi rotation config"
+    default VI_ROTATION_NONE
+config VI_ROTATION_NONE
+    bool "0 degree"
+config VI_ROTATION_90
+    bool "90 degree"
+config VI_ROTATION_180
+    bool "180 degree"
+config VI_ROTATION_270
+    bool "270 degree"
+endchoice
+
+choice
+    prompt "vo rotation config"
+    default VO_ROTATION_NONE
+config VO_ROTATION_NONE
+    bool "0 degree"
+config VO_ROTATION_90
+    bool "90 degree"
+config VO_ROTATION_180
+    bool "180 degree"
+config VO_ROTATION_270
+    bool "270 degree"
+endchoice
+
+config VPSS_VIDEO_FLIP_SUPPORT
+    bool "vpss video flip support"
+	default n
+	help
+        vpss video flip support.
+
+config VPSS_VIDEO_MIRROR_SUPPORT
+    bool "vpss video mirror support"
+	default n
+	help
+        vpss video mirror support.
+
+config VIDEO_RTSP_SUPPORT
+    bool "Video rtsp support"
+	default n
+	help
+        Video rtsp support.
+choice
+  	prompt "Video rtsp stream source"
+    depends on VIDEO_RTSP_SUPPORT
+    default VIDEO_RTSP_FROM_VPSS
+config VIDEO_RTSP_FROM_VPSS
+    bool "vpss grp/chn"
+config VIDEO_RTSP_FROM_VI
+    bool "vi chn"
+endchoice
+
+config ISP_FACE_AE_SUPPORT
+    bool "isp face ae support"
+    default n
+	help
+        isp face ae support.
+
+config WEBSERVER_SUPPORT
+    bool "webserver support"
+	depends on !VIDEO_RTSP_SUPPORT
+    default n
+	help
+        webserver support.
+
+config FILE_STORAGE_SUPPORT
+    bool "file storage support"
+    default n
+    help
+        file storage support.
+
+config FILE_PLAYER_SUPPORT
+    bool "File player support"
+    default n
+	help
+        File player support.
+
+config FILE_PLAYER_SUPPORT
+    bool "File player support"
+    default n
+	help
+        File player support.
+
+
+config ETHERNET_SUPPORT
+    bool "Ethernet connect support"
+    default n
+	help
+        Ethernet connect support.
+
+config WIFI_SUPPORT
+    bool "Wifi connect support"
+    default n
+	help
+        Wifi connect support.
+
+config BLUETOOTH_SUPPORT
+    bool "Bluetooth connect support"
+    default n
+	help
+        Bluetooth connect support.
+
+config AUDIO_PLAYER_SUPPORT
+    bool "Audio player support"
+    default n
+	help
+        Audio player support.
+
+config MP3_SUPPORT
+    bool "Mp3 audio play support"
+    depends on AUDIO_PLAYER_SUPPORT
+    default n
+	help
+        Mp3 audio play support.
+
+config FACTORY_TEST_SUPPORT
+    bool "Factory test support"
+    default y
+	help
+        Factory test support.
+
+endmenu

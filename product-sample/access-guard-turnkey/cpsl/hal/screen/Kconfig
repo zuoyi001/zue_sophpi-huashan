@@ -1,0 +1,54 @@
+menu "Screen options"
+
+choice
+	prompt "Screen type"
+	default CONFIG_SCREEN_HX8394
+
+config SCREEN_HX8394
+	bool "Enable screen HX8394"
+	help
+	  Say Y if you want to enable screen HX8394.
+
+config SCREEN_OTA5182
+	bool "Enable screen OTA5182"
+	help
+	  Say Y if you want to enable screen OTA5182.
+
+config SCREEN_ST7796S
+	bool "Enable screen ST7796S"
+	help
+	  Say Y if you want to enable screen ST7796S.
+
+config SCREEN_ST7789
+	bool "Enable screen ST7789"
+	help
+	  Say Y if you want to enable screen ST7789.
+
+config SCREEN_ST7796S_RGB16BIT
+	bool "Enable screen ST7796S_RGB16BIT"
+	help
+	  Say Y if you want to enable screen ST7796S_RGB16BIT.
+
+config SCREEN_OTA7290B
+	bool "Enable screen OTA7290B"
+	help
+	  Say Y if you want to enable screen OTA7290B.
+
+config SCREEN_ILI8961
+	bool "Enable screen ILI8961"
+	help
+	  Say Y if you want to enable screen ILI8961.
+
+config SCREEN_OTA7290B_MIPI11INCH
+	bool "Enable screen OTA7290B_MIPI11INCH"
+	help
+	  Say Y if you want to enable screen OTA7290B_MIPI11INCH.
+
+config SCREEN_ICNL9707
+	bool "Enable screen ICNL9707"
+	help
+	  Say Y if you want to enable screen ICNL9707.
+
+endchoice
+
+endmenu

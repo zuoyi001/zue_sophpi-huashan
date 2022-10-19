@@ -1,0 +1,287 @@
+diff --git a/application_legacy/resources/app_rtsp.c b/application_legacy/resources/app_rtsp.c
+index feec35af..f191faaf 100644
+--- a/application_legacy/resources/app_rtsp.c
++++ b/application_legacy/resources/app_rtsp.c
+@@ -203,7 +203,9 @@ static CVI_VOID *GetIrVencStreamProc(CVI_VOID *pArgs)
+ 	CVI_S32 s32Ret;
+     VENC_CHN_STATUS_S stStat;
+     VENC_STREAM_S stStream;
+-    //VIDEO_FRAME_INFO_S stVencFrame;
++#if defined(CONFIG_IR_VIDEO_RTSP_VENC_BIND_DISABLE)
++    VIDEO_FRAME_INFO_S stVencFrame;
++#endif
+ 	sprintf(TaskName, "chn%dVencGetStream", VencChn);
+ 	prctl(PR_SET_NAME, TaskName, 0, 0, 0);
+ 	printf("venc task%d start\n", VencChn);
+@@ -226,8 +228,8 @@ static CVI_VOID *GetIrVencStreamProc(CVI_VOID *pArgs)
+ 		}
+ 
+ 		CVI_S32 s32SetFrameMilliSec = 20000;
+-		VENC_STREAM_S stStream;
+-		VENC_CHN_STATUS_S stStat;
++		// VENC_STREAM_S stStream;
++		// VENC_CHN_STATUS_S stStat;
+ 		VENC_CHN_ATTR_S stVencChnAttr;
+ 
+ 		s32Ret = CVI_VENC_SendFrame(VencChn, &stVencFrame, s32SetFrameMilliSec);
+@@ -562,16 +564,19 @@ int APP_RgbVideoVencInit(void)
+     }
+ 
+     #if defined(CONFIG_RGB_VIDEO_RTSP_VENC_BIND_VI)
++        printf("APP_RgbVideoVencInit--CONFIG_RGB_VIDEO_RTSP_VENC_BIND_VI\r\n");
+ 	pIc[0].bind_mode = VENC_BIND_VI;
+ 	pIc[0].width = 1080;
+ 	pIc[0].height = 1920;
+     #elif defined(CONFIG_RGB_VIDEO_RTSP_VENC_BIND_VPSS)
++        printf("APP_RgbVideoVencInit--CONFIG_RGB_VIDEO_RTSP_VENC_BIND_VPSS\r\n");
+     pIc[0].bind_mode = VENC_BIND_VPSS;
+     pIc[0].width = 1280;
+     pIc[0].height = 720;
+     pIc[0].vpssGrp = 1,
+     pIc[0].vpssChn = 1,
+     #elif defined(CONFIG_IR_VIDEO_RTSP_VENC_BIND_DISABLE)
++        printf("APP_RgbVideoVencInit--CONFIG_IR_VIDEO_RTSP_VENC_BIND_DISABLE\r\n");
+     pIc[0].bind_mode = VENC_BIND_DISABLE;
+ 	pIc[0].width = 720;
+ 	pIc[0].height = 1280;
+diff --git a/application_legacy/resources/app_video.c b/application_legacy/resources/app_video.c
+index eee9502f..3a8c2063 100755
+--- a/application_legacy/resources/app_video.c
++++ b/application_legacy/resources/app_video.c
+@@ -412,22 +412,40 @@ static void _VencinitInputCfg(APP_PARAM_VENC_CTX_S *Venc)
+ 	int buffSize = 0;
+ 
+ 	Venc->s32VencChnCnt = chn_num;
+-	for (i = 0; i < chn_num; i++) {
++	for (i = 0; i < chn_num; i++) 
++    {
+ 		Venc->astVencChnCfg[i].VencChn = i;
+ 		Venc->astVencChnCfg[i].bEnable = 1;
+-		if (!Venc->astVencChnCfg[i].bEnable) {
++		if (!Venc->astVencChnCfg[i].bEnable) 
++        {
+ 			printf("Venc_chn[%d] not enable!\n", i);
+ 			continue;
+ 		}
+ 
+ 		Venc->astVencChnCfg[i].enType           = PT_H265;
+-		Venc->astVencChnCfg[i].VpssGrp          = i+1;
+-		Venc->astVencChnCfg[i].VpssChn          = 1;
+-		Venc->astVencChnCfg[i].u32Width         = 1280;
+-		Venc->astVencChnCfg[i].u32Height        = 720;
+ 
+-		Venc->astVencChnCfg[i].enBindMode       = VENC_BIND_VPSS;
+-		if (Venc->astVencChnCfg[i].enBindMode != VENC_BIND_DISABLE) {
++        #if defined(CONFIG_RGB_VIDEO_RTSP_VENC_BIND_VI)
++            printf("_VencinitInputCfg--CONFIG_RGB_VIDEO_RTSP_VENC_BIND_VI\r\n");
++            Venc->astVencChnCfg[i].enBindMode = VENC_BIND_VI;
++            Venc->astVencChnCfg[i].u32Width         = 1080;
++		    Venc->astVencChnCfg[i].u32Height        = 1920;
++        #elif defined(CONFIG_RGB_VIDEO_RTSP_VENC_BIND_VPSS)
++            printf("_VencinitInputCfg--CONFIG_RGB_VIDEO_RTSP_VENC_BIND_VPSS\r\n");
++            Venc->astVencChnCfg[i].enBindMode = VENC_BIND_VPSS;
++            Venc->astVencChnCfg[i].u32Width         = 1280;
++		    Venc->astVencChnCfg[i].u32Height        = 720;
++            Venc->astVencChnCfg[i].VpssGrp          = i+1;
++            Venc->astVencChnCfg[i].VpssChn          = 1;
++        #elif defined(CONFIG_IR_VIDEO_RTSP_VENC_BIND_DISABLE)
++            printf("_VencinitInputCfg--CONFIG_IR_VIDEO_RTSP_VENC_BIND_DISABLE\r\n");
++            Venc->astVencChnCfg[i].enBindMode = VENC_BIND_DISABLE;
++            Venc->astVencChnCfg[i].u32Width         = 720;
++		    Venc->astVencChnCfg[i].u32Height        = 1280;
++        #endif
++
++
++		if (Venc->astVencChnCfg[i].enBindMode != VENC_BIND_DISABLE) 
++        {
+ 			Venc->astVencChnCfg[i].astChn[0].enModId    = 6;
+ 			Venc->astVencChnCfg[i].astChn[0].s32DevId   = 1+i;
+ 			Venc->astVencChnCfg[i].astChn[0].s32ChnId   = 1;
+@@ -440,14 +458,15 @@ static void _VencinitInputCfg(APP_PARAM_VENC_CTX_S *Venc)
+ 			i, Venc->astVencChnCfg[i].enType, Venc->astVencChnCfg[i].VpssGrp, Venc->astVencChnCfg[i].VpssChn, 
+ 			Venc->astVencChnCfg[i].u32Width, Venc->astVencChnCfg[i].u32Height);
+ 
+-		if (Venc->astVencChnCfg[i].enType != PT_JPEG) {
+-
++		if (Venc->astVencChnCfg[i].enType != PT_JPEG) 
++        {
+ 			Venc->astVencChnCfg[i].u32Profile       = 0;
+ 			Venc->astVencChnCfg[i].u32SrcFrameRate  = 25;
+ 			Venc->astVencChnCfg[i].u32DstFrameRate = 25;
+ 			Venc->astVencChnCfg[i].enGopMode        = 0;
+ 
+-			switch (Venc->astVencChnCfg[i].enGopMode) {
++			switch (Venc->astVencChnCfg[i].enGopMode) 
++            {
+ 				case VENC_GOPMODE_NORMALP:
+ 					Venc->astVencChnCfg[i].unGopParam.stNormalP.s32IPQpDelta = 2;
+ 				break;
+@@ -509,7 +528,9 @@ static void _VencinitInputCfg(APP_PARAM_VENC_CTX_S *Venc)
+ 			printf("u32MaxQp=%d u32MinQp=%d u32MaxIQp=%d u32MinIQp=%d s32ChangePos=%d s32InitialDelay=%d\n", 
+ 				Venc->astVencChnCfg[i].stRcParam.u32MaxQp, Venc->astVencChnCfg[i].stRcParam.u32MinQp, Venc->astVencChnCfg[i].stRcParam.u32MaxIQp, 
+ 				Venc->astVencChnCfg[i].stRcParam.u32MinIQp, Venc->astVencChnCfg[i].stRcParam.s32ChangePos, Venc->astVencChnCfg[i].stRcParam.s32InitialDelay);
+-		} else {
++		} 
++        else 
++        {
+ 			Venc->astVencChnCfg[i].stJpegCodecParam.quality       = 20;
+ 			Venc->astVencChnCfg[i].stJpegCodecParam.MCUPerECS     = 0;
+ 			printf("Venc_chn[%d] quality=%d\n", i, Venc->astVencChnCfg[i].stJpegCodecParam.quality);
+@@ -1034,12 +1055,13 @@ CVI_S32 APP_Venc_Jpeg_Param_Set(VENC_CHN VencChn, APP_JPEG_CODEC_PARAM_S *pstJpe
+ 
+ APP_PARAM_VENC_CTX_S g_stVencCtx, *g_pstVencCtx = &g_stVencCtx;
+ 
+-CVI_S32 APP_Venc_Init (void)
++CVI_S32 APP_Venc_Init(void)
+ {
+ 	CVI_S32 s32Ret = CVI_SUCCESS;
+ 	_VencinitInputCfg(g_pstVencCtx);
+ 
+-	for (VENC_CHN s32ChnIdx = 0; s32ChnIdx < g_pstVencCtx->s32VencChnCnt; s32ChnIdx++) {
++	for (VENC_CHN s32ChnIdx = 0; s32ChnIdx < g_pstVencCtx->s32VencChnCnt; s32ChnIdx++) 
++    {
+         APP_VENC_CHN_CFG_S *pstVencChnCfg = &g_pstVencCtx->astVencChnCfg[s32ChnIdx];
+         APP_VENC_ROI_CFG_S *pstVencRoiCfg = g_pstVencCtx->astRoiCfg;
+         VENC_CHN VencChn = pstVencChnCfg->VencChn;
+@@ -1056,25 +1078,29 @@ CVI_S32 APP_Venc_Init (void)
+         memset(&stVencChnAttr, 0, sizeof(stVencChnAttr));
+ 
+ 		/* Venc channel validity check */
+-        if (VencChn != pstVencChnCfg->VencChn) {
++        if (VencChn != pstVencChnCfg->VencChn) 
++        {
+            printf("VencChn error %d\n", VencChn);
+             goto VENC_EXIT0;
+         }
+ 
+ 		s32Ret = APP_Venc_Chn_Attr_Set(&pstVencChnAttr->stVencAttr, pstVencChnCfg);
+-		if (s32Ret != CVI_SUCCESS) {
++		if (s32Ret != CVI_SUCCESS) 
++        {
+ 			printf("media_venc_set_attr [%d] failed with 0x%x\n", VencChn, s32Ret);
+ 			goto VENC_EXIT0;
+ 		}
+ 
+ 		s32Ret = APP_Venc_Gop_Attr_Set(&pstVencChnAttr->stGopAttr, pstVencChnCfg);
+-		if (s32Ret != CVI_SUCCESS) {
++		if (s32Ret != CVI_SUCCESS) 
++        {
+ 			printf("media_venc_set_gop [%d] failed with 0x%x\n", VencChn, s32Ret);
+ 			goto VENC_EXIT0;
+ 		}
+ 
+ 		s32Ret = APP_Venc_Rc_Attr_Set(&pstVencChnAttr->stRcAttr, pstVencChnCfg);
+-		if (s32Ret != CVI_SUCCESS) {
++		if (s32Ret != CVI_SUCCESS) 
++        {
+ 			printf("media_venc_set_rc_attr [%d] failed with 0x%x\n", VencChn, s32Ret);
+ 			goto VENC_EXIT0;
+ 		}
+@@ -1082,42 +1108,53 @@ CVI_S32 APP_Venc_Init (void)
+ 		APP_Venc_Attr_Check(pstVencChnAttr);
+ 
+ 		s32Ret = CVI_VENC_CreateChn(VencChn, pstVencChnAttr);
+-		if (s32Ret != CVI_SUCCESS) {
++		if (s32Ret != CVI_SUCCESS) 
++        {
+ 			printf("CVI_VENC_CreateChn [%d] failed with 0x%x\n", VencChn, s32Ret);
+ 			goto VENC_EXIT1;
+ 		}
+ 
+-		if ((enCodecType == PT_H265) || (enCodecType == PT_H264)) {
++		if ((enCodecType == PT_H265) || (enCodecType == PT_H264)) 
++        {
+             if (enCodecType == PT_H264)
+             {
+                 s32Ret = APP_Venc_Roi_Set(VencChn, pstVencRoiCfg);
+-                if (s32Ret != CVI_SUCCESS) {
++                if (s32Ret != CVI_SUCCESS) 
++                {
+                     printf("APP_Venc_Roi_Set [%d] failed with 0x%x\n", VencChn, s32Ret);
+                     goto VENC_EXIT1;
+                 }
+             }
++
+             s32Ret = APP_Venc_Rc_Param_Set(VencChn, enCodecType, pstVencChnCfg->enRcMode, &pstVencChnCfg->stRcParam);
+-                if (s32Ret != CVI_SUCCESS) {
++            if (s32Ret != CVI_SUCCESS) 
++            {
+                 printf("Venc_%d RC Param Set failed with 0x%x\n", VencChn, s32Ret);
+                 goto VENC_EXIT1;
+             }
+ 
+             s32Ret = APP_Venc_FrameLost_Set(VencChn, &pstVencChnCfg->stFrameLostCtrl);
+-                if (s32Ret != CVI_SUCCESS) {
++            if (s32Ret != CVI_SUCCESS) 
++            {
+                 printf("Venc_%d RC frame lost control failed with 0x%x\n", VencChn, s32Ret);
+                 goto VENC_EXIT1;
+             }
+-        } else if (enCodecType == PT_JPEG) {
++        } 
++        else if (enCodecType == PT_JPEG) 
++        {
+             s32Ret = APP_Venc_Jpeg_Param_Set(VencChn, &pstVencChnCfg->stJpegCodecParam);
+-                if (s32Ret != CVI_SUCCESS) {
++            if (s32Ret != CVI_SUCCESS) 
++            {
+                 printf("Venc_%d JPG Param Set failed with 0x%x\n", VencChn, s32Ret);
+                 goto VENC_EXIT1;
+             }
+         }
+ 
+-		if (pstVencChnCfg->enBindMode != VENC_BIND_DISABLE) {
++		if (pstVencChnCfg->enBindMode != VENC_BIND_DISABLE) 
++        {
+             s32Ret = CVI_SYS_Bind(&pstVencChnCfg->astChn[0], &pstVencChnCfg->astChn[1]);
+-            if (s32Ret != CVI_SUCCESS) {
++            if (s32Ret != CVI_SUCCESS) 
++            {
+                printf("CVI_SYS_Bind failed with %#x\n", s32Ret);
+                 goto VENC_EXIT1;
+             }
+@@ -1126,7 +1163,8 @@ CVI_S32 APP_Venc_Init (void)
+     return CVI_SUCCESS;
+ 
+ VENC_EXIT1:
+-    for (VENC_CHN s32ChnIdx = 0; s32ChnIdx < g_pstVencCtx->s32VencChnCnt; s32ChnIdx++) {
++    for (VENC_CHN s32ChnIdx = 0; s32ChnIdx < g_pstVencCtx->s32VencChnCnt; s32ChnIdx++) 
++    {
+         CVI_VENC_ResetChn(g_pstVencCtx->astVencChnCfg[s32ChnIdx].VencChn);
+         CVI_VENC_DestroyChn(g_pstVencCtx->astVencChnCfg[s32ChnIdx].VencChn);
+     }
+diff --git a/application_legacy/sac_main_app.c b/application_legacy/sac_main_app.c
+index 248ba23d..7f56534b 100644
+--- a/application_legacy/sac_main_app.c
++++ b/application_legacy/sac_main_app.c
+@@ -298,15 +298,15 @@ int SAC_MAINAPP_StartUp(void)
+ 
+ 	pthread_create(&display_thread, NULL, SAC_MAINAPP_DisplayThread, NULL);
+ 	pthread_create(&face_ai_thread, NULL, APP_AI_FaceThread, NULL);
++#if (defined(CONFIG_RGB_VIDEO_RTSP_SUPPORT) && defined(CONFIG_IR_VIDEO_RTSP_SUPPORT))
+ 	APP_Venc_Init();
+ 	#if defined(CONFIG_RGB_VIDEO_RTSP_SUPPORT)
+-	// APP_RgbVideoVencInit();
+ 	RTSP_CreateServer(VencChn, 0);
+ 	#endif
+ 	#if defined(CONFIG_IR_VIDEO_RTSP_SUPPORT)
+-	// APP_IrVideoVencInit();
+ 	RTSP_CreateServer(VencChn, 1);
+ 	#endif
++#endif
+ 
+ 	// input c+enter to exit application
+ 	while(1){
+diff --git a/customer/cvitek/cvitek_vpss_config_aisdk.c b/customer/cvitek/cvitek_vpss_config_aisdk.c
+index a142a370..1a459ffb 100644
+--- a/customer/cvitek/cvitek_vpss_config_aisdk.c
++++ b/customer/cvitek/cvitek_vpss_config_aisdk.c
+@@ -328,7 +328,7 @@ CVI_S32 APP_InitVpss(void)
+ 
+ 	s32Ret = APP_SetVpssConfig(4,&stVpssGrpAttr);
+ 	if (s32Ret != CVI_SUCCESS) {
+-		SAMPLE_PRT("CVI_Init_Video_Process Grp5 failed with %d\n", s32Ret);
++		SAMPLE_PRT("CVI_Init_Video_Process Grp4 failed with %d\n", s32Ret);
+ 		return s32Ret;
+ 	}
+ 

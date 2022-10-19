@@ -1,0 +1,97 @@
+zh-CN:
+  Welcome to CviTek: 北京晶视智能科技有限公司
+  Device Activate: 设备激活
+  Mode Switch: 模式切换
+  Device Setting: 设备设置
+  Device Information: 设备信息
+  Face Lib: 人脸库
+  Lang Switch: 语言切换
+  Add Face Info: 添加人脸信息
+  Gallery: 相册
+  Capture: 拍照
+  Batch Register: 本地批量注册
+  Cancel: 取消
+  Search: 搜索
+  Access Control: 门禁控制
+  Authorization: 认证
+  Auth Method: 认证方式
+  Device Interface: 设备接口
+  Electronic Control: 继电器控制
+  Wiegand: 韦根
+  Com: 串口
+  Com Enable: 串口使能
+  Baud Rate: 波特率
+  Bits: 数据位
+  Check Mode: 校验模式
+  Stop bit: 停止位
+  Protocol: 协议
+  Others: 其它
+  Signal: 门磁检测
+  Open Delay(ms): 开门延时
+  Open/Close Setting: 门动作
+  Alarmer: 报警器
+  Open Period(ms): 开门时长
+  FR Gap Time(ms): 识别间隔
+  Profile & Notification: 个性化与通知
+  Profile: 个性化
+  Voice Notice: 语音播报
+  Name Display: 姓名显示
+  Company Name: 公司名称
+  'Please Input Employee''s Name:': 请输入员工名字
+  'Please Input Employee''s ID:': 请输入员工工号
+  Commit: 提交
+  Setting: 设置
+  Device Manage: 设备管理
+  Door Button: 门禁按钮
+  Uart: 串口
+  Upgrade: 升级
+  Connect: 连接
+  Start: 开始
+  Export: 导出
+  Reboot: 重启
+  Shutdown: 关机
+  Reset: 重置
+  Delete Face: 删除人脸
+  Confirm: 确认
+  Edit Face Info: 编辑人脸信息
+  Name: 名字
+  Serial: 序列
+  type: 类型
+  ic_card: IC卡
+  Time zone: 时区
+  Manual date: 手动设置日期
+  Syn NTP: 同步网络时间
+  Language: 语言
+  Log export: 日志导出
+  System: 系统
+  Display brightness: 显示亮度
+  Registered people/Max: 已注册人数/上限
+  About: 关于
+  Boot time: 启动时间
+  Version: 版本
+  Device name: 设备名称
+  Device type: 设备类型
+  Device serial: 设备序列号
+  Release time: 发布时间
+  Mac address: 硬件地址
+  Hardware: 硬件
+  Ip address: 网络地址
+  Broadcast address: 广播地址
+  Netmask: 子网掩码
+  Voice sound: 音量
+  Enter display lock time: 进入显示锁定时间
+  Enter display close time: 进入显示关闭时间
+  Wifi: ~
+  SSID: ~
+  Password: 密码
+  Storage: 存储
+  Occupancy/Remaining: 已使用/剩余
+  Account: 账号
+  'Upgrade"), _("Upgrade': ~
+  Camera: 摄像机
+  'Connect"), _("Connect': ~
+  'Syn NTP"), _("Start': ~
+  'Log export"), _("Export': ~
+  'Reboot"), _("Reboot': ~
+  'Shutdown"), _("Shutdown': ~
+  'Reset"), _("Reset': ~

@@ -1,0 +1,63 @@
+
+
+menu "Function libs config"
+
+config ADVERTISEMENT_SUPPORT
+	bool "advertisement support"
+	default n
+	help
+	    advertisement support.
+config AUDIO_SUPPORT
+	bool "audio support"
+	default y
+	help
+	    audio support.
+
+config BOOTLOGO_SUPPORT
+	bool "bootlogo support"
+	default y
+	help
+	    bootlogo support.
+
+config BLUETOOTH_SUPPORT
+	bool "bluetooth support"
+	default n
+	help
+	    bluetooth support.
+
+config ETHERNET_SUPPORT
+	bool "ethernet support"
+	default y
+	help
+	    ethernet support.
+
+config WIFI_SUPPORT
+	bool "wifi support"
+	default n
+	help
+	    wifi support.
+
+config FINGERPRINT_SUPPORT
+	bool "fingerprint support"
+	default n
+	help
+	    fingerprint support.
+
+config QRCODE_SUPPORT
+	bool "qr_code support"
+	default n
+	help
+	    qr_code support.
+
+config DATABASE
+	bool "database repo"
+	default y
+	help
+	    database define.
+
+config NFC_SUPPORT
+	bool "nfc contol library"
+	default y
+	help
+	    nfc contol library.
+endmenu

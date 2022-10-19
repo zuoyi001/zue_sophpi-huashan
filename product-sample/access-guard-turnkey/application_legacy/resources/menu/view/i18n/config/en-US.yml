@@ -1,0 +1,95 @@
+en-US:
+  Welcome to CviTek: Welcome to CviTek
+  Device Activate: Device Activate
+  Mode Switch: Mode Switch
+  Device Setting: Device Setting
+  Device Information: Device Information
+  Face Lib: Face Lib
+  Lang Switch: Lang Switch
+  Add Face Info: Add Face Info
+  Gallery: Gallery
+  Capture: Capture
+  Batch Register: Batch Register
+  Cancel: Cancel
+  Search: Search
+  Access Control: Access Control
+  Authorization: ~
+  Auth Method: ~
+  Device Interface: ~
+  Electronic Control: ~
+  Wiegand: ~
+  Com: ~
+  Com Enable: ~
+  Baud Rate: ~
+  Bits: ~
+  Check Mode: ~
+  Stop bit: ~
+  Protocol: ~
+  Others: ~
+  Signal: ~
+  Open Delay(ms): ~
+  Open/Close Setting: ~
+  Alarmer: ~
+  Open Period(ms): ~
+  FR Gap Time(ms): ~
+  Profile & Notification: ~
+  Profile: ~
+  Voice Notice: ~
+  Name Display: ~
+  Company Name: ~
+  'Please Input Employee''s Name:': ~
+  'Please Input Employee''s ID:': ~
+  Commit: ~
+  Setting: ~
+  Device Manage: ~
+  Door Button: ~
+  Uart: ~
+  Upgrade: ~
+  Connect: ~
+  Start: ~
+  Export: ~
+  Reboot: ~
+  Shutdown: ~
+  Reset: ~
+  Delete Face: ~
+  Confirm: ~
+  Edit Face Info: ~
+  Name: ~
+  Serial: ~
+  type: ~
+  ic_card: ~
+  'Syn NTP"), _("Start': ~
+  Time zone: ~
+  Manual date: ~
+  'Log export"), _("Export': ~
+  Registered people/Max: ~
+  System: ~
+  Language: ~
+  About: ~
+  Boot time: ~
+  Version: ~
+  Device name: ~
+  Device type: ~
+  Device serial: ~
+  Release time: ~
+  Mac address: ~
+  'Upgrade"), _("Upgrade': ~
+  Hardware: ~
+  Ip address: ~
+  Broadcast address: ~
+  Netmask: ~
+  Voice sound: ~
+  Display brightness: ~
+  Enter display lock time: ~
+  Enter display close time: ~
+  Camera: ~
+  Wifi: ~
+  SSID: ~
+  Password: ~
+  'Connect"), _("Connect': ~
+  Storage: ~
+  Occupancy/Remaining: ~
+  Account: ~
+  'Reboot"), _("Reboot': ~
+  'Shutdown"), _("Shutdown': ~
+  'Reset"), _("Reset': ~

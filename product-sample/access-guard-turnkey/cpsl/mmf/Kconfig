@@ -1,0 +1,81 @@
+menu "Sensor options"
+
+choice
+	prompt "Sensor Dev 0"
+	default SNS0_NONE
+	config SNS0_NONE
+		bool "none"
+	config SNS0_NEXTCHIP_N5
+		bool "nextchip_n5"
+	config SNS0_OV_OS08A20
+		bool "ov_os08a20"
+	config SNS0_PICO_384
+		bool "pico_384"
+	config SNS0_PICO_640
+		bool "pico_640"
+	config SNS0_PIXELPLUS_PR2100
+		bool "pixelplus_pr2100"
+	config SNS0_SMS_SC200AI
+		bool "sms_sc200ai"
+	config SNS0_SMS_SC3335
+		bool "sms_sc3335"
+	config SNS0_SMS_SC4210
+		bool "sms_sc4210"
+	config SNS0_SMS_SC8238
+		bool "sms_sc8238"
+	config SNS0_SOI_F23
+		bool "soi_f23"
+	config SNS0_SOI_F35
+		bool "soi_f35"
+	config SNS0_SOI_H65
+		bool "soi_h65"
+	config SNS0_SONY_IMX290_2L
+		bool "sony_imx290_2L"
+	config SNS0_SONY_IMX307
+		bool "sony_imx307"
+	config SNS0_SONY_IMX307_2L
+		bool "sony_imx307_2L"
+	config SNS0_SONY_IMX307_SUBLVDS
+		bool "sony_imx307_sublvds"
+	config SNS0_SONY_IMX327
+		bool "sony_imx327"
+	config SNS0_SONY_IMX327_2L
+		bool "sony_imx327_2L"
+	config SNS0_SONY_IMX327_SUBLVDS
+		bool "sony_imx327_sublvds"
+	config SNS0_SONY_IMX334
+		bool "sony_imx334"
+	config SNS0_SONY_IMX335
+		bool "sony_imx335"
+	config SNS0_VIVO_MCS369
+		bool "vivo_mcs369"
+	config SNS0_VIVO_MCS369Q
+		bool "vivo_mcs369q"
+	config SNS0_VIVO_MM308M2
+		bool "vivo_mm308m2"
+	config SNS0_GCORE_GC2093
+		bool "gcore_gc2093"
+endchoice
+choice
+	prompt "Sensor Dev 1"
+	default SNS1_NONE
+	config SNS1_NONE
+		bool "none"
+	config SNS1_NEXTCHIP_N5
+		bool "nextchip_n5"
+		depends on (SNS0_NEXTCHIP_N5)
+	config SNS1_SOI_F35_SLAVE
+		bool "soi_f35_slave"
+		depends on (SES0_SOI_F35)
+	config SNS1_SONY_IMX307_SLAVE
+		bool "sony_imx307_slave"
+		depends on (SNS0_SONY_IMX307_2L)
+	config SNS1_SONY_IMX327_SLAVE
+		bool "sony_imx327_slave"
+		depends on (SNS0_SONY_IMX327_2L)
+	config SNS1_PIXELPLUS_PR2020
+		bool "pixelplus_pr2020"
+		depends on (SNS0_PIXELPLUS_PR2100 || SNS0_SONY_IMX335 || SNS0_GCORE_GC2093)
+endchoice
+
+endmenu

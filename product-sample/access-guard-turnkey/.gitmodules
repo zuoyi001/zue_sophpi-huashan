@@ -1,0 +1,9 @@
+[submodule "gui_engine/LittleVGL/lv_drivers"]
+	path = gui_engine/LittleVGL/lv_drivers
+	url = ssh://10.240.0.84:29418/lv_drivers
+[submodule "gui_engine/LittleVGL/lv_examples"]
+	path = gui_engine/LittleVGL/lv_examples
+	url = ssh://10.240.0.84:29418/lv_examples
+[submodule "gui_engine/LittleVGL/lvgl"]
+	path = gui_engine/LittleVGL/lvgl
+	url = ssh://10.240.0.84:29418/LVGL

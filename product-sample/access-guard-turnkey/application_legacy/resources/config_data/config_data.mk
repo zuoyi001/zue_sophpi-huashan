@@ -1,0 +1,1 @@
+INCLUDES += -I$(PWD)/resources/config_data/

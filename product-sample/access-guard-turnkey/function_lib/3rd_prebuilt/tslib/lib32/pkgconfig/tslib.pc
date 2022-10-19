@@ -1,0 +1,10 @@
+prefix=/home/frank/frank/workspace/sac_release_sdk/sdk_source/access-control-demo/tslib/tslib_install
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: tslib
+Description: Touchscreen Access Library
+Version: 1.22+
+Libs: -L${libdir} -lts
+Cflags: -I${includedir}

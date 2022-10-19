@@ -1,0 +1,1 @@
+INCLUDES += -I$(AG_UI_DIR)/resources/menu/core/

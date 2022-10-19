@@ -1,0 +1,29 @@
+; section for source
+[source]
+;type = SOURCE_USER_FE
+dev_num = 2
+; section for sensor
+[sensor]
+; sensor name
+name = GCORE_GC2093_MIPI_2M_30FPS_10BIT
+;name = GCORE_GC2093_MIPI_2M_30FPS_10BIT_WDR2TO1
+;bus/i2c dev number
+bus_id = 0
+;mipi-rx dev number
+mipi_dev = 0
+;mipi-rx lane mapping
+lane_id = 1, 3, 2, -1, -1
+
+; section for sensor2
+[sensor2]
+; sensor name
+name = GCORE_GC2093_SLAVE_MIPI_2M_30FPS_10BIT
+;name = GCORE_GC2093_SLAVE_MIPI_2M_30FPS_10BIT_WDR2TO1
+;bus/i2c dev number
+bus_id = 3
+;mipi-rx dev number
+mipi_dev = 1
+;mipi-rx lane mapping
+lane_id = 0, 4, 2, -1, -1
+mclk_en = 1
+mclk = 1

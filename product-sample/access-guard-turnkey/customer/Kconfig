@@ -1,0 +1,45 @@
+##
+menu "Customer app config"
+
+config USE_DEFAULT_PQ_PARAM
+    bool "use default pq param"
+    default y
+	help
+        use default pq param.
+
+config SDR_PQ_BIN_NAME
+	depends on !USE_DEFAULT_PQ_PARAM
+    string "ISP module SDR PQBIN name"
+	default "/mnt/cfg/param/cvi_sdr_bin"
+	help
+        ISP module SDR PQBIN name.
+
+config WDR_PQ_BIN_NAME
+	depends on !USE_DEFAULT_PQ_PARAM
+    string "ISP module WDR PQBIN name"
+	default "/mnt/cfg/param/cvi_wdr_bin"
+	help
+        ISP module WDR PQBIN name.
+
+
+config PANEL_DISPLAY_SUPPORT
+    bool "Panel display support"
+    default y
+	help
+        Panel display.
+
+config PANEL_DISPLAY_HOR
+	int "panel display horizon size."
+    depends on PANEL_DISPLAY_SUPPORT
+	default 720
+	help
+		panel display horizon size.
+
+config PANEL_DISPLAY_VER
+	int "panel display vertical size."
+    depends on PANEL_DISPLAY_SUPPORT
+	default 1280
+	help
+		panel display vertical size.
+
+endmenu

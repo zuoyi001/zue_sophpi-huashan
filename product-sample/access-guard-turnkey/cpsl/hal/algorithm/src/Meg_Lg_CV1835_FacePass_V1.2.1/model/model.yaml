@@ -1,0 +1,21 @@
+%YAML:1.0
+# model path
+
+detect_model: ./model/cv1835_detect_A.bin
+postfilter_model: ./model/cv1835_postfilter_A.bin
+refine_model: ./model/cv1835_landmark_A.bin
+anchor_path: ./model/cv1835_anchor_A.bin
+poseblur_model: ./model/cv1835_poseblur_A.bin
+liveness_bgr_model: ./model/cv1835_live_rgb_A.bin
+liveness_bgrir_model: ./model/cv1835_live_rgbir_A01.bin
+age_gender_model: ''
+rc_model: ./model/cv1835_faceattr_B.bin
+occl_model: ''
+group_model_path: ./model/cv1835_search_A.bin
+stn_model: ./model/cv1835_preFeat_N.bin
+feature_model: ./model/cv1835_feat_N.bin
+
+detect_threshold: 0.3
+postfilter_threshold: 0.5
+
+

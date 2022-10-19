@@ -1,0 +1,13 @@
+prefix=/root/.jenkins/workspace/third_party/oss/install/cvi-miniz
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: cvi_miniz
+Description: 
+Version: 2.2.0
+URL: 
+
+Requires:
+Libs: -L${libdir} -lcvi_miniz
+Cflags: -I${includedir}

@@ -1,0 +1,111 @@
+#
+# For a description of the syntax of this configuration file,
+# see Documentation/kbuild/kconfig-language.txt.
+#
+mainmenu "Smart-Access-Control Application"
+##
+config CUSTOMER
+	prompt "Customer board."
+	string
+	default "cvitek"
+	help
+		Customer board define.
+##
+choice
+    prompt "CVITEK CHIP"
+    default CVI_SOC_CV183X
+config CVI_SOC_CV183X
+    bool "CV183X: cv1835"
+config CVI_SOC_CV182X
+    bool "CV182X: cv1821/cv1825"
+config CVI_SOC_CR182X
+    bool "CR182X: cr1825"
+endchoice
+
+config CVI_SOC
+	string
+	default "cv183x" if CVI_SOC_CV183X
+	default "cv182x" if CVI_SOC_CV182X
+	default "cr182x" if CVI_SOC_CV182X
+##
+choice
+    prompt "Application Build."
+    default APP_32BIT
+config APP_32BIT
+    bool "32bit Version."
+config APP_64BIT
+    bool "64bit Version."
+config APP_UCLIBC
+    bool "uclibc Version."
+config APP_MUSL
+    bool "musl Version."
+endchoice
+
+config MW_SDK_VER_LIB32
+	bool
+	default y if APP_32BIT
+	help
+		Depends MW SDK 32bit Version.
+
+config MW_SDK_VER_LIB64
+	bool
+	default y if APP_64BIT
+	help
+		Depends on MW SDK 64bit Version.
+
+config MW_SDK_VER_UCLIBC
+	bool
+	default y if APP_UCLIBC
+	help
+		Depends on MW SDK Uclibc Version.
+
+config MW_SDK_VER_MUSL
+	bool
+	default y if APP_MUSL
+	help
+		Depends on MW SDK musl Version.
+##
+choice
+    prompt "GUI engine"
+    default ENABLE_GUI_LVGL
+config ENABLE_GUI_LVGL
+    bool "LittleVGL"
+config ENABLE_GUI_AWTK
+    bool "AWTK"
+endchoice
+##
+choice
+    prompt "Algorithm vendor"
+	default ALGORITHM_VENDOR_AISDK
+config ALGORITHM_VENDOR_AISDK
+	bool "AiSdk"
+config ALGORITHM_VENDOR_MEGVII
+	bool "Megvii"
+config ALGORITHM_VENDOR_SENSETIME
+	bool "Sensetime"
+endchoice
+
+config ALGORITHM_VENDOR
+	string
+	default "aisdk" if ALGORITHM_VENDOR_AISDK
+	default "megvii" if ALGORITHM_VENDOR_MEGVII
+	default "sensetime" if ALGORITHM_VENDOR_SENSETIME
+	help
+		Facelib vendor define.
+##
+source "Kconfig.app"
+source "customer/Kconfig"
+source "function_lib/Kconfig"
+##
+config DEBUG_VER
+	bool "Build application as DEBUG version"
+	default n
+	help
+		DEBUG_VER define.
+##
+config STATIC_LINK
+	bool "Build application with Static link"
+	default n
+	help
+		Build application with Static link.
+##

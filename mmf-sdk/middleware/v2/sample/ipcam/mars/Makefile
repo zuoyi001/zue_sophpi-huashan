@@ -74,7 +74,7 @@ SDIR	+= $(APP_MODULE_PATH)/peripheral/ircut
 INCS	+= -I$(APP_MODULE_PATH)/peripheral/ircut
 
 # AI
-AI_ENABLE = 0
+AI_ENABLE = 1
 ifeq ($(AI_ENABLE), 1)
 SDIR	+= $(APP_MODULE_PATH)/ai
 INCS	+= -I$(APP_MODULE_PATH)/ai

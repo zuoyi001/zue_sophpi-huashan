@@ -1,0 +1,14 @@
+prefix=/root/.jenkins/workspace/third_party/oss/install/ffmpeg
+exec_prefix=${prefix}
+libdir=/root/.jenkins/workspace/third_party/oss/install/ffmpeg/lib
+includedir=/root/.jenkins/workspace/third_party/oss/install/ffmpeg/include
+
+Name: libswresample
+Description: FFmpeg audio resampling library
+Version: 3.8.100
+Requires: 
+Requires.private: libavutil >= 56.59.100
+Conflicts:
+Libs: -L${libdir}  -lswresample 
+Libs.private: -lm
+Cflags: -I${includedir}

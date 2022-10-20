@@ -1,0 +1,12 @@
+prefix=/root/.jenkins/workspace/third_party/oss/install/uv
+exec_prefix=${prefix}
+libdir=/root/.jenkins/workspace/third_party/oss/install/uv/lib
+includedir=/root/.jenkins/workspace/third_party/oss/install/uv/include
+
+Name: libuv-static
+Version: 1.44.1
+Description: multi-platform support library with a focus on asynchronous I/O.
+URL: http://libuv.org/
+
+Libs: -L${libdir} -luv_a -lpthread -ldl -lrt
+Cflags: -I${includedir}

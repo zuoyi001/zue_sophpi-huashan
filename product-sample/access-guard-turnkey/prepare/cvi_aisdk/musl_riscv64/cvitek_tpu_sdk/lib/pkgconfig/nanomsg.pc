@@ -1,0 +1,13 @@
+prefix=/root/.jenkins/workspace/third_party/oss/install/nanomsg
+exec_prefix=${prefix}
+includedir=${prefix}/include
+libdir=${prefix}/lib
+
+Name: nanomsg
+Description: High-Performance Scalability Protocols
+URL: http://nanomsg.org/
+Version: 1.1.5-14-gcc19ff6
+Requires:
+Libs: -L${libdir} -lnanomsg
+Libs.private: -lrt -lrt -lpthread
+Cflags: -I${includedir}

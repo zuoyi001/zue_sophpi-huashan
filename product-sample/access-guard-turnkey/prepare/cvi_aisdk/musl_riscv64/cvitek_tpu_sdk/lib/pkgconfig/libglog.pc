@@ -1,0 +1,10 @@
+prefix=/root/.jenkins/workspace/third_party/oss/install/glog
+exec_prefix=/root/.jenkins/workspace/third_party/oss/install/glog/bin
+libdir=/root/.jenkins/workspace/third_party/oss/install/glog/lib
+includedir=/root/.jenkins/workspace/third_party/oss/install/glog/include
+
+Name: libglog
+Description: Google Log (glog) C++ logging framework
+Version: 0.4.0
+Libs: -L${libdir} -lglog
+Cflags: -I${includedir}

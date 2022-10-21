@@ -5,7 +5,7 @@ ifeq ($(PARAM_FILE), )
 	include $(PARAM_FILE)
 endif
 
-DEFS += -DSLICE_BUFF_MODE
+# DEFS += -DSLICE_BUFF_MODE
 
 # add sensor -D definition
 include $(BUILD_PATH)/.config

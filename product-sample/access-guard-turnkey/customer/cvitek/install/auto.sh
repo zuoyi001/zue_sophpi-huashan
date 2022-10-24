@@ -1,11 +1,18 @@
 #!/bin/sh
 # INSTALL_PATH=$PWD
-INSTALL_PATH=/mnt/data
+INSTALL_PATH=/mnt/data/install
 echo $INSTALL_PATH
 #
 export LD_LIBRARY_PATH="/lib:/lib/arm-linux-gnueabihf:/usr/lib:/usr/local/lib:/mnt/system/lib:/mnt/system/usr/lib:/mnt/system/usr/lib/3rd:$INSTALL_PATH/lib"
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/local/sbin:/usr/sbin:/sbin:/mnt/system/usr/bin:/mnt/system/usr/sbin:/mnt/data/bin:/mnt/data/sbin"
 export HASPUSER_PREFIX=/mnt/data/auth
+##
+##
+# check panel init
+cd $INSTALL_PATH;
+./sample_dsi
+devmem 0x0a088000 32 0xC0
+echo "panel init ..."
 ##
 #check cfbcopyarea.ko
 if [ ! -d /sys/module/cfbcopyarea ]; then
@@ -24,12 +31,7 @@ if [ ! -d /sys/module/cvi_fb ]; then
     # insmod /mnt/system/ko/cvi_fb.ko option=2
     insmod /mnt/system/ko/cvi_fb.ko
 fi
-##
-# check panel init
-cd $INSTALL_PATH;
-./sample_dsi
-echo "panel init ..."
-##
+
 # repo
 if [ ! -d $INSTALL_PATH/repo ];then
     mkdir $INSTALL_PATH/repo

@@ -1,0 +1,16 @@
+#if 0
+&dac{
+	mute-gpio-l = <&porta 15 GPIO_ACTIVE_LOW>;
+	mute-gpio-r = <&porta 30 GPIO_ACTIVE_LOW>;
+};
+#endif
+
+/ {
+	/delete-node/ wifi-sd@5000000;
+	/delete-node/ i2c@04010000;
+	/delete-node/ i2s@04110000;
+	/delete-node/ i2s@04120000;
+	/delete-node/ sound_ext1;
+	/delete-node/ sound_ext2;
+	/delete-node/ sound_PDM;
+};

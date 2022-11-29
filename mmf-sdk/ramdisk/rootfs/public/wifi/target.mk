@@ -1,3 +1,0 @@
-ifeq ($(CONFIG_TARGET_PACKAGE_WIFI),y)
-TARGET_PACKAGES += wifi
-endif

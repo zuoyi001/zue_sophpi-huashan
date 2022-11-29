@@ -1,0 +1,14 @@
+prefix=/root/.jenkins/workspace/third_party/oss/install/ffmpeg
+exec_prefix=${prefix}
+libdir=/root/.jenkins/workspace/third_party/oss/install/ffmpeg/lib
+includedir=/root/.jenkins/workspace/third_party/oss/install/ffmpeg/include
+
+Name: libavformat
+Description: FFmpeg container format library
+Version: 58.58.100
+Requires: 
+Requires.private: libavcodec >= 58.106.100, libavutil >= 56.59.100
+Conflicts:
+Libs: -L${libdir}  -lavformat 
+Libs.private: -lm
+Cflags: -I${includedir}

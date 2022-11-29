@@ -1,3 +1,0 @@
-ifeq ($(CONFIG_TARGET_PACKAGE_LIBNFS),y)
-TARGET_PACKAGES += libnfs
-endif

@@ -1,3 +1,0 @@
-ifeq ($(CONFIG_TARGET_PACKAGE_PROCRANK),y)
-TARGET_PACKAGES += procrank
-endif

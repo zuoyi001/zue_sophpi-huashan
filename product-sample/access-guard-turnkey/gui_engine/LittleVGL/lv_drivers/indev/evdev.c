@@ -50,6 +50,15 @@ lv_point_t point;
  *   GLOBAL FUNCTIONS
  **********************/
 
+static lv_point_t user_remap(lv_coord_t posX, lv_coord_t posY) {
+lv_point_t pos;
+// remap pos
+pos.y = 1280 - (posX * 1280 / 720) - 1;
+pos.x = 720 - (posY * 720 / 1280)- 1;
+// swap pos
+return pos;
+}
+
 /**
  * Initialize the evdev interface
  */
@@ -218,8 +227,8 @@ bool evdev_read(lv_indev_drv_t * drv, lv_indev_data_t * data)
     data->point.x = map(evdev_root_x, EVDEV_HOR_MIN, EVDEV_HOR_MAX, 0, lv_disp_get_hor_res(drv->disp));
     data->point.y = map(evdev_root_y, EVDEV_VER_MIN, EVDEV_VER_MAX, 0, lv_disp_get_ver_res(drv->disp));
 #else
-    data->point.x = evdev_root_x;
-    data->point.y = evdev_root_y;
+    // data->point.x = evdev_root_x;
+    // data->point.y = evdev_root_y;
 #endif
 
     data->state = evdev_button;
@@ -237,6 +246,9 @@ bool evdev_read(lv_indev_drv_t * drv, lv_indev_data_t * data)
 	point.x = data->point.x;
 	point.y = data->point.y;
 	//printf("[point.x:%d point.y:%d %s,%d]\n",point.x,point.y,__FUNCTION__,__LINE__);
+
+    //remap
+    data->point = user_remap(evdev_root_x, evdev_root_y);
 
     return false;
 }

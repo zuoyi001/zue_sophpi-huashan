@@ -55,7 +55,7 @@ static void confirm_btn_event_cb(lv_obj_t * obj, lv_event_t event)
 {
     if (LV_EVENT_RELEASED == event) {
 
-        menuPageBack();
+        //menuPageBack();
         createFaceRegisterDialog(NULL);
     }
 }

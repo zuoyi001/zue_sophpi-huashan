@@ -30,7 +30,7 @@
 
 extern VO_PUB_ATTR_S stVoPubAttr;
 
-void APP_SetVpssAspect(CVI_S32 vpsschn,CVI_S32 x,CVI_S32 y, CVI_S32 width, CVI_S32 height) 
+void APP_SetVpssAspect(CVI_S32 vpsschn,CVI_S32 x,CVI_S32 y, CVI_S32 width, CVI_S32 height)
 {
 	VPSS_CHN_ATTR_S stChnAttr;
 	CVI_VPSS_GetChnAttr(5, vpsschn, &stChnAttr);
@@ -261,7 +261,7 @@ CVI_S32 APP_SetVpssConfig(VPSS_GRP VpssGrp,VPSS_GRP_ATTR_S* stVpssGrpAttr)
 	}
 
 	if (VpssGrp == 1) {
-		s32Ret = SAMPLE_COMM_VI_Bind_VPSS(0, 0, VpssGrp);
+		s32Ret = SAMPLE_COMM_VI_Bind_VPSS(0, 1, VpssGrp);
 		if (s32Ret != CVI_SUCCESS) {
 			SAMPLE_PRT("vi bind vpss failed. s32Ret: 0x%x !\n", s32Ret);
 			return s32Ret;
@@ -269,14 +269,6 @@ CVI_S32 APP_SetVpssConfig(VPSS_GRP VpssGrp,VPSS_GRP_ATTR_S* stVpssGrpAttr)
  	}
 
 	if (VpssGrp == 2) {
-		s32Ret = SAMPLE_COMM_VI_Bind_VPSS(0, 1, VpssGrp);
-		if (s32Ret != CVI_SUCCESS) {
-			SAMPLE_PRT("vi bind vpss failed. s32Ret: 0x%x !\n", s32Ret);
-			return s32Ret;
-		}
-	}
-
-	if (VpssGrp == 5) {
 		s32Ret = SAMPLE_COMM_VI_Bind_VPSS(0, 0, VpssGrp);
 		if (s32Ret != CVI_SUCCESS) {
 			SAMPLE_PRT("vi bind vpss failed. s32Ret: 0x%x !\n", s32Ret);
@@ -284,8 +276,16 @@ CVI_S32 APP_SetVpssConfig(VPSS_GRP VpssGrp,VPSS_GRP_ATTR_S* stVpssGrpAttr)
 		}
 	}
 
-	if (VpssGrp == 4) {
+	if (VpssGrp == 5) {
 		s32Ret = SAMPLE_COMM_VI_Bind_VPSS(0, 1, VpssGrp);
+		if (s32Ret != CVI_SUCCESS) {
+			SAMPLE_PRT("vi bind vpss failed. s32Ret: 0x%x !\n", s32Ret);
+			return s32Ret;
+		}
+	}
+
+	if (VpssGrp == 4) {
+		s32Ret = SAMPLE_COMM_VI_Bind_VPSS(0, 0, VpssGrp);
 		if (s32Ret != CVI_SUCCESS) {
 			SAMPLE_PRT("vi bind vpss failed. s32Ret: 0x%x !\n", s32Ret);
 			return s32Ret;

@@ -276,7 +276,8 @@ CVI_S32 APP_VideoInit(void)
 		//set IR sensor mono mode.
 		ISP_MONO_ATTR_S monoAttr;
 		monoAttr.Enable = true;
-		CVI_ISP_SetMonoAttr(1, &monoAttr);
+        //sensor 0 is IR sensor
+		CVI_ISP_SetMonoAttr(0, &monoAttr);
 	}
 
 

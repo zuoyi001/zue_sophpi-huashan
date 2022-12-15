@@ -21,6 +21,8 @@
 //#include "dbg.h"
 
 #define MAX_BUF 64
+#define PANEL_H 1280
+#define PANEL_W 720
 
 static int tp_fd = -1;
 
@@ -30,8 +32,8 @@ static int Display_W;
 static int Display_H;
 
 /*If EVDEV_XXX_MIN > EVDEV_XXX_MAX the XXX axis is automatically inverted*/
-#define EVDEV_HOR_MIN   5
-#define EVDEV_VER_MIN   20
+#define EVDEV_HOR_MIN   1
+#define EVDEV_VER_MIN   8
 #define HLPrintf1 printf
 
 int Tp_Postion_Mapping(int x, int in_min, int in_max, int out_min, int out_max)
@@ -40,6 +42,13 @@ int Tp_Postion_Mapping(int x, int in_min, int in_max, int out_min, int out_max)
 	val = div((out_max - out_min), (in_max - in_min));
 	
 	return (x - in_min) * val.quot + out_min;
+}
+
+int Tp_Postion_Mapping_(int x, uint32_t s_x, uint32_t d_x)
+{
+    int x_ = ((float) s_x / (float) d_x) * x;
+
+	return x_;
 }
 
 int Tp_Init(int node)
@@ -68,26 +77,26 @@ int Tp_Postion_Get(int *x, int *y)
     if (touch_ret < 0) {
 		printf("read touch fair!\n");
     }
-	printf("event info, type:%x, code:%x, tp_event.value:%d\n", tp_event.type, tp_event.code, tp_event.value);
+	//printf("event info, type:%x, code:%x, tp_event.value:%d\n", tp_event.type, tp_event.code, tp_event.value);
     //3、判断事件类型
     switch(tp_event.type) {  
 		case EV_SYN:  
-			printf("EV_SYN type:%x, code:%x, tp_event.value:%d\n", tp_event.type, tp_event.code, tp_event.value);
+			//printf("EV_SYN type:%x, code:%x, tp_event.value:%d\n", tp_event.type, tp_event.code, tp_event.value);
 			break ;
 
 		case EV_ABS:
 			if (tp_event.code == ABS_MT_POSITION_X) {
 				*x = tp_event.value;
-				printf("X type:%x,code:%x,tp_event.value:%d\n", tp_event.type, tp_event.code, tp_event.value);
+				//printf("X type:%x,code:%x,tp_event.value:%d\n", tp_event.type, tp_event.code, tp_event.value);
 			}
 			if (tp_event.code == ABS_MT_POSITION_Y) {
 				*y = tp_event.value;
-				printf("Y type:%x,code:%x,tp_event.value:%d\n", tp_event.type, tp_event.code, tp_event.value);
+				//printf("Y type:%x,code:%x,tp_event.value:%d\n", tp_event.type, tp_event.code, tp_event.value);
 			}
 			break;
 
         default:
-			printf("default type:%x,code:%x,tp_event.value:%d\n", tp_event.type, tp_event.code, tp_event.value);
+			//printf("default type:%x,code:%x,tp_event.value:%d\n", tp_event.type, tp_event.code, tp_event.value);
 			break;
     }
     
@@ -101,14 +110,24 @@ static void *tp_postion_get_thread()
 
 	int tp_x, tp_y;
 	int tp_map_x, tp_map_y;
+    int tp_map_xx, tp_map_yy;
 
 	while (1) {
-		//获取屏幕上的绝对坐标点
+		////Obtain the absolute coordinate points on the screen
 		Tp_Postion_Get(&tp_x, &tp_y);
-		//printf("cv_tp_x:%d     cv_tp_y:%d\n",cv_tp_x,cv_tp_y);
-		tp_map_x = Tp_Postion_Mapping(tp_x, EVDEV_HOR_MIN, (Display_H - EVDEV_HOR_MIN), 0, Display_H);
-		tp_map_y = Tp_Postion_Mapping(tp_y, EVDEV_VER_MIN, (Display_W - EVDEV_VER_MIN), 0, Display_W);
-		printf("tp_X_y(%d,%d) after mapping(%d,%d)\n", tp_x, tp_y, tp_map_x, tp_map_y);
+        //Modify coordinates according to scale
+		tp_map_x = Tp_Postion_Mapping_(tp_x , PANEL_H, Display_H);
+		tp_map_y = Tp_Postion_Mapping_(tp_y , PANEL_W, Display_W);
+
+        //Modify 0 point position
+        tp_map_x = PANEL_H - tp_map_x;
+        tp_map_y = PANEL_W - tp_map_y;
+
+        //Modify x-axis and y-axis and set offset
+        tp_map_xx = tp_map_y - EVDEV_HOR_MIN;
+        tp_map_yy = tp_map_x - EVDEV_VER_MIN;
+
+        printf("tp_map_xy(%d,%d) \n", tp_map_xx, tp_map_yy);
 		usleep(100);
 	}
 
@@ -155,7 +174,7 @@ void main(int argc, char *argv[], int v[])
 			printf("input value not match current format (%%d)\n");
 		}  	
         HLPrintf1("Set screen resolution to WxH(%dx%d) \n", Display_W, Display_H);
-		printf("pls input operate node id[0/1/2] : ");
+		printf("pls input operate node id[0/1/2] : \n");
 		if (scanf("%d", &node) == 0) {
 			printf("input value not match current format (%%d)\n");
 		}

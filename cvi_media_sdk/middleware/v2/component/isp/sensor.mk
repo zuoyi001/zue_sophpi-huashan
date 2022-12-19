@@ -65,6 +65,7 @@ sensor-$(CONFIG_SENSOR_OV_OS04A10)           += ov_os04a10
 sensor-$(CONFIG_SENSOR_OV_OS04C10)           += ov_os04c10
 sensor-$(CONFIG_SENSOR_OV_OS08A20)           += ov_os08a20
 sensor-$(CONFIG_SENSOR_OV_OV4689)            += ov_ov4689
+sensor-$(CONFIG_SENSOR_OV_OV5647)            += ov_ov5647
 sensor-$(CONFIG_SENSOR_OV_OV6211)            += ov_ov6211
 sensor-$(CONFIG_SENSOR_OV_OV7251)            += ov_ov7251
 sensor-$(CONFIG_SENSOR_PIXELPLUS_PR2020)     += pixelplus_pr2020

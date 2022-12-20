@@ -481,16 +481,16 @@ config WIFI_ENABLE
       If unsure say N.
 
 if WIFI_ENABLE
-	choice
-		prompt "Wifi type"
-		default WIFI_RTL8821CS
-
 	config WIFI_RTL8821CS
 		bool "Enable Wifi RTL8821CS"
 		help
 			Say Y if you want to enable wifi RTL8821CS.
+	
+	config WIFI_RTL8723DS
+		bool "Enable Wifi RTL8723DS"
+		help
+			Say Y if you want to enable wifi RTL8723DS.
 
-	endchoice
 endif
 
 config TP_ENABLE

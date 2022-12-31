@@ -26,6 +26,7 @@ static int g_fd[VI_MAX_PIPE_NUM] = {[0 ... (VI_MAX_PIPE_NUM - 1)] = -1};
 
 int ov5647_i2c_init(VI_PIPE ViPipe)
 {
+
 	char acDevFile[16] = {0};
 	CVI_U8 u8DevNum;
 
@@ -50,7 +51,6 @@ int ov5647_i2c_init(VI_PIPE ViPipe)
 		g_fd[ViPipe] = -1;
 		return ret;
 	}
-
 	return CVI_SUCCESS;
 }
 
@@ -260,6 +260,7 @@ static void ov5647_linear_1080p30_init(VI_PIPE ViPipe)
 	ov5647_write_register(ViPipe, 0x3001, 0xff);
 	ov5647_write_register(ViPipe, 0x3002, 0xff);
 	ov5647_write_register(ViPipe, 0x301d, 0xf0);
+	ov5647_write_register(ViPipe, 0x3503, 0x07);
 	ov5647_write_register(ViPipe, 0x3a18, 0x00);
 	ov5647_write_register(ViPipe, 0x3a19, 0xf8);
 	ov5647_write_register(ViPipe, 0x3c01, 0x80);
@@ -319,7 +320,6 @@ static void ov5647_linear_1080p30_init(VI_PIPE ViPipe)
 	ov5647_write_register(ViPipe, 0x4050, 0x6e);
 	ov5647_write_register(ViPipe, 0x4051, 0x8f);
 	ov5647_write_register(ViPipe, 0x0100, 0x01);
-
 	ov5647_write_register(ViPipe, 0x3000, 0x00);
 	ov5647_write_register(ViPipe, 0x3001, 0x00);
 	ov5647_write_register(ViPipe, 0x3002, 0x00);
@@ -336,11 +336,9 @@ static void ov5647_linear_1080p30_init(VI_PIPE ViPipe)
 
 	ov5647_default_reg_init(ViPipe);
 
-	ov5647_write_register(ViPipe, 0x0100, 0x01);
-
 	delay_ms(100);
 
-	printf("ViPipe:%d,===OV5647 1080P 30fps 10bit LINE Init OK!===\n", ViPipe);
+	printf("ViPipe:%d,===OV5647 1080P 30fps 10bit LINE Init OK!\n", ViPipe);
 }
 
 

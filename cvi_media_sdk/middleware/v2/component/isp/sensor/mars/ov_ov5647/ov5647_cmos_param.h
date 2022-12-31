@@ -45,7 +45,7 @@ static const OV5647_MODE_S g_astOv5647_mode[OV5647_MODE_NUM] = {
 		.u32VtsDef = 1104,
 		.stExp[0] = {
 			.u16Min = 4,
-			.u16Max = 1554 - 4,
+			.u16Max = 1104 - 4,
 			.u16Def = 400,
 			.u16Step = 1,
 		},

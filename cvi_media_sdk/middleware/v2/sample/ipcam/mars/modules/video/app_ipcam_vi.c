@@ -476,10 +476,12 @@ static CVI_VOID app_ipcam_RawDump_Unload(CVI_VOID)
 static ISP_SNS_OBJ_S *app_ipcam_SnsObj_Get(SENSOR_TYPE_E enSnsType)
 {
     switch (enSnsType) {
+
 #ifdef SNS0_OV_OV5647
     case SENSOR_OV_OV5647:
         return &stSnsOv5647_Obj;
 #endif
+
 #ifdef SNS0_GCORE_GC1054
     case SENSOR_GCORE_GC1054:
         return &stSnsGc1054_Obj;
@@ -674,7 +676,6 @@ CVI_S32 app_ipcam_Vi_DevAttr_Get(SENSOR_TYPE_E enSnsType, VI_DEV_ATTR_S *pstViDe
 
     switch (enSnsType) {
     case SENSOR_GCORE_GC1054:
-    case SENSOR_OV_OV5647:
     case SENSOR_GCORE_GC2053:
     case SENSOR_GCORE_GC2053_SLAVE:
     case SENSOR_GCORE_GC2093:
@@ -696,6 +697,7 @@ CVI_S32 app_ipcam_Vi_DevAttr_Get(SENSOR_TYPE_E enSnsType, VI_DEV_ATTR_S *pstViDe
         break;
     case SENSOR_OV_OS08A20:
     case SENSOR_OV_OS08A20_SLAVE:
+    case SENSOR_OV_OV5647:
         pstViDevAttr->enBayerFormat = BAYER_FORMAT_BG;
         break;
     case SENSOR_PICO_384:
@@ -780,8 +782,8 @@ CVI_S32 app_ipcam_Vi_PipeAttr_Get(SENSOR_TYPE_E enSnsType, VI_PIPE_ATTR_S *pstVi
 
     switch (enSnsType) {
     case SENSOR_GCORE_GC1054:
-    case SENSOR_OV_OV5647:
     case SENSOR_GCORE_GC2053:
+    case SENSOR_OV_OV5647:
     case SENSOR_GCORE_GC2053_SLAVE:
     case SENSOR_GCORE_GC2093:
     case SENSOR_GCORE_GC2093_SLAVE:
@@ -920,8 +922,8 @@ CVI_S32 app_ipcam_Isp_InitAttr_Get(SENSOR_TYPE_E enSnsType, WDR_MODE_E enWDRMode
 
     switch (enSnsType) {
     case SENSOR_GCORE_GC1054:
-    case SENSOR_OV_OV5647:
     case SENSOR_GCORE_GC2053:
+    case SENSOR_OV_OV5647:
     case SENSOR_GCORE_GC2053_SLAVE:
     case SENSOR_GCORE_GC2093:
     case SENSOR_GCORE_GC2093_SLAVE:
@@ -1000,7 +1002,6 @@ CVI_S32 app_ipcam_Isp_PubAttr_Get(SENSOR_TYPE_E enSnsType, ISP_PUB_ATTR_S *pstIs
     }
     switch (enSnsType) {
     case SENSOR_GCORE_GC1054:
-    case SENSOR_OV_OV5647:
     case SENSOR_GCORE_GC2053:
     case SENSOR_GCORE_GC2053_SLAVE:
     case SENSOR_GCORE_GC2093:
@@ -1017,6 +1018,7 @@ CVI_S32 app_ipcam_Isp_PubAttr_Get(SENSOR_TYPE_E enSnsType, ISP_PUB_ATTR_S *pstIs
         break;
     case SENSOR_OV_OS08A20:
     case SENSOR_OV_OS08A20_SLAVE:
+    case SENSOR_OV_OV5647:
         pstIspPubAttr->enBayer = BAYER_BGGR;
         break;
     case SENSOR_PICO_384:
@@ -2213,3 +2215,4 @@ int app_ipcam_CmdTask_Flip_Mirror_Switch(CVI_MQ_MSG_t *msg, CVI_VOID *userdate)
 /*****************************************************************
  *  The above API for command test used                 End
  * **************************************************************/
+

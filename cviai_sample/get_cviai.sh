@@ -1,0 +1,4 @@
+wget --user='cvitek_mlir_2022' --password='Bxc~b6n!Zn' --timeout=5 --waitretry=0 --tries=3 --retry-connrefused  ftp://218.17.249.213/home/tpu_rel_v1.5.0-868-g743c9d53a/cvitek_tpu_sdk_cv181x_musl_riscv64.tar.gz  -P .
+wget --user='cvitek_mlir_2022' --password='Bxc~b6n!Zn' --timeout=5 --waitretry=0 --tries=3 --retry-connrefused  ftp://218.17.249.213/home/cvitek_mlir_ubuntu-18.04_v1.5.0-872-g4818dc6ef.tar.gz  -P .
+wget --user='cvitek_mlir_2022' --password='Bxc~b6n!Zn' --timeout=5 --waitretry=0 --tries=3 --retry-connrefused  ftp://218.17.249.213/home/docker_cvitek_dev_1.8-ubuntu-18.04.tar  -P .
+wget --user='cvitek_mlir_2022' --password='Bxc~b6n!Zn' --timeout=5 --waitretry=0 --tries=3 --retry-connrefused  ftp://218.17.249.213/home/CVITEK_TPU快速入门指南v1.5.9.pdf  -P .

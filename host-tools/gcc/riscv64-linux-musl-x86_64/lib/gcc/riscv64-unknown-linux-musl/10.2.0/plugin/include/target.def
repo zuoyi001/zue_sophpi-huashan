@@ -6799,6 +6799,10 @@ DEFHOOK
 (iv_gen_load_index, "*",
 bool, (HOST_WIDE_INT loop_niter, machine_mode mem_mode), NULL)
 
+DEFHOOK
+(fwprop_legitimize_set, "Legitmize define insn @var{def_set} to enbale forward propagate.",
+void, (rtx *def_set), hook_void_rtx)
+
 /* Leave the boolean fields at the end.  */
 
 /* Functions related to mode switching.  */

@@ -45,15 +45,20 @@ along with GCC; see the file COPYING3.  If not see
 extern const char *riscv_expand_arch (int argc, const char **argv);
 extern const char *riscv_expand_arch_from_cpu (int argc, const char **argv);
 extern const char *riscv_default_mtune (int argc, const char **argv);
+extern const char *riscv_expand_abi_from_arch (int argc, const char **argv);
+extern const char *riscv_expand_abi_from_cpu (int argc, const char **argv);
 
 # define EXTRA_SPEC_FUNCTIONS						\
   { "riscv_expand_arch", riscv_expand_arch },				\
   { "riscv_expand_arch_from_cpu", riscv_expand_arch_from_cpu },		\
-  { "riscv_default_mtune", riscv_default_mtune },
+  { "riscv_default_mtune", riscv_default_mtune },			\
+  { "riscv_expand_abi_from_arch", riscv_expand_abi_from_arch },		\
+  { "riscv_expand_abi_from_cpu", riscv_expand_abi_from_cpu },
 
 /* Support for a compile-time default CPU, et cetera.  The rules are:
    --with-arch is ignored if -march or -mcpu is specified.
-   --with-abi is ignored if -mabi is specified.
+   --with-abi is ignored if -mabi is specified. If -mcpu or -march is specified,
+     suitable -mabi will be selected from arch string.
    --with-tune is ignored if -mtune or -mcpu is specified.
 
    But using default -march/-mtune value if -mcpu don't have valid option.  */
@@ -64,7 +69,11 @@ extern const char *riscv_default_mtune (int argc, const char **argv);
   {"arch", "%{!march=*:"						\
 	   "  %{!mcpu=*:-march=%(VALUE)}"				\
 	   "  %{mcpu=*:%:riscv_expand_arch_from_cpu(%* %(VALUE))}}" },	\
-  {"abi", "%{!mabi=*:-mabi=%(VALUE)}" }, \
+  {"abi", "%{!mabi=*:"							\
+	   "  %{!march=*:"						\
+	   "    %{!mcpu=*:-mabi=%(VALUE)}"				\
+	   "    %{mcpu=*:%:riscv_expand_abi_from_cpu(%* %(VALUE))}}"	\
+	   "  %{march=*:%:riscv_expand_abi_from_arch(%*)}}" }
 
 #ifdef IN_LIBGCC2
 #undef TARGET_64BIT
@@ -1050,6 +1059,7 @@ extern unsigned riscv_stack_boundary;
 /* Called from RISCV_REORG, this is defined in riscv-sr.c.  */
 
 extern void riscv_remove_unneeded_save_restore_calls (void);
+extern void riscv_optimize_quiet_comparison (void);
 
 #define HARD_REGNO_RENAME_OK(FROM, TO) riscv_hard_regno_rename_ok (FROM, TO)
 

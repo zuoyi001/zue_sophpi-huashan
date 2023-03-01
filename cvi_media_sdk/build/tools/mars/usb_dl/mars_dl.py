@@ -18,15 +18,12 @@ def parse_Args():
         help="the folder path to dir inclued fip,rootfs kernel and xml",
     )
     parser.add_argument(
-        "--cpu",
-        metavar="arch",
-        type=str,
-        default="ca53",
-        help="ca53 or riscv",
-    )
-    parser.add_argument(
         "-v", "--verbose", help="increase output verbosity", action="store_true"
     )
+    parser.add_argument("--mac",
+                        metavar="mac address",
+                        type=str,
+                        help="set mac address")
     group = parser.add_mutually_exclusive_group()
     group.add_argument("--serial", action="store_true", default=False)
     group.add_argument("--libusb", action="store_true", default=False)
@@ -39,7 +36,7 @@ def parse_Args():
 def main():
     args = parse_Args()
     image_dir = args.image_dir
-    cpu = args.cpu
+    mac = args.mac
 
     if (not args.serial and not args.libusb) or args.serial:
         driver = "serial"
@@ -48,19 +45,23 @@ def main():
     logging.info("Using %s" % driver)
 
     logging.info("Mars USB download start\n")
+
     cmd = (
         "python rom_usb_dl/mars_rom_usb_download.py --image_dir "
         + image_dir
-        + " --cpu " + cpu
     )
     os.system(cmd)
+
     cmd = (
         "python rom_usb_dl/mars_uboot_usb_download.py --image_dir "
         + image_dir
         + " --"
         + driver
     )
+    if (mac):
+        cmd = cmd + " --mac " + mac
     os.system(cmd)
+
     logging.info("Mars USB download end\n")
 
 

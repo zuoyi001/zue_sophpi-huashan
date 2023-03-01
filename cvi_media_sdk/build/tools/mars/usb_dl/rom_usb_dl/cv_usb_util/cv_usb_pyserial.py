@@ -457,7 +457,8 @@ class cv_usb_pyserial:
         self.filesize = 0
         while complete_cnt < 1:  # For stress test
             complete_cnt = complete_cnt + 1
-            tx_len = 512
+            # tx_len = 512
+            tx_len = 256	# for usb fifo
             content_file = chunk
             content_size = size
             self.filesize = content_size
@@ -519,6 +520,22 @@ class cv_usb_pyserial:
             return _usb_send_req(self.ser_cmd, 1, 0)
         else:
             return self.serial_write(self.ser_cmd, 0, 0)
+
+    def protocol_msg_read(self, message, length):
+        try:
+            self.device.write(message)
+            self.device.flushOutput()
+        except serial.SerialTimeoutException as e:
+            print("Write data fail!")
+            return pkt.FAIL
+
+        try:
+            ret = self.device.read(length)
+        except serial.SerialTimeoutException as e:
+            print("Read data fail")
+            return pkt.FAIL
+
+        return ret
 
     def protocol_msg_send(self, message, length, response):
         start_time = time.time()
@@ -602,6 +619,13 @@ class cv_usb_pyserial:
             return pkt.FAIL
 
         return pkt.SUCCESS
+
+    def protocol_msg_d2s_once(self, length):
+        msg = []
+        self.protocol_msg_fill_header(
+            msg, pkt.CV_USB_D2S, 0, pkt.USB_MSG_D2S_SIZE, 0
+        )
+        return self.protocol_msg_read(msg, length)
 
     def protocol_msg_s2d_once(self, addr, dataBuf, length):
         msg = []

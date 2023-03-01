@@ -1,5 +1,4 @@
 file(GLOB _SOURCES "src/*.c" "*.S")
-
 # try to find out the include folder recursively under CMAKE_INSTALL_PREFIX folder
 MACRO(HEADER_DIRECTORIES return_list)
     FILE(GLOB_RECURSE new_list ${CMAKE_INSTALL_PREFIX}/*.h)
@@ -24,9 +23,9 @@ if (CHIP STREQUAL "cv1835")
     set(EXTRA_LIBS ${EXTRA_LIBS} "${TOP_DIR}/driver/venc/vc/vcodec/codebase/vpuapi/coda9/980_roi_rc_lib/libroirc_aarch64.a")
 elseif (CHIP STREQUAL "mars")
 if (CONFIG_FAST_IMAGE_TYPE STRGREATER "0")
-    set(CVI_TASK_LIBS comm isp vi vcodec rgn audio camera)
+    #set(CVI_TASK_LIBS comm)
 else()
-    set(CVI_TASK_LIBS comm rgn audio)
+    #set(CVI_TASK_LIBS comm)
 endif()
 endif()
 else()
@@ -46,6 +45,5 @@ link_directories("${TOP_DIR}/install/lib")
 add_executable(cvirtos.elf ${_SOURCES})
 
 target_link_libraries(cvirtos.elf PRIVATE -Wl,--start-group ${CVI_TASK_LIBS} ${CVI_LIBS} ${EXTRA_LIBS} -Wl,--end-group -Wl,-Map=cvirtos.map)
-
 install(TARGETS cvirtos.elf DESTINATION bin)
 install(FILES ${CMAKE_BINARY_DIR}/cvirtos.map DESTINATION bin)

@@ -40,6 +40,12 @@ class cv_usb:
             else:
                 self.usb_dev.serial_send_chunk(chunk, size, dest_addr, delay_ms, Type)
 
+    def recive_data(self, addr, length, timeout_ms=0):
+        if self.driver == "pyserial":
+            return self.usb_dev.protocol_msg_d2s_once(addr, length)
+        else:
+            return self.usb_dev.protocol_msg_d2s_once(addr, length, timeout_ms)
+
     def send_req_data(self, token, address, reqLen, data=None, ack=0):
         if self.driver == "pyserial":
             return self.usb_dev.usb_send_req_data(token, address, reqLen, data)

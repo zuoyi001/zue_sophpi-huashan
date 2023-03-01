@@ -59,6 +59,9 @@ else
     rm -f $SYSTEM_DIR/mnt/system/lib/libcrypto*
 fi
 
+rm -rf $SYSTEM_DIR/etc/init.d/S23ntp
+rm -rf $SYSTEM_DIR/bin/ntpd
+
 du -sh $SYSTEM_DIR/* |sort -rh
 du -sh $SYSTEM_DIR/mnt/* |sort -rh
 du -sh $SYSTEM_DIR/mnt/system/* |sort -rh

@@ -471,50 +471,6 @@ config KERNEL_COMPRESS
 	  Set kernel source code.
 endmenu
 
-menu "Osdrv options"
-
-config WIFI_ENABLE
-    bool "WIFI ENABLE!"
-    default n
-    help
-      Open wifi driver
-      If unsure say N.
-
-if WIFI_ENABLE
-	config WIFI_RTL8821CS
-		bool "Enable Wifi RTL8821CS"
-		help
-			Say Y if you want to enable wifi RTL8821CS.
-	
-	config WIFI_RTL8723DS
-		bool "Enable Wifi RTL8723DS"
-		help
-			Say Y if you want to enable wifi RTL8723DS.
-
-endif
-
-config TP_ENABLE
-    bool "TP ENABLE!"
-    default n
-    help
-      Open tp driver
-      If unsure say N.
-
-if TP_ENABLE
-	choice
-		prompt "Tp type"
-		default TP_GT9XX
-
-	config TP_GT9XX
-		bool "Enable TP GT9XX"
-		help
-			Say Y if you want to enable TP GT9XX.
-
-	endchoice
-endif
-
-endmenu
-
 menu "ROOTFS options"
 
 config SKIP_RAMDISK

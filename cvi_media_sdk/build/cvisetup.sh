@@ -221,29 +221,6 @@ function clean_bld()
   make bld-clean
 )}
 
-function _build_osdrv_env()
-{
-  export KERNEL_OUTPUT_FOLDER RAMDISK_OUTPUT_FOLDER SYSTEM_OUT_DIR OSDRV_PATH
-}
-
-function build_osdrv()
-{(
-  print_notice "Run ${FUNCNAME[0]}() ${1} function"
-
-  _build_osdrv_env
-  cd "$BUILD_PATH" || return
-  make osdrv || return "$?"
-)}
-
-function clean_osdrv()
-{
-  print_notice "Run ${FUNCNAME[0]}() function"
-
-  _build_osdrv_env
-  cd "$BUILD_PATH" || return
-  make osdrv-clean
-}
-
 function _build_middleware_env()
 {
   export MULTI_PROCESS_SUPPORT
@@ -313,7 +290,6 @@ function build_all()
   # build bsp
   build_uboot || return $?
   build_kernel || return $?
-  build_osdrv || return $?
   build_middleware || return $?
   pack_access_guard_turnkey_app || return $?
   pack_ipc_turnkey_app || return $?
@@ -329,7 +305,6 @@ function build_all()
 function clean_all()
 {
   clean_uboot
-  clean_osdrv
   clean_kernel
   clean_ramdisk
   clean_middleware
@@ -418,7 +393,6 @@ function cvi_setup_env()
   FREERTOS_PATH="$TOP_DIR"/freertos
   ALIOS_PATH="$TOP_DIR"/alios
   KERNEL_PATH="$TOP_DIR"/"$KERNEL_SRC"
-  OSDRV_PATH="$TOP_DIR"/osdrv
   RAMDISK_PATH="$TOP_DIR"/ramdisk
   BM_BLD_PATH="$TOP_DIR"/bm_bld
   TOOLCHAIN_PATH="$TOP_DIR"/host-tools
@@ -499,8 +473,10 @@ function cvi_setup_env()
     fi
 
     if [[ "$ENABLE_ALIOS" != "y" ]]; then
-      ln -fs "$BUILD_PATH"/boards/default/partition/partition_spinand_page_"$PAGE_SUFFIX".xml \
-        "$BUILD_PATH"/boards/"${CHIP_ARCH,,}"/"$PROJECT_FULLNAME"/partition/partition_"$STORAGE_TYPE".xml
+      pushd "$BUILD_PATH"/boards/"${CHIP_ARCH,,}"/"$PROJECT_FULLNAME"/partition/
+      ln -fs ../../../default/partition/partition_spinand_page_"$PAGE_SUFFIX".xml \
+        partition_"$STORAGE_TYPE".xml
+      popd
     fi
   fi
 

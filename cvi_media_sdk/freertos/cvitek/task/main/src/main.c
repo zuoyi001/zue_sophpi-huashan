@@ -121,17 +121,18 @@ int main(void)
 {
 	pre_system_init();
 	printf("CVIRTOS Build Date:%s  (Time :%s) \n", __DATE__, __TIME__);
+	printf("Hello world!");
 #ifndef __riscv
 	mmu_enable();
 	printf("enable I/D cache & MMU done\n");
 #endif
 	/* Configure the hardware ready to run the demo. */
 	prvSetupHardware();
-	post_system_init();
+	// post_system_init();
 
 #ifdef CVIRTOS
 	{
-		main_cvirtos();
+		// main_cvirtos();
 	}
 #elif defined BLINKY_DEMO
 	{
@@ -195,7 +196,7 @@ void vApplicationMallocFailedHook(void)
 	timers, and semaphores.  The size of the FreeRTOS heap is set by the
 	configTOTAL_HEAP_SIZE configuration constant in FreeRTOSConfig.h. */
 	taskDISABLE_INTERRUPTS();
-	dump_uart_disable();
+	// dump_uart_disable();
 	printf("vApplicationMallocFailedHook\n");
 	for (;;)
 		;
@@ -206,7 +207,7 @@ void vApplicationStackOverflowHook(TaskHandle_t pxTask, char *pcTaskName)
 {
 	(void)pcTaskName;
 	(void)pxTask;
-	dump_uart_disable();
+	// dump_uart_disable();
 	printf("%s %s\n", __func__, pcTaskName);
 	/* Run time stack overflow checking is performed if
 	configCHECK_FOR_STACK_OVERFLOW is defined to 1 or 2.  This hook
@@ -303,7 +304,7 @@ the stack and so not exists after this function exits. */
 
 void vMainAssertCalled(const char *pcFileName, uint32_t ulLineNumber)
 {
-	dump_uart_disable(); 
+	// dump_uart_disable(); 
 	printf("ASSERT!  Line %d of file %s\r\n", ulLineNumber, pcFileName);
 	taskENTER_CRITICAL();
 	for (;;)

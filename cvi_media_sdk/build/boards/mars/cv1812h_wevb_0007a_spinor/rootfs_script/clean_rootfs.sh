@@ -12,3 +12,6 @@ rm -rf $SYSTEM_DIR/mnt/system/m2m-deinterlace.ko
 rm -rf $SYSTEM_DIR/mnt/system/efivarfs.ko
 
 du -sh $SYSTEM_DIR/* |sort -rh
+
+rm -rf $SYSTEM_DIR/etc/init.d/S23ntp
+rm -rf $SYSTEM_DIR/bin/ntpd

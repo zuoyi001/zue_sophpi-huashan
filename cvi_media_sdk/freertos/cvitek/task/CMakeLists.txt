@@ -1,5 +1,4 @@
 cmake_minimum_required(VERSION 3.16.5)
-
 project(arch C ASM)
 
 set(CMAKE_CXX_STANDARD 11)
@@ -31,9 +30,9 @@ if (CHIP STREQUAL "cv1835")
     add_subdirectory(display)
     add_subdirectory(vcodec)
 elseif (CHIP STREQUAL "mars")
-    add_subdirectory(comm)
-    add_subdirectory(rgn)
-    add_subdirectory(audio)
+    #add_subdirectory(comm)
+    #add_subdirectory(rgn)
+    #add_subdirectory(audio)
 if (CONFIG_FAST_IMAGE_TYPE STRGREATER "0")
     add_subdirectory(vi)
     

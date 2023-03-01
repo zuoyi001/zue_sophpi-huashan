@@ -357,16 +357,22 @@ void sys_pll_init(void)
 #ifdef VC_CLK_OVERDRIVE
 	mmio_write_32(0x030020E4, 0x00020109); //clk_axi_video_codec = MIPIMPLL(900) / 2 = 450MHz
 	mmio_write_32(0x030020EC, 0x00020209); //clk_vc_src0 = CAM1PLL(1030) / 2 = 515MHz
+	mmio_write_32(0x030020C8, 0x00030009); //clk_axi_vip = MIPIPLL(900) / 3 = 300MHz
+	mmio_write_32(0x030020D0, 0x00060309); //clk_src_vip_sys_0 = FPLL(1500) / 6 = 250MHz
+	mmio_write_32(0x030020D8, 0x00030209); //clk_src_vip_sys_1 = DISPPLL(1188)/ 3 = 396MHz
+	mmio_write_32(0x03002110, 0x00020209); //clk_src_vip_sys_2 = DISPPLL(1188) / 2 = 594MHz
+	mmio_write_32(0x03002140, 0x00020009); //clk_src_vip_sys_3 = MIPIPLL(900) / 2 = 450MHz
+	mmio_write_32(0x03002144, 0x00030209); //clk_src_vip_sys_4 = DISPPLL(1188) / 3 = 396MHz
 #else
 	mmio_write_32(0x030020E4, 0x00030209); //clk_axi_video_codec = CAM1PLL(1080) / 3 = 360MHz
 	mmio_write_32(0x030020EC, 0x00030009); //clk_vc_src0 = DISPPLL(1188) / 3 = 396MHz
-#endif
 	mmio_write_32(0x030020C8, 0x00030009); //clk_axi_vip = MIPIPLL(900) / 3 = 300MHz
 	mmio_write_32(0x030020D0, 0x00060209); //clk_src_vip_sys_0 = DISPPLL(1188) / 6 = 198MHz
 	mmio_write_32(0x030020D8, 0x00030009); //clk_src_vip_sys_1 = MIPIPLL(900) / 3 = 300MHz
 	mmio_write_32(0x03002110, 0x00020209); //clk_src_vip_sys_2 = DISPPLL(1188) / 2 = 594MHz
 	mmio_write_32(0x03002140, 0x00030009); //clk_src_vip_sys_3 = MIPIPLL(900) / 3 = 300MHz
 	mmio_write_32(0x03002144, 0x00030209); //clk_src_vip_sys_4 = DISPPLL(1188) / 3 = 396MHz
+#endif
 
 	// set hsperi clock to PLL (FPLL) div by 5  = 300MHz
 	mmio_write_32(0x030020B8, 0x00050009); //--> CLK_AXI4

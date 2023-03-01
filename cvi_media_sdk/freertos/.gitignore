@@ -1,1 +1,5 @@
-*.d
+build/
+install/
+*.bin
+
+.vscode/

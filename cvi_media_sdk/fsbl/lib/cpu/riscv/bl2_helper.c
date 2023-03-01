@@ -53,7 +53,7 @@ void jump_to_monitor(uintptr_t monitor_entry, uintptr_t next_addr)
 
 	fw_dynamic_info.magic = FW_DYNAMIC_INFO_MAGIC_VALUE;
 	fw_dynamic_info.next_addr = next_addr;
-	fw_dynamic_info.next_mode = FW_DYNAMIC_INFO_NEXT_MODE_S;
+	fw_dynamic_info.next_mode = FW_DYNAMIC_INFO_NEXT_MODE_M;
 	fw_dynamic_info.boot_hart = -1;
 
 	NOTICE("OPENSBI: next_addr=0x%lx arg1=0x%lx", next_addr, arg1);

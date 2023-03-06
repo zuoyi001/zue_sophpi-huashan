@@ -569,6 +569,11 @@ CVI_VOID *SAMPLE_COMM_GetSnsObj(SAMPLE_SNS_TYPE_E enSnsType)
 		pSnsObj = &stSnsOv4689_Obj;
 		break;
 #endif
+#if defined(SENSOR_OV_OV5647)
+	case OV_OV5647_MIPI_2M_30FPS_10BIT:
+		pSnsObj = &stSnsOv5647_Obj;
+		break;
+#endif
 #if defined(SENSOR_OV_OV6211)
 	case OV_OV6211_MIPI_400P_120FPS_10BIT:
 		pSnsObj = &stSnsOv6211_Obj;

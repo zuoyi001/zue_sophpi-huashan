@@ -1,5 +1,5 @@
 .PHONY: FORCE
-.PHONY: bld bld-clean
+.PHONY: bld bld-clean osdrv
 .PHONY: arm-trusted-firmware arm-trusted-firmware-clean
 .PHONY: u-boot u-boot-clean
 .PHONY: rtos rtos-clean
@@ -326,6 +326,28 @@ ifeq ($(patsubst "%",%,$(CONFIG_ARCH)),arm64)
 	$(call copy_header_action, ${KERNEL_PATH}/${KERNEL_OUTPUT_FOLDER}/arm/usr/include)
 endif
 	${Q}ln -sf ${KERNEL_PATH}/${KERNEL_OUTPUT_FOLDER}  ${KERNEL_PATH}/build/kernel_output
+
+OSDRV_DIRS := $(wildcard $(OSDRV_PATH)/*)
+OSDRV_TARGETS := $(addprefix osdrv_target_,${OSDRV_DIRS})
+OSDRV_CLEAN_TARGETS := $(addprefix osdrv_clean_target_,${OSDRV_DIRS})
+
+${OSDRV_TARGETS}: osdrv_target_%: kernel
+	cd $(OSDRV_PATH)/$(notdir $*) && \
+	$(MAKE) CROSS_COMPILE=$(patsubst "%",%,$(CONFIG_CROSS_COMPILE_SDK)) ARCH=$(patsubst "%",%,$(CONFIG_ARCH)) \
+	KERNEL_DIR=$(KERNEL_PATH)/$(KERNEL_OUTPUT_FOLDER) -j$(NPROC) all
+
+osdrv: kernel ${OSDRV_TARGETS}
+	echo "build $@"
+	${Q}mkdir -p ${SYSTEM_OUT_DIR}/ko/3rd
+	${Q}find ${OSDRV_DIRS} -name '*.ko' -exec cp -f {} ${SYSTEM_OUT_DIR}/ko/3rd \;
+
+${OSDRV_CLEAN_TARGETS}: osdrv_clean_target_%:
+	cd $(OSDRV_PATH)/$(notdir $*) && \
+	$(MAKE) CROSS_COMPILE=$(patsubst "%",%,$(CONFIG_CROSS_COMPILE_SDK)) ARCH=$(patsubst "%",%,$(CONFIG_ARCH)) \
+	KERNEL_DIR=$(KERNEL_PATH)/$(KERNEL_OUTPUT_FOLDER) -j$(NPROC) clean
+
+osdrv-clean: ${OSDRV_CLEAN_TARGETS}
+	$(call print_target)
 
 ifeq ($(CONFIG_TOOLCHAIN_GLIBC_ARM64),y)
 INITRAMFS_BASE := glibc_arm64

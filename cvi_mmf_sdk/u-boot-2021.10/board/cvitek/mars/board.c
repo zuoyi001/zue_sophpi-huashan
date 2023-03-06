@@ -210,7 +210,7 @@ int board_init(void)
 #elif defined(CONFIG_DISPLAY_CVITEK_LVDS)
 	pinmux_config(PINMUX_LVDS);
 #endif
-	pinmux_config(PINMUX_SDIO1);
+	// pinmux_config(PINMUX_SDIO1);
 	cvi_board_init();
 	return 0;
 }

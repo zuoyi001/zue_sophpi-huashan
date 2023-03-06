@@ -233,8 +233,8 @@ static void cv182xa_ephy_init(void)
 	mmio_write_32(0x03009054, 0x2F62);
 
 // LED PAD MUX
-	mmio_write_32(0x030010e0, 0x05);
-	mmio_write_32(0x030010e4, 0x05);
+	// mmio_write_32(0x030010e0, 0x05);
+	// mmio_write_32(0x030010e4, 0x05);
 	//(SD1_CLK selphy)
 	mmio_write_32(0x050270b0, 0x11111111);
 	//(SD1_CMD selphy)

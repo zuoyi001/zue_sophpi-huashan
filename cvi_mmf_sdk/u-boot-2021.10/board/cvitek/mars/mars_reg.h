@@ -118,7 +118,7 @@
 #define DW_WDT_CRR_RESTART_VAL	0x76
 
 /* SDIO Wifi */
-#define WIFI_CHIP_EN_BGA    BIT(18)
+#define WIFI_CHIP_EN_BGA    BIT(30)
 #define WIFI_CHIP_EN_QFN    BIT(2)
 
 /* RTC */

@@ -1,0 +1,6 @@
+__pycache__
+/output
+/.config*
+/config.cmake
+/config.all_vars
+/.defconfig

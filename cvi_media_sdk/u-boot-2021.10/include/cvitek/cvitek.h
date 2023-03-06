@@ -1,1 +1,0 @@
-/root/.jenkins/workspace/cr1821_v3.0.0_release_build/build/boards/mars/cv1823a_wevb_0007a_spinor/u-boot/cvitek.h

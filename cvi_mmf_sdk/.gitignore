@@ -1,2 +1,11 @@
-/install
-/host-tools
+install
+host-tools
+*.bin
+*.elf
+*.dis
+*.a
+*.so
+*.d
+*.map
+*.sym
+*.o

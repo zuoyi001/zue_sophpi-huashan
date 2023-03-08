@@ -536,8 +536,10 @@ void prvAudioRunTask(void *pvParameters)
 				break;
 			} else
 				aud_debug("CVIAUDIO_RTOS_CMD_SSP_INIT_BLOCK magic word matched\n");
+
 			_pstVqeConfig = (AI_TALKVQE_CONFIG_S_RTOS *)pstAudBlockMailBox->AinVqeCfgPhy;
-			//dump out the vqe config ------------------------------------------start
+			inv_dcache_range((uintptr_t)_pstVqeConfig, sizeof(AI_TALKVQE_CONFIG_S_RTOS));
+
 			printf("SSP_INIT dump-----------------------------------------------------\n");
 			printf("para_client_config[%d]\n", _pstVqeConfig->para_client_config);
 			printf("u32OpenMask[0x%x]\n", _pstVqeConfig->u32OpenMask);
@@ -546,8 +548,7 @@ void prvAudioRunTask(void *pvParameters)
 			printf("stAecCfg.para_aes_std_thrd[%d]\n", _pstVqeConfig->stAecCfg.para_aes_std_thrd);
 			printf("stAecCfg.para_aes_supp_coeff[%d]\n", _pstVqeConfig->stAecCfg.para_aes_supp_coeff);
 			printf("SSP_INIT dump-----------------------------------------------------[end]\n");
-			//dump out the vqe config -------------------------------------------end
-			//attach AI_TALKVQE_CONFIG_S from AI_TALKVQE_CONFIG_S_RTOS----start
+
 			AI_TALKVQE_CONFIG_S VqeConfig;
 			AI_TALKVQE_CONFIG_S *pVqeConfigSsp = &VqeConfig;
 
@@ -569,14 +570,7 @@ void prvAudioRunTask(void *pvParameters)
 			pVqeConfigSsp->stAecDelayCfg.para_delay_sample = _pstVqeConfig->stAecDelayCfg.para_delay_sample;
 			pVqeConfigSsp->s32RevMask = _pstVqeConfig->s32RevMask;
 			pVqeConfigSsp->para_notch_freq = _pstVqeConfig->para_notch_freq;
-			#if 0
-			memcpy(pVqeConfigSsp->customize,
-				_pstVqeConfig->customize,
-				sizeof(CVI_CHAR)*MAX_AUDIO_VQE_CUSTOMIZE_NAME);
-			#endif
 
-
-			//atatach AI_TALKVQE_CONFIG_S from AI_TALKVQE_CONFIG_RTOs------end
 			if (paudio_ssp_block != NULL)
 				aud_error("warning paudio_ssp_blcok not Null..\n");
 

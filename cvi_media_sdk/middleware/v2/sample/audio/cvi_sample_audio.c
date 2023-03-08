@@ -1644,9 +1644,9 @@ CVI_S32 SAMPLE_AUDIO_DEBUG_SET_VOLUME(ST_AudioUnitTestCfg *testCfg)
 	CVI_S32 s32SetInputOrOutput = 0;
 
 	printf("----------------------cvi check------------------------\n");
-	printf("\n Enter output card id: \n");
+	printf("\n Enter output card id: \t");
 	err = scanf("%d", &idevid);
-	printf("\n Enter volume \n");
+	printf("\n Enter volume \t");
 	err = scanf("%d", &volumedb);
 	printf("\n enter card[%d] vol[%d]\n", idevid, volumedb);
 	if (err == EOF)

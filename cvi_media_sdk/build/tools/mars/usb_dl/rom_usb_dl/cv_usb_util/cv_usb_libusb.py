@@ -703,6 +703,21 @@ class cv_usb_libusb:
         else:
             return self.libusb_write(self.ser_cmd, 0, 0)
 
+    def protocol_msg_read(self, message, length, timeout_ms=0):
+        try:
+            self.epOut.write(message, timeout_ms)
+        except usb.USBError as e:
+            print("Write data fail!")
+            return pkt.FAIL
+
+        try:
+            ret = self.epIn.read(length, timeout_ms)
+        except usb.USBError as e:
+            print("Read data fail")
+            return pkt.FAIL
+
+        return ret
+
     def protocol_msg_send(self, message, length, response):
         start_time = time.time()
         try:
@@ -770,6 +785,11 @@ class cv_usb_libusb:
             print("Write data Fail %s" % e)
             return pkt.FAIL
         return pkt.SUCCESS
+
+    def protocol_msg_d2s_once(self, addr, length, timeout_ms=0):
+        msg = []
+        self.protocol_msg_fill_header(msg, CV_USB_D2S, addr, USB_MSG_D2S_SIZE, length)
+        return self.protocol_msg_read(msg, length, timeout_ms)
 
     def protocol_msg_s2d_once(self, addr, dataBuf, length):
         msg = []

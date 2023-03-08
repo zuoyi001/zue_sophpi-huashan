@@ -43,7 +43,6 @@ typedef enum _SENSOR_TYPE_E {
     SENSOR_NEXTCHIP_N6,
     SENSOR_OV_OS08A20,
     SENSOR_OV_OS08A20_SLAVE,
-    SENSOR_OV_OV5647,
     SENSOR_PICO_384,
     SENSOR_PICO_640,
     SENSOR_PIXELPLUS_PR2020,
@@ -169,6 +168,9 @@ APP_PARAM_VI_CTX_S *app_ipcam_Vi_Param_Get(void);
 int app_ipcam_Vi_Init(void);
 int app_ipcam_Vi_DeInit(void);
 int app_ipcam_PQBin_Load(const CVI_CHAR *pBinPath);
+void app_ipcam_Framerate_Set(CVI_U8 viPipe, CVI_U8 fps);
+CVI_U8 app_ipcam_Framerate_Get(CVI_U8 viPipe);
+
 int app_ipcam_CmdTask_Auto_Rgb_Ir_Switch(CVI_MQ_MSG_t *msg, CVI_VOID *userdate);
 int app_ipcam_CmdTask_Setect_Pq(CVI_MQ_MSG_t *msg, CVI_VOID *userdate);
 int app_ipcam_CmdTask_Mirror_Switch(CVI_MQ_MSG_t *msg, CVI_VOID *userdate);

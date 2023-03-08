@@ -352,6 +352,7 @@ static void sc401ai_linear_1440p30_init(VI_PIPE ViPipe)
 	sc401ai_write_register(ViPipe, 0x57a8, 0xd0);
 	sc401ai_write_register(ViPipe, 0x36e9, 0x14);
 	sc401ai_write_register(ViPipe, 0x36f9, 0x14);
+	sc401ai_write_register(ViPipe, 0x5001, 0x44);	//Support sid pull up
 
 	sc401ai_default_reg_init(ViPipe);
 
@@ -482,6 +483,7 @@ static void sc401ai_linear_1296p30_init(VI_PIPE ViPipe)
 	sc401ai_write_register(ViPipe, 0x57a8, 0xd0);
 	sc401ai_write_register(ViPipe, 0x36e9, 0x14);
 	sc401ai_write_register(ViPipe, 0x36f9, 0x14);
+	sc401ai_write_register(ViPipe, 0x5001, 0x44);	//Support sid pull up
 
 	sc401ai_default_reg_init(ViPipe);
 

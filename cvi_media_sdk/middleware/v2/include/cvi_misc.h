@@ -47,6 +47,8 @@ CVI_S32 CVI_EFUSE_Read(CVI_EFUSE_AREA_E area, CVI_U8 *buf, CVI_U32 buf_size);
 CVI_S32 CVI_EFUSE_Write(CVI_EFUSE_AREA_E area, const CVI_U8 *buf, CVI_U32 buf_size);
 CVI_S32 CVI_EFUSE_EnableSecureBoot(void);
 CVI_S32 CVI_EFUSE_IsSecureBootEnabled(void);
+CVI_S32 CVI_EFUSE_EnableFastBoot(void);
+CVI_S32 CVI_EFUSE_IsFastBootEnabled(void);
 /**
  * @brief Lock eFuse area for both READING and WRITING.
  *

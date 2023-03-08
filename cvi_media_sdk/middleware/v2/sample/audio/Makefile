@@ -163,6 +163,7 @@ EXTRA_LDFLAGS += -lcli
 ifeq ($(MULTI_PROCESS_SUPPORT_AUDIO), yes)
 DEFINES += -DRPC_MULTI_PROCESS
 DEFINES += -DRPC_MULTI_PROCESS_AUDIO
+DEFINES += -DCVIAUDIO_STATIC
 EXTRA_LDFLAGS += -lnanomsg
 endif
 
@@ -179,8 +180,13 @@ ELFFLAGS = $(filter-out -static, $(AUDIO_ELFFLAGS))
 
 .PHONY : clean all
 
+
+ifeq ($(MULTI_PROCESS_SUPPORT_AUDIO), yes)
 ifeq ($(CONFIG_ENABLE_SDK_ASAN), y)
 all : sample_audio check_and_leave sample_audio_asan
+else
+all : sample_audio check_and_leave sample_multi_process
+endif
 else
 all : sample_audio check_and_leave
 endif
@@ -211,6 +217,11 @@ check_and_leave:
 	@echo "audio check and leave..remove unnecessary libs"
 	@rm -rf $(MW_PATH)/lib/3rd/libmad*
 	@rm -rf $(MW_PATH)/lib/3rd/libmp3lame*
+
+sample_multi_process:
+	cd ./multiprocess_case/down_example; make clean;make
+	cd ./multiprocess_case/up_example; make clean;make
+
 clean:
 	@echo "sample/audio/clean in"  $(MW_PATH)
 	@rm -f $(OBJS) $(DEPS) $(TEST_OBJ) $(MP3_PLAYER_OBJ)

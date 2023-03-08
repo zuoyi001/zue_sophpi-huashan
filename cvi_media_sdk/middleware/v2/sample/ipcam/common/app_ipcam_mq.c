@@ -107,7 +107,7 @@ static void *mq_recv_worker(void *arg)
             //        (void *)&msg, buf_len, MSG_WAITALL, NULL, NULL));
             memset(&msg, 0, sizeof(CVI_MQ_MSG_t));
             recv_len = recvfrom(pEpHdl->socket_fd, (void *)&msg, buf_len, MSG_WAITALL, (struct sockaddr *)&remoteClient, &addr_len);
-            printf("[MQ] RX %"PRIdFAST32" bytes\n", recv_len);
+            printf("[MQ] RX %ld bytes\n", recv_len);
             //CVI_LOGI_MEM(&msg, recv_len, "RX MSG");
             if(msg.needack) {
                 dptr = &remoteClient.sun_path[17];

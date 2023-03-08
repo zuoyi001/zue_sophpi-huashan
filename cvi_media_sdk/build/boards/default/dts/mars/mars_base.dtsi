@@ -144,7 +144,6 @@
 		block-ts = <15>;
 	};
 
-#if 0
 	watchdog0: cv-wd@0x3010000 {
 		compatible = "snps,dw-wdt";
 		reg = <0x0 0x03010000 0x0 0x1000>;
@@ -152,6 +151,13 @@
 		clocks = <&pclk>;
 	};
 
+    pclk: pclk {
+		#clock-cells = <0>;
+		compatible = "fixed-clock";
+		clock-frequency = <25000000>;
+	};
+
+#if 0
 	pwm0: pwm@3060000 {
 		compatible = "cvitek,cvi-pwm";
 		reg = <0x0 0x3060000 0x0 0x1000>;
@@ -178,12 +184,6 @@
 		reg = <0x0 0x3063000 0x0 0x1000>;
 		clocks = <&clk MARS_CLK_PWM>;
 		#pwm-cells = <4>;
-	};
-
-	pclk: pclk {
-		#clock-cells = <0>;
-		compatible = "fixed-clock";
-		clock-frequency = <25000000>;
 	};
 #endif
 
@@ -265,7 +265,7 @@
 		clock-frequency = <25000000>;
 		reg-shift = <2>;
 		reg-io-width = <4>;
-		status = "okay";
+		status = "disabled";
 	};
 
 	uart2: serial@04160000 {
@@ -274,7 +274,7 @@
 		clock-frequency = <25000000>;
 		reg-shift = <2>;
 		reg-io-width = <4>;
-		status = "okay";
+		status = "disabled";
 	};
 
 	uart3: serial@04170000 {
@@ -283,7 +283,7 @@
 		clock-frequency = <25000000>;
 		reg-shift = <2>;
 		reg-io-width = <4>;
-		status = "okay";
+		status = "disabled";
 	};
 
 	uart4: serial@041C0000 {
@@ -537,7 +537,7 @@
 		pll_reg = <0x300207C>;
 		no-mmc;
 		no-sd;
-		status = "okay";
+		status = "disabled";
 	};
 
 	i2s_mclk: i2s_mclk {
@@ -671,7 +671,7 @@
 		      <0x0 0x0a0c4000 0x0 0x2000>, <0x0 0x0a0c6000 0x0 0x2000>,
 		      <0x0 0x03001c30 0x0 0x30>;
 		reg-names = "csi_mac0", "csi_wrap0", "csi_mac1", "csi_mac2", "pad_ctrl";
-		snsr-reset = <&porta 2 GPIO_ACTIVE_LOW>, <&porta 6 GPIO_ACTIVE_LOW>, <&porta 2 GPIO_ACTIVE_LOW>;
+		snsr-reset = <&porta 2 GPIO_ACTIVE_LOW>, <&porta 2 GPIO_ACTIVE_LOW>, <&porta 2 GPIO_ACTIVE_LOW>;
 		resets = <&rst RST_CSIPHY0>, <&rst RST_CSIPHY1>,
 			<&rst RST_CSIPHY0RST_APB>, <&rst RST_CSIPHY1RST_APB>;
 		reset-names = "phy0", "phy1", "phy-apb0", "phy-apb1";
@@ -749,12 +749,25 @@
 		clock-names = "clk_disp", "clk_dsi", "clk_bt";
 	};
 
+#if (CVIMMAP_FRAMEBUFFER_SIZE > 0)
+	reserved-memory {
+	  #size-cells = <0x2>;
+	  #address-cells = <0x2>;
+	  ranges;
+
+		fb_reserved: cvifb {
+			alloc-ranges = <0x0 CVIMMAP_FRAMEBUFFER_ADDR 0 CVIMMAP_FRAMEBUFFER_SIZE>;
+			size = <0x0 CVIMMAP_FRAMEBUFFER_SIZE>;
+		};
+	};
+
 	cvifb {
 		compatible = "cvitek,fb";
+		memory-region = <&fb_reserved>;
 		reg = <0x0 0x0a088000 0x0 0x1000>;
 		reg-names = "disp";
 	};
-
+#endif
 	dwa {
 		compatible = "cvitek,dwa";
 		reg = <0x0 0x0a0c0000 0x0 0x1000>;

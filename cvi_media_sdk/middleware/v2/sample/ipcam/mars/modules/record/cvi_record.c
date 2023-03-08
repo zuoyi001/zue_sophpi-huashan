@@ -449,7 +449,9 @@ static CVI_S32 CVI_RECORD_GetIndexBakFileFd(const CVI_CHAR *path, CVI_S32 iIndex
         _RECORD_ERR("Invalid Input:%s\n", stPathName);
         return RECORD_ERROR;
     }
-    snprintf(stPathName, sizeof(stPathName), "%s/"CVI_RECORD_INDEX_FILE_BAK, path, iIndex);
+    if (snprintf(stPathName, sizeof(stPathName), "%s/"CVI_RECORD_INDEX_FILE_BAK, path, iIndex) < 0) {
+        _RECORD_ERR("snprintf error\n");
+    }
     fd = open(stPathName, mode);
     if (fd <= 0) {
         _RECORD_ERR("pkg open file err:%s\n", stPathName);
@@ -471,7 +473,9 @@ static CVI_S32 CVI_RECORD_GetIndexFileName(const CVI_CHAR *path, CVI_S32 iIndex,
         return RECORD_ERROR;
     }
 
-    snprintf(pFileName, iLen, "%s/"CVI_RECORD_INDEX_FILE, path, iIndex);
+    if (snprintf(pFileName, iLen, "%s/"CVI_RECORD_INDEX_FILE, path, iIndex) < 0) {
+        _RECORD_ERR("snprintf error\n");
+    }
 
     return 0;
 }
@@ -522,7 +526,9 @@ static CVI_S32 CVI_RECORD_GetAvFilesFd(const CVI_CHAR *path, CVI_U32 iRecIndexNo
         return RECORD_ERROR;
     }
 
-    snprintf(stPathName, sizeof(stPathName), "%s/"CVI_RECORD_AV_FILE, path, iRecIndexNo);
+    if (snprintf(stPathName, sizeof(stPathName), "%s/"CVI_RECORD_AV_FILE, path, iRecIndexNo) < 0) {
+        _RECORD_ERR("snprintf error\n");
+    }
     fd = open(stPathName, mode);
     if (fd <= 0)
         _RECORD_ERR("pkg open file err:%s\n", stPathName);
@@ -551,7 +557,9 @@ static CVI_S32 CVI_RECORD_GetAvFilesFromCard(const CVI_CHAR *path)
     }
 
     while (iMissFiles <= CVI_RECORD_MAX_MISS_AVFILES) {
-        snprintf(stPathName, sizeof(stPathName), "%s/"CVI_RECORD_AV_FILE, path, index);
+        if (snprintf(stPathName, sizeof(stPathName), "%s/"CVI_RECORD_AV_FILE, path, index) < 0) {
+            _RECORD_ERR("snprintf error\n");
+        }
         index++;
         if ((0 != access(stPathName, F_OK))) {
             iMissFiles++;
@@ -881,7 +889,7 @@ static void CVI_RECORD_FreeFrameBuffer(pkg_read_buffer* pPkgReadBuff)
 *****************************************************************************/
 static CVI_CHAR* time_to_string(time_t ctime, CVI_CHAR *astring)
 {
-    CVI_CHAR acDate[20];
+    CVI_CHAR acDate[32];
     struct tm local;
 
     localtime_r(&ctime, &local);
@@ -1021,7 +1029,7 @@ static CVI_S32 CVI_RECORD_ShowFileIndexHeader(CVI_RECORD_FILE_INDEX_HEADER* pFil
         _RECORD_ERR("Invalid Input:NULL\n");
         return ERR_INVALID_ARGUMENT;
     }
-    _RECORD_INFO("Show info:iFileStartCode:%x,iModifyTimes:%llu,iVersion:%d,iAVFiles:%d,iCurrFileRecNo:%d,iCrcSum:%d\n",
+    _RECORD_INFO("Show info:iFileStartCode:%x,iModifyTimes:%lu,iVersion:%d,iAVFiles:%d,iCurrFileRecNo:%d,iCrcSum:%d\n",
         pFileIndexHeader->iFileStartCode, pFileIndexHeader->iModifyTimes, pFileIndexHeader->iVersion,
         pFileIndexHeader->iAVFiles, pFileIndexHeader->iCurrFileRecNo, pFileIndexHeader->iCrcSum);
     return 0;
@@ -1052,10 +1060,10 @@ static CVI_S32 CVI_RECORD_ShowSegmentIndex(CVI_RECORD_SEGMENT_INDEX_RECORD* pSeg
         return ERR_INVALID_ARGUMENT;
     }
     
-    CVI_CHAR sStartTime[20];
-    CVI_CHAR sEndTime[20];
+    CVI_CHAR sStartTime[32];
+    CVI_CHAR sEndTime[32];
 
-    _RECORD_INFO("Show info:iEvenType:%d,iStatus:%u,Time:%s-%s,iFrameStartOffset:%u-%u,iSegmentNo:%u,iInfoCount:%u,iInfoEndOffset:%u,iCrcSum:%d,remain:%u\n",
+    _RECORD_INFO("Show info:iEvenType:%d,iStatus:%u,Time:%s-%s,iFrameStartOffset:%u-%u,iSegmentNo:%u,iInfoCount:%u,iInfoEndOffset:%u,iCrcSum:%d,remain:%lu\n",
         pSegIndexRecord->iEvenType, pSegIndexRecord->iStatus,
         time_to_string(pSegIndexRecord->tBeginTime, sStartTime),
         time_to_string(pSegIndexRecord->tEndTime, sEndTime),
@@ -1086,7 +1094,7 @@ static CVI_S32 CVI_RECORD_ShowFramInfo(CVI_RECORD_SEGMENT_INFO* pFrameInfo)
             pFrameInfo->iIndexInfo.iIndexFrame[14], pFrameInfo->iIndexInfo.iIndexFrame[15], pFrameInfo->iCrcSum);
     } else if(CVI_RECORD_INFO_TYPE_FRAME == pFrameInfo->iInfoType) {
             CVI_CHAR sStartTime[20];
-            _RECORD_INFO("data frame info:code:%#x,type:%u,frame(type:%u.%u,No:%u,offset:%u,len:%u,time:%llu,%s),iCrcSum:%d, %d\n",
+            _RECORD_INFO("data frame info:code:%#x,type:%u,frame(type:%u.%u,No:%u,offset:%u,len:%u,time:%lu,%s),iCrcSum:%d, %d\n",
                 pFrameInfo->iSegmentStartCode, pFrameInfo->iInfoType, pFrameInfo->iFrameInfo.iFrameType, 
                 pFrameInfo->iFrameInfo.iSubType, pFrameInfo->iFrameInfo.iFrameNo, pFrameInfo->iFrameInfo.iStartOffset,
                 pFrameInfo->iFrameInfo.iFrameLen, pFrameInfo->iFrameInfo.iFrame_absTime, time_to_string(pFrameInfo->iFrameInfo.iShowTime, sStartTime),
@@ -1316,7 +1324,7 @@ static CVI_S32 CVI_RECORD_ReadFileIndexHeader(CVI_RECORD_FILE_INDEX_HEADER* pFil
     
     iRead = read(fd, pFileIndexHeader, sizeof(CVI_RECORD_FILE_INDEX_HEADER));
     if(iRead != sizeof(CVI_RECORD_FILE_INDEX_HEADER)) {
-        _RECORD_ERR("read error %u != %u\n", iRead, sizeof(CVI_RECORD_FILE_INDEX_HEADER));
+        _RECORD_ERR("read error %d != %lu\n", iRead, sizeof(CVI_RECORD_FILE_INDEX_HEADER));
         return ERR_INVALID_ARGUMENT;
     }
     
@@ -1346,7 +1354,7 @@ static CVI_S32 CVI_RECORD_ReadFileIndex(CVI_RECORD_FILE_INDEX_RECORD* pFileIndex
 
     iRead = read(fd, pFileIndexRecord, sizeof(CVI_RECORD_FILE_INDEX_RECORD));
     if (iRead != sizeof(CVI_RECORD_FILE_INDEX_RECORD)) {
-        _RECORD_ERR("read error %u != %u\n", iRead, sizeof(CVI_RECORD_FILE_INDEX_RECORD));
+        _RECORD_ERR("read error %u != %lu\n", iRead, sizeof(CVI_RECORD_FILE_INDEX_RECORD));
         return ERR_INVALID_ARGUMENT;
     }
     s_iCacheRWTotal += iRead;
@@ -1383,7 +1391,7 @@ static CVI_S32 CVI_RECORD_ReadSegmentFrameInfo(CVI_S32 fd, CVI_U32 iOffset, CVI_
         iRead = read(fd, pSegFrameInfo, iSegNum*sizeof(CVI_RECORD_SEGMENT_INFO));
         if (iRead != (CVI_S32)(iSegNum*sizeof(CVI_RECORD_SEGMENT_INFO)))
         {
-            _RECORD_ERR("read error %u != %u\n", iRead, sizeof(CVI_RECORD_SEGMENT_INFO));
+            _RECORD_ERR("read error %u != %lu\n", iRead, sizeof(CVI_RECORD_SEGMENT_INFO));
             return ERR_INVALID_ARGUMENT;
         }
         s_iCacheRWTotal += iRead;
@@ -1422,7 +1430,7 @@ static CVI_S32 CVI_RECORD_WriteSegmentFrameInfo(CVI_S32 fd, CVI_U32 iOffset, CVI
         return ERR_INVALID_ARGUMENT;
     }
     pSegFrameInfoTmp = pSegFrameInfo;
-    _RECORD_DBG("write frame info offset %u,num:%d, len:%d\n", iOffset, iSegHeaderInfo, iSegHeaderInfo * sizeof(CVI_RECORD_SEGMENT_INFO));
+    _RECORD_DBG("write frame info offset %u,num:%d, len:%ld\n", iOffset, iSegHeaderInfo, iSegHeaderInfo * sizeof(CVI_RECORD_SEGMENT_INFO));
     for (i = 0; i < iSegHeaderInfo; i++) {
         pSegFrameInfoTmp->iCrcSum = CVI_RECORD_GetCrc((const CVI_CHAR*)pSegFrameInfoTmp, sizeof(CVI_RECORD_SEGMENT_INFO) - sizeof(pSegFrameInfoTmp->iCrcSum));
         if (CVI_RECORD_FRAME_HEADER_INFO_MAX == iSegHeaderInfo)
@@ -1434,7 +1442,7 @@ static CVI_S32 CVI_RECORD_WriteSegmentFrameInfo(CVI_S32 fd, CVI_U32 iOffset, CVI
 
     nWriteLen = write(fd, pSegFrameInfo, iSegHeaderInfo * sizeof(CVI_RECORD_SEGMENT_INFO));
     if (nWriteLen != (CVI_S32)(iSegHeaderInfo * sizeof(CVI_RECORD_SEGMENT_INFO))) {
-        _RECORD_ERR("read error %u != %u\n", nWriteLen, iSegHeaderInfo * sizeof(CVI_RECORD_SEGMENT_INFO));
+        _RECORD_ERR("read error %u != %lu\n", nWriteLen, iSegHeaderInfo * sizeof(CVI_RECORD_SEGMENT_INFO));
         return ERR_INVALID_ARGUMENT;
     }
     s_iCacheRWTotal += nWriteLen;
@@ -1465,7 +1473,7 @@ static CVI_S32 CVI_RECORD_WriteFileIndexHeader(CVI_RECORD_FILE_INDEX_HEADER* pFi
 
     nWriteLen = write(fd, pFileIndexHeader, sizeof(CVI_RECORD_FILE_INDEX_HEADER));
     if (nWriteLen != sizeof(CVI_RECORD_FILE_INDEX_HEADER)) {
-        _RECORD_ERR("read error %u != %u\n", nWriteLen, sizeof(CVI_RECORD_FILE_INDEX_HEADER));
+        _RECORD_ERR("read error %u != %lu\n", nWriteLen, sizeof(CVI_RECORD_FILE_INDEX_HEADER));
         return ERR_INVALID_ARGUMENT;
     }
     s_iCacheRWTotal += nWriteLen;
@@ -1504,7 +1512,7 @@ static CVI_S32 CVI_RECORD_WriteFileIndex(CVI_RECORD_FILE_INDEX_RECORD* pFileInde
 
     if (nWriteLen != (CVI_S32)(iWriteFiles*sizeof(CVI_RECORD_FILE_INDEX_RECORD)))
     {
-        _RECORD_ERR("read error %u != %u\n", nWriteLen, iWriteFiles*sizeof(CVI_RECORD_FILE_INDEX_RECORD));
+        _RECORD_ERR("read error %u != %lu\n", nWriteLen, iWriteFiles*sizeof(CVI_RECORD_FILE_INDEX_RECORD));
         return ERR_INVALID_ARGUMENT;
     }
     s_iCacheRWTotal += nWriteLen;
@@ -1541,7 +1549,7 @@ static CVI_S32 CVI_RECORD_WriteSegmentIndex(CVI_RECORD_SEGMENT_INDEX_RECORD* pSe
     nWriteLen = write(fd, pSegIndexRecord, iWriteSegNum*sizeof(CVI_RECORD_SEGMENT_INDEX_RECORD));
 
     if(nWriteLen != (CVI_S32)(iWriteSegNum*sizeof(CVI_RECORD_SEGMENT_INDEX_RECORD))) {
-        _RECORD_ERR("read error %u != %u\n", nWriteLen, iWriteSegNum*sizeof(CVI_RECORD_SEGMENT_INDEX_RECORD));
+        _RECORD_ERR("read error %u != %lu\n", nWriteLen, iWriteSegNum*sizeof(CVI_RECORD_SEGMENT_INDEX_RECORD));
         return ERR_INVALID_ARGUMENT;
     }
 
@@ -1609,7 +1617,7 @@ static CVI_S32 CVI_RECORD_RepairIndex(CVI_S32* pCurrFileRecNo)
 
     iRemainIndexBuf = malloc(CVI_RECORD_REMAIN_INDEX_SIZE);
     if (NULL == iRemainIndexBuf) {
-        _RECORD_ERR("pkg init repair error, malloc err %d\n", CVI_RECORD_REMAIN_INDEX_SIZE);
+        _RECORD_ERR("pkg init repair error, malloc err %ld\n", CVI_RECORD_REMAIN_INDEX_SIZE);
         CVI_RECORD_FUNC_END;
         return RECORD_ERROR;
     }
@@ -1804,7 +1812,7 @@ static CVI_S32 CVI_RECORD_RepairIndex(CVI_S32* pCurrFileRecNo)
 
         //写入剩余容量
         if (CVI_RECORD_REMAIN_INDEX_SIZE != write(iIndexFd, iRemainIndexBuf, CVI_RECORD_REMAIN_INDEX_SIZE)) {
-            _RECORD_ERR("repair write index remain err,%d\n", CVI_RECORD_REMAIN_INDEX_SIZE);
+            _RECORD_ERR("repair write index remain err,%ld\n", CVI_RECORD_REMAIN_INDEX_SIZE);
             iRet = RECORD_ERROR;
             goto endFunc;
         }
@@ -1919,7 +1927,7 @@ static CVI_S32 CVI_RECORD_SetCurrentFileInit(CVI_U32 iCurrFileRecNo)
         CVI_RECORD_GetInitSegmentFrameInfo(&stSegFrameInfo);
         for (j = 0; j < CVI_RECORD_FRAME_DATA_INFO_WRITE_MAX_COUNT; j++) {
             if (0 > CVI_RECORD_WriteBuffer(&stWriteBuff, (CVI_U8*)&stSegFrameInfo, sizeof(stSegFrameInfo), fd, 0)) {
-                _RECORD_ERR("pkg format avFiles ERR, size %d\n", sizeof(stSegFrameInfo));
+                _RECORD_ERR("pkg format avFiles ERR, size %ld\n", sizeof(stSegFrameInfo));
                 iRet = ERR_INVALID_ARGUMENT;
                 goto endFunc0;
             }
@@ -1927,7 +1935,7 @@ static CVI_S32 CVI_RECORD_SetCurrentFileInit(CVI_U32 iCurrFileRecNo)
         }
 
         if (0 > CVI_RECORD_FlushBuffer(&stWriteBuff, fd, 0)) {
-            _RECORD_ERR("pkg format avFiles ERR, size %d\n", sizeof(stSegFrameInfo));
+            _RECORD_ERR("pkg format avFiles ERR, size %ld\n", sizeof(stSegFrameInfo));
             iRet = ERR_INVALID_ARGUMENT;
             goto endFunc0;
         }
@@ -1968,7 +1976,7 @@ endFunc0:
     CVI_RECORD_GetInitSegmentIndex(&stSegIndexRecord, CVI_RECORD_STATUS_INIT);
     for (j = 0; j < CVI_RECORD_AV_FILE_MAX_SEGMENT; j++) {
         if (0 > CVI_RECORD_WriteBuffer(&stWriteBuff, (CVI_U8*)&stSegIndexRecord, sizeof(stSegIndexRecord), fd, 0)) {
-            _RECORD_ERR("pkg format stFileIndexRecord ERR, size %d\n", sizeof(stSegIndexRecord));
+            _RECORD_ERR("pkg format stFileIndexRecord ERR, size %ld\n", sizeof(stSegIndexRecord));
             iRet = ERR_INVALID_ARGUMENT;
             goto endFunc1;
         }
@@ -2277,7 +2285,7 @@ endFunc:
             pkg_buffer stPkgBuff;
             memset(&stPkgBuff, 0, sizeof(stPkgBuff));
             if (0 != CVI_RECORD_MallocBuffer(&stPkgBuff, PKG_FILE_INDEX_MAX_LEN)) {
-                _RECORD_ERR("pkgstorage malloc err: pPkgBuff %d\n", PKG_FILE_INDEX_MAX_LEN);
+                _RECORD_ERR("pkgstorage malloc err: pPkgBuff %ld\n", PKG_FILE_INDEX_MAX_LEN);
             } else {
                 CVI_U32 iLastFileRecNo = 0;
                 if(0 == iCurrFileRecNo)
@@ -2370,7 +2378,13 @@ checkAgain:
     iIndexfd = CVI_RECORD_GetIndexFileFd(s_mPkgParam.iPkgPathName, index, O_RDWR, &iFileSize);
     if (iIndexfd <= 0) {
         _RECORD_ERR("open pkg index(%d) pkgstorage_get_file_index err\n", index);
-        return RECORD_ERROR;
+        iIndexfd = CVI_RECORD_GetIndexBakFileFd(s_mPkgParam.iPkgPathName, index, O_RDWR, &iFileSize);
+        if (iIndexfd <= 0) {
+            _RECORD_ERR("open pkg index(%d) pkgstorage_get_file_bak_index err\n", index);
+            return RECORD_ERROR;
+        } else {
+            bRepairIndex = 1;
+        }
     }
     if (0 != CVI_RECORD_ReadFileIndexHeader(&stFileIndexHeader, iIndexfd)) {
         iMaxAVFileNum = CVI_RECORD_GetAvFilesFromCard(s_mPkgParam.iPkgPathName);
@@ -2454,7 +2468,9 @@ checkAgain:
             if (0 != CVI_RECORD_GetIndexFileName(s_mPkgParam.iPkgPathName, bCheckIndex, stPathName, sizeof(stPathName))) {
                 _RECORD_ERR("pkg invalid path\n");
             } else {
-                snprintf(stPathNameBak, sizeof(stPathNameBak), "%s/"CVI_RECORD_INDEX_FILE_BAK, s_mPkgParam.iPkgPathName, index);
+                if (snprintf(stPathNameBak, sizeof(stPathNameBak), "%s/"CVI_RECORD_INDEX_FILE_BAK, s_mPkgParam.iPkgPathName, index) < 0) {
+                    _RECORD_ERR("snprintf error\n");
+                }
                 if (0 != CVI_RECORD_CopyFile(stPathNameBak, stPathName, 1)) {
                     _RECORD_ERR("pkg copy bak index Err\n");
                 }
@@ -2478,7 +2494,9 @@ checkAgain:
                 _RECORD_ERR("pkg invalid path\n");
                 continue;
             }
-            snprintf(stPathNameBak, sizeof(stPathNameBak), "%s/"CVI_RECORD_INDEX_FILE_BAK, s_mPkgParam.iPkgPathName, index);
+            if (snprintf(stPathNameBak, sizeof(stPathNameBak), "%s/"CVI_RECORD_INDEX_FILE_BAK, s_mPkgParam.iPkgPathName, index) < 0) {
+                _RECORD_ERR("snprintf error\n");
+            }
             if (0 != CVI_RECORD_CopyFile(stPathName, stPathNameBak, 1))
                 _RECORD_ERR("pkg copy index to bak\n");
         }
@@ -3084,14 +3102,14 @@ PSS_API CVI_S32 API_CALL CVI_RECORD_Init(IN CVI_CHAR *pPkgPathName)
     }
     
     if(0 != CVI_RECORD_MallocBuffer(&s_mPkgParam.iPkgCurFileIndexBuff, PKG_FILE_INDEX_MAX_LEN)){
-        _RECORD_ERR("pkgstorage malloc err: iPkgCurFileIndexBuff %d\n", PKG_FILE_INDEX_MAX_LEN);
+        _RECORD_ERR("pkgstorage malloc err: iPkgCurFileIndexBuff %ld\n", PKG_FILE_INDEX_MAX_LEN);
         CVI_RECORD_FreeBuffer(&s_mPkgParam.iPkgWriteBuff);
         return ERR_HANDLE_ALLOC_ERROR;
     }
     
     s_mPkgParam.iPkgWriteIndexBuff = (CVI_RECORD_SEGMENT_INFO*)malloc(CVI_RECORD_FRAME_DATA_INFO_WRITE_MAX_SIZE);
     if(NULL == s_mPkgParam.iPkgWriteIndexBuff) {
-        _RECORD_ERR("pkgstorage malloc err: iPkgWriteIndexBuff %d\n", CVI_RECORD_FRAME_DATA_INFO_WRITE_MAX_SIZE);
+        _RECORD_ERR("pkgstorage malloc err: iPkgWriteIndexBuff %ld\n", CVI_RECORD_FRAME_DATA_INFO_WRITE_MAX_SIZE);
         CVI_RECORD_FreeBuffer(&s_mPkgParam.iPkgCurFileIndexBuff);
         CVI_RECORD_FreeBuffer(&s_mPkgParam.iPkgWriteBuff);
         return ERR_HANDLE_ALLOC_ERROR;
@@ -3099,8 +3117,10 @@ PSS_API CVI_S32 API_CALL CVI_RECORD_Init(IN CVI_CHAR *pPkgPathName)
     s_mPkgParam.iPkgWriteSegmentNum = 0;
     memset((CVI_U8*)s_mPkgParam.iPkgWriteIndexBuff, 0, CVI_RECORD_FRAME_DATA_INFO_WRITE_MAX_SIZE);
     CVI_RECORD_FREE_CACHE;
-    
-    snprintf(stPathName, sizeof(stPathName), "%s/"CVI_RECORD_FORMAT_FLAG, s_mPkgParam.iPkgPathName);
+
+    if (snprintf(stPathName, sizeof(stPathName), "%s/"CVI_RECORD_FORMAT_FLAG, s_mPkgParam.iPkgPathName) < 0) {
+        _RECORD_ERR("snprintf error\n");
+    }
     if (0 == access(stPathName, F_OK)) {
         _RECORD_ERR("pkgstorage format err flag %s\n", stPathName);
         s_mPkgParam.iPkgStatus = CVI_STORAGE_STATUS_ERROR;
@@ -3113,7 +3133,9 @@ PSS_API CVI_S32 API_CALL CVI_RECORD_Init(IN CVI_CHAR *pPkgPathName)
         //检测3个视频文件如果都不存在则没格式化状态
         s_mPkgParam.iPkgStatus = CVI_STORAGE_STATUS_UNINIT;
         for (i = 0; i < CVI_RECORD_MAX_MISS_AVFILES; i++) {
-            snprintf(stPathName, sizeof(stPathName), "%s/"CVI_RECORD_AV_FILE, s_mPkgParam.iPkgPathName, i);
+            if (snprintf(stPathName, sizeof(stPathName), "%s/"CVI_RECORD_AV_FILE, s_mPkgParam.iPkgPathName, i) < 0) {
+                _RECORD_ERR("snprintf error\n");
+            }
             if((0 == access(stPathName, F_OK))) {
                 s_mPkgParam.iPkgStatus = CVI_STORAGE_STATUS_NORMAL;
                 break;
@@ -3273,7 +3295,7 @@ PSS_API CVI_S32 API_CALL CVI_RECORD_Format(CVI_U32 iFileSize)
         iMaxIndexNum++;
 
     _RECORD_INFO("pkg format FileSize %u, Index:%d,AVFiles: %d\n", iFileSize, iMaxIndexNum, iMaxAVFileNum);    
-    _RECORD_INFO("pkg format size file_index_header: %u,file_index_record: %u,Segment_index_record: %u,Segment_frame_info: %u\n",
+    _RECORD_INFO("pkg format size file_index_header: %lu,file_index_record: %lu,Segment_index_record: %lu,Segment_frame_info: %lu\n",
             sizeof(CVI_RECORD_FILE_INDEX_HEADER), sizeof(CVI_RECORD_FILE_INDEX_RECORD), sizeof(CVI_RECORD_SEGMENT_INDEX_RECORD), sizeof(CVI_RECORD_SEGMENT_INFO));
     pthread_mutex_lock(&s_iPkgRunMutex);
     if ((0 == s_mPkgParam.iPkginited)
@@ -3290,7 +3312,9 @@ PSS_API CVI_S32 API_CALL CVI_RECORD_Format(CVI_U32 iFileSize)
         memset(stWriteBuf, 0, sizeof(stWriteBuf));
         CVI_RECORD_FREE_CACHE;
 
-        snprintf(stPathName, sizeof(stPathName), "%s/"CVI_RECORD_FORMAT_FLAG, s_mPkgParam.iPkgPathName);
+        if (snprintf(stPathName, sizeof(stPathName), "%s/"CVI_RECORD_FORMAT_FLAG, s_mPkgParam.iPkgPathName) < 0) {
+            _RECORD_ERR("snprintf error\n");
+        }
         fd = open(stPathName, O_RDWR | O_CREAT);
         if (fd > 0) {
             write(fd, "1", 1);
@@ -3311,7 +3335,9 @@ PSS_API CVI_S32 API_CALL CVI_RECORD_Format(CVI_U32 iFileSize)
             }
 
             iWriteTotal = 0;
-            snprintf(stPathName, sizeof(stPathName), "%s/"CVI_RECORD_AV_FILE, s_mPkgParam.iPkgPathName, i);
+            if (snprintf(stPathName, sizeof(stPathName), "%s/"CVI_RECORD_AV_FILE, s_mPkgParam.iPkgPathName, i) < 0) {
+                _RECORD_ERR("snprintf error\n");
+            }
             iRet = CVI_RECORD_PreFormatFiles(stPathName, CVI_RECORD_AV_FILE_MAX_SIZE);
             if (0 != iRet) {
                 _RECORD_ERR("pre format file err:%s, %u, ret:%d\n", stPathName, CVI_RECORD_AV_FILE_MAX_SIZE, iRet);
@@ -3333,8 +3359,12 @@ PSS_API CVI_S32 API_CALL CVI_RECORD_Format(CVI_U32 iFileSize)
             usleep(CVI_RECORD_FORMAT_PRE_WRITE_INT);
 
             iWriteTotal = 0;
-            snprintf(stPathName, sizeof(stPathName), "%s/"CVI_RECORD_INDEX_FILE, s_mPkgParam.iPkgPathName, i);
-            snprintf(stPathNameBak, sizeof(stPathNameBak), "%s/"CVI_RECORD_INDEX_FILE_BAK, s_mPkgParam.iPkgPathName, i);
+            if (snprintf(stPathName, sizeof(stPathName), "%s/"CVI_RECORD_INDEX_FILE, s_mPkgParam.iPkgPathName, i) < 0) {
+                _RECORD_ERR("snprintf error\n");
+            }
+            if (snprintf(stPathNameBak, sizeof(stPathNameBak), "%s/"CVI_RECORD_INDEX_FILE_BAK, s_mPkgParam.iPkgPathName, i) < 0) {
+                _RECORD_ERR("snprintf error\n");
+            }
             iRet = CVI_RECORD_PreFormatFiles(stPathName, CVI_RECORD_INDEX_FILE_MAX_SIZE);
             if (0 != iRet) {
                 _RECORD_ERR("pre format file err:%s, %u, ret:%d\n", stPathName, CVI_RECORD_INDEX_FILE_MAX_SIZE, iRet);
@@ -3354,7 +3384,7 @@ PSS_API CVI_S32 API_CALL CVI_RECORD_Format(CVI_U32 iFileSize)
             //写 CVI_RECORD_FILE_INDEX_HEADER（录像文件索引头）
             CVI_RECORD_GetInitFileIndexHeader(&stFileIndexHeader, iMaxAVFileNum);
             if (0 > CVI_RECORD_WriteBuffer(&s_mPkgParam.iPkgWriteBuff, (CVI_U8*)&stFileIndexHeader, sizeof(stFileIndexHeader), fd, 0)) {
-                _RECORD_ERR("pkg format stFileIndexHeader ERR, size %d\n", sizeof(stFileIndexHeader));
+                _RECORD_ERR("pkg format stFileIndexHeader ERR, size %ld\n", sizeof(stFileIndexHeader));
                 iRet = ERR_INVALID_ARGUMENT;
                 goto funcEnd;
             }
@@ -3366,7 +3396,7 @@ PSS_API CVI_S32 API_CALL CVI_RECORD_Format(CVI_U32 iFileSize)
             for (j = 0; j < CVI_RECORD_INDEX_MAX_AVFILES; j++) {
                 iRet = CVI_RECORD_WriteBuffer(&s_mPkgParam.iPkgWriteBuff, (CVI_U8*)&stFileIndexRecord, sizeof(stFileIndexRecord), fd, 0);
                 if (0 > iRet) {
-                    _RECORD_ERR("pkg format stFileIndexRecord ERR, size %d\n", sizeof(stFileIndexRecord));
+                    _RECORD_ERR("pkg format stFileIndexRecord ERR, size %ld\n", sizeof(stFileIndexRecord));
                     iRet = ERR_INVALID_ARGUMENT;
                     goto funcEnd;
                 } else if (iRet > 0) {
@@ -3385,7 +3415,7 @@ PSS_API CVI_S32 API_CALL CVI_RECORD_Format(CVI_U32 iFileSize)
             for (j = 0; j < CVI_RECORD_INDEX_MAX_AVFILES * CVI_RECORD_AV_FILE_MAX_SEGMENT; j++) {
                 iRet = CVI_RECORD_WriteBuffer(&s_mPkgParam.iPkgWriteBuff, (CVI_U8*)&stSegIndexRecord, sizeof(stSegIndexRecord), fd, 0);
                 if (0 > iRet) {
-                    _RECORD_ERR("pkg format stFileIndexRecord ERR, size %d\n", sizeof(stSegIndexRecord));
+                    _RECORD_ERR("pkg format stFileIndexRecord ERR, size %ld\n", sizeof(stSegIndexRecord));
                     iRet = ERR_INVALID_ARGUMENT;
                     goto funcEnd;
                 } else if (iRet > 0) {
@@ -3419,7 +3449,7 @@ PSS_API CVI_S32 API_CALL CVI_RECORD_Format(CVI_U32 iFileSize)
             }
 
             if (0 > CVI_RECORD_FlushBuffer(&s_mPkgParam.iPkgWriteBuff, fd, 0)) {
-                _RECORD_ERR("pkg format avFiles ERR, size %d\n", sizeof(stSegFrameInfo));
+                _RECORD_ERR("pkg format avFiles ERR, size %ld\n", sizeof(stSegFrameInfo));
                 iRet = ERR_INVALID_ARGUMENT;
                 goto funcEnd;
             }
@@ -3435,7 +3465,7 @@ PSS_API CVI_S32 API_CALL CVI_RECORD_Format(CVI_U32 iFileSize)
             }
 
             if (0 != CVI_RECORD_CopyFile(stPathName, stPathNameBak, 0)) {
-                _RECORD_ERR("pkg format avFiles ERR, size %d\n", sizeof(stSegFrameInfo));
+                _RECORD_ERR("pkg format avFiles ERR, size %ld\n", sizeof(stSegFrameInfo));
                 iRet = ERR_INVALID_ARGUMENT;
                 goto funcEnd;
             }
@@ -3455,7 +3485,9 @@ funcEnd:
         if (0 == iRet) {
             iRet = CVI_RECORD_LoadCurrentInfo(0);
             if (0 == iRet) {
-                snprintf(stPathName, sizeof(stPathName), "%s/"CVI_RECORD_FORMAT_FLAG, s_mPkgParam.iPkgPathName);
+                if (snprintf(stPathName, sizeof(stPathName), "%s/"CVI_RECORD_FORMAT_FLAG, s_mPkgParam.iPkgPathName) < 0) {
+                    _RECORD_ERR("snprintf error\n");
+                }
                 remove(stPathName);
                 usleep(200 * 1000);
                 if (0 == access(stPathName, F_OK)) {
@@ -3467,7 +3499,7 @@ funcEnd:
                         _RECORD_ERR("sd card del flag err:%s, err\n", stPathName);
                     }
                 }
-                s_mPkgParam.iPkgStatus = CVI_RECORD_STATUS_NORMAL;
+                s_mPkgParam.iPkgStatus = CVI_STORAGE_STATUS_NORMAL;
                 s_mPkgParam.iPkgFormatPrecent = 100;
             } else {
                 s_mPkgParam.iPkgStatus = CVI_STORAGE_STATUS_ERROR;
@@ -3609,7 +3641,7 @@ PSS_API CVI_S32 API_CALL CVI_RECORD_DataInput(PT_FRAME_INFO  pstFrameInfo)
 
     if (CVI_RECORD_FRAME_TYPE_G711U == pstFrameInfo->iFrameType) {
         if (pstFrameInfo->iFrameNo != iLastAudioNo + 1) {
-            _RECORD_ERR("[skip Audio]write Frame no:%u->%u, time:%lu->%lu,%lu, rTime:%llu->%llu\n", iLastAudioNo, pstFrameInfo->iFrameNo,
+            _RECORD_ERR("[skip Audio]write Frame no:%u->%u, time:%lu->%lu,%lu, rTime:%lu->%lu\n", iLastAudioNo, pstFrameInfo->iFrameNo,
                 iLastAudioTime, pstFrameInfo->iShowTime, time(NULL),
                 iLastAudioAbsTime, pstFrameInfo->iFrame_absTime);
         }
@@ -3618,7 +3650,7 @@ PSS_API CVI_S32 API_CALL CVI_RECORD_DataInput(PT_FRAME_INFO  pstFrameInfo)
         iLastAudioAbsTime = pstFrameInfo->iFrame_absTime;
     } else {
         if(pstFrameInfo->iFrameNo != iLastVideoNo+1) {
-            _RECORD_ERR("[skip video]write Frame no:%u->%u, time:%lu->%lu,%lu, rTime:%llu->%llu\n", iLastVideoNo, pstFrameInfo->iFrameNo,
+            _RECORD_ERR("[skip video]write Frame no:%u->%u, time:%lu->%lu,%lu, rTime:%lu->%lu\n", iLastVideoNo, pstFrameInfo->iFrameNo,
                 iLastVideoTime, pstFrameInfo->iShowTime, time(NULL),
                 iLastVideoAbsTime, pstFrameInfo->iFrame_absTime);
         }
@@ -4113,7 +4145,7 @@ static CVI_S32 CVI_REPLAY_GetByTime(time_t tBeginTime, time_t tEndTime, CVI_U32 
     }
 
     if (0 != CVI_RECORD_MallocBuffer(&stPkgBuf, PKG_FILE_INDEX_MAX_LEN)) {
-        _RECORD_ERR("pkgstorage malloc err: stPkgBuf %d\n", PKG_FILE_INDEX_MAX_LEN);
+        _RECORD_ERR("pkgstorage malloc err: stPkgBuf %ld\n", PKG_FILE_INDEX_MAX_LEN);
         CVI_RECORD_FUNC_END;
         return ERR_HANDLE_ALLOC_ERROR;
     }
@@ -4180,7 +4212,7 @@ static CVI_S32 CVI_REPLAY_GetByTime(time_t tBeginTime, time_t tEndTime, CVI_U32 
                                 pSegTailNew = (CVI_REPLAY_SEEK_RECORD *)malloc(sizeof(CVI_REPLAY_SEEK_RECORD));
                                 if (NULL == pSegTailNew) {
                                     //只要分配空间失败，就把之前成功分配的释放掉
-                                    _RECORD_ERR("malloc buf err, %d\n", sizeof(CVI_REPLAY_SEEK_RECORD));
+                                    _RECORD_ERR("malloc buf err, %ld\n", sizeof(CVI_REPLAY_SEEK_RECORD));
                                     CVI_REPLAY_FreeSeekArr(pSegHead);
                                     pSegHead = NULL;
                                     nRecSegCount = 0;
@@ -4219,7 +4251,7 @@ static CVI_S32 CVI_REPLAY_GetByTime(time_t tBeginTime, time_t tEndTime, CVI_U32 
                                     pSegTailNew = (CVI_REPLAY_SEEK_RECORD *)malloc(sizeof(CVI_REPLAY_SEEK_RECORD));
                                     if (NULL == pSegTailNew) {
                                         //只要分配空间失败，就把之前成功分配的释放掉
-                                        _RECORD_ERR("malloc buf err, %d\n", sizeof(CVI_REPLAY_SEEK_RECORD));
+                                        _RECORD_ERR("malloc buf err, %ld\n", sizeof(CVI_REPLAY_SEEK_RECORD));
                                         CVI_REPLAY_FreeSeekArr(pSegHead);
                                         pSegHead = NULL;
                                         nRecSegCount = 0;
@@ -4333,7 +4365,7 @@ static CVI_S32 CVI_REPLAY_QueryByTime(time_t tBeginTime, time_t tEndTime, CVI_U3
     }
 
     if (0 != CVI_RECORD_MallocBuffer(&stPkgBuf, PKG_FILE_INDEX_MAX_LEN)) {
-        _RECORD_ERR("pkgstorage malloc err: stPkgBuf %d\n", PKG_FILE_INDEX_MAX_LEN);
+        _RECORD_ERR("pkgstorage malloc err: stPkgBuf %ld\n", PKG_FILE_INDEX_MAX_LEN);
         CVI_RECORD_FUNC_END;
         return ERR_HANDLE_ALLOC_ERROR;
     }
@@ -4484,7 +4516,7 @@ PSS_API CVI_S32 API_CALL CVI_REPLAY_QueryByMonth(IN CVI_U32 query_year, IN CVI_U
     }
 
     if(0 != CVI_RECORD_MallocBuffer(&stPkgBuf, PKG_FILE_INDEX_MAX_LEN)) {
-        _RECORD_ERR("pkgstorage malloc err: stPkgBuf %d\n", PKG_FILE_INDEX_MAX_LEN);
+        _RECORD_ERR("pkgstorage malloc err: stPkgBuf %ld\n", PKG_FILE_INDEX_MAX_LEN);
         return ERR_HANDLE_ALLOC_ERROR;
     }
 
@@ -4738,7 +4770,7 @@ static void *CVI_REPLAY_DataPopProc(void *lParam)
     }
 
     if (!CVI_REPLAY_IsValid(pPoper)) {
-        _RECORD_ERR("[PB EXIT]Pkg Invalid input Exit ERR! hDataPopper = 0x%x\n", (CVI_U32)pPoper);
+        _RECORD_ERR("[PB EXIT]Pkg Invalid input Exit ERR! hDataPopper = %p\n", pPoper);
         CVI_RECORD_FUNC_END;
         return NULL;
     }
@@ -4746,7 +4778,7 @@ static void *CVI_REPLAY_DataPopProc(void *lParam)
     //创建回放数据
     if (s_mPkgParam.iPkginited && !s_mPkgParam.bPkgstop && pPoper->pThreadRun && pPoper->bOpen) {
         if (0 >= CVI_REPLAY_GetByTime(pPoper->tBeginTime, pPoper->tEndTime, pPoper->iEvenType, &pRecSeekHead)) {
-            _RECORD_ERR("[PB EXIT]Pkg get pb time invalid! hDataPopper = 0x%x, time:%lu-%lu\n", (CVI_U32)pPoper, pPoper->tBeginTime, pPoper->tEndTime);
+            _RECORD_ERR("[PB EXIT]Pkg get pb time invalid! hDataPopper = %p, time:%lu-%lu\n", pPoper, pPoper->tBeginTime, pPoper->tEndTime);
             if (pPoper->pGetDataCallback)
                 pPoper->pGetDataCallback(pPoper, NULL, CVI_REPLAY_CB_ERROR);
             CVI_RECORD_FUNC_END;
@@ -4754,7 +4786,7 @@ static void *CVI_REPLAY_DataPopProc(void *lParam)
         }
         if(0 != CVI_RECORD_MallocBuffer(&stPkgBuf, PKG_FILE_INDEX_MAX_LEN))
         {
-            _RECORD_ERR("[PB EXIT]pkgstorage malloc err: stPkgBuf %d\n", PKG_FILE_INDEX_MAX_LEN);
+            _RECORD_ERR("[PB EXIT]pkgstorage malloc err: stPkgBuf %ld\n", PKG_FILE_INDEX_MAX_LEN);
             CVI_REPLAY_FreeSeekArr(pRecSeekHead);
             if(pPoper->pGetDataCallback)
             {
@@ -4769,7 +4801,7 @@ static void *CVI_REPLAY_DataPopProc(void *lParam)
     }
     else
     {
-        _RECORD_ERR("[PB EXIT]Pkg Invalid input Exit ERR! hDataPopper = 0x%x, init:%d,stop:%d,run:%d,open:%d\n", (CVI_U32)pPoper,
+        _RECORD_ERR("[PB EXIT]Pkg Invalid input Exit ERR! hDataPopper = %p, init:%d,stop:%d,run:%d,open:%d\n", pPoper,
             s_mPkgParam.iPkginited, s_mPkgParam.bPkgstop, pPoper->pThreadRun, pPoper->bOpen);
         
         if(pPoper->pGetDataCallback)
@@ -4992,16 +5024,16 @@ static void *CVI_REPLAY_DataPopProc(void *lParam)
                         CVI_RECORD_ShowSegmentIndex(pSegIndexRecord);
                         if(0 != CVI_RECORD_ReadSegmentFrameInfo(iFilefd, CVI_RECORD_FRAME_HEADER_INFO_SEEK(pSegIndexRecord), iPkgWriteIndexHead, CVI_RECORD_FRAME_HEADER_INFO_MAX, NULL))
                         {
-                            _RECORD_ERR("[skip seg]Reader header Invalid files:%d seg:%d, offset:%u, %u\n", iRecFileNo, iRecSeekSegId, pSegIndexRecord->iInfoEndOffset, CVI_RECORD_FRAME_HEADER_INFO_SEEK(pSegIndexRecord));
+                            _RECORD_ERR("[skip seg]Reader header Invalid files:%d seg:%d, offset:%u, %lu\n", iRecFileNo, iRecSeekSegId, pSegIndexRecord->iInfoEndOffset, CVI_RECORD_FRAME_HEADER_INFO_SEEK(pSegIndexRecord));
                         }
                         else
                         {
-                             _RECORD_DBG("[seg]Reader header files:%d seg:%d, offset:%u, %u\n", iRecFileNo, iRecSeekSegId, pSegIndexRecord->iInfoEndOffset, CVI_RECORD_FRAME_HEADER_INFO_SEEK(pSegIndexRecord));
+                             _RECORD_DBG("[seg]Reader header files:%d seg:%d, offset:%u, %lu\n", iRecFileNo, iRecSeekSegId, pSegIndexRecord->iInfoEndOffset, CVI_RECORD_FRAME_HEADER_INFO_SEEK(pSegIndexRecord));
                              if((CVI_RECORD_INFO_TYPE_HEADER != iPkgWriteIndexHead[CVI_RECORD_FRAME_HEADER_INFO_HEAD].iInfoType)
                                 || (CVI_RECORD_INFO_TYPE_KEY_INDEX != iPkgWriteIndexHead[CVI_RECORD_FRAME_HEADER_INFO_KEY0].iInfoType)
                                 || (CVI_RECORD_INFO_TYPE_KEY_INDEX != iPkgWriteIndexHead[CVI_RECORD_FRAME_HEADER_INFO_KEY1].iInfoType))
                              {
-                                 _RECORD_ERR("[skip seg]Reader header type(%d,%d,%d) Invalid files:%d seg:%d, offset:%u, %u\n", 
+                                 _RECORD_ERR("[skip seg]Reader header type(%d,%d,%d) Invalid files:%d seg:%d, offset:%u, %lu\n", 
                                         iPkgWriteIndexHead[CVI_RECORD_FRAME_HEADER_INFO_HEAD].iInfoType, iPkgWriteIndexHead[CVI_RECORD_FRAME_HEADER_INFO_KEY0].iInfoType,
                                         iPkgWriteIndexHead[CVI_RECORD_FRAME_HEADER_INFO_KEY1].iInfoType, iRecFileNo, iRecSeekSegId, pSegIndexRecord->iInfoEndOffset, CVI_RECORD_FRAME_HEADER_INFO_SEEK(pSegIndexRecord));
                              }
@@ -5061,14 +5093,14 @@ static void *CVI_REPLAY_DataPopProc(void *lParam)
                                      
                                      if(0 != CVI_RECORD_ReadSegmentFrameInfo(iFilefd, pSegIndexRecord->iInfoEndOffset-((iRecSeekSegFrameId+1)*sizeof(CVI_RECORD_SEGMENT_INFO)), &iPkgWriteIndexBuff, 1, NULL))
                                      {
-                                          _RECORD_ERR("[skip frame]Reader frame0 Index:%d seg:%d id:%d, offset:%u, %u\n", iRecFileNo, iRecSeekSegId, iRecSeekSegFrameId, pSegIndexRecord->iInfoEndOffset, ((iRecSeekSegFrameId+1)*sizeof(CVI_RECORD_SEGMENT_INFO)));
+                                          _RECORD_ERR("[skip frame]Reader frame0 Index:%d seg:%d id:%d, offset:%u, %lu\n", iRecFileNo, iRecSeekSegId, iRecSeekSegFrameId, pSegIndexRecord->iInfoEndOffset, ((iRecSeekSegFrameId+1)*sizeof(CVI_RECORD_SEGMENT_INFO)));
                                           continue;
                                      }
                                      else
                                      {
                                          if(CVI_RECORD_INFO_TYPE_FRAME != iPkgWriteIndexBuff.iInfoType)
                                          {
-                                             _RECORD_ERR("[skip frame]Reader frame1 Index:%d seg:%d,type:%d,id:%d, offset:%u, %u\n", iRecFileNo, iRecSeekSegId, iPkgWriteIndexBuff.iInfoType, iRecSeekSegFrameId, pSegIndexRecord->iInfoEndOffset, ((iRecSeekSegFrameId+1)*sizeof(CVI_RECORD_SEGMENT_INFO)));
+                                             _RECORD_ERR("[skip frame]Reader frame1 Index:%d seg:%d,type:%d,id:%d, offset:%u, %lu\n", iRecFileNo, iRecSeekSegId, iPkgWriteIndexBuff.iInfoType, iRecSeekSegFrameId, pSegIndexRecord->iInfoEndOffset, ((iRecSeekSegFrameId+1)*sizeof(CVI_RECORD_SEGMENT_INFO)));
                                              continue;
                                          }
                                          else
@@ -5254,7 +5286,7 @@ static void *CVI_REPLAY_DataPopProc(void *lParam)
         }
         else
         {
-            _RECORD_ERR("Pkg Err,thread no open(%d),  hDataPopper = 0x%x\n", pPoper->bOpen, (CVI_U32)pPoper);
+            _RECORD_ERR("Pkg Err,thread no open(%d),  hDataPopper = %p\n", pPoper->bOpen, pPoper);
             break;
         }
 BEGIN:
@@ -5362,7 +5394,7 @@ PSS_API HANDLE API_CALL CVI_REPLAY_Create(IN time_t tStartSeekTime, IN time_t tE
         s_mDataPoper[iPoperIndex].pGetDataCallback = cbReplayCallback;
 
         pthread_mutex_unlock(&s_mDataPoper[iPoperIndex].iPopMutex);
-        _RECORD_INFO("creat OK! Handle = 0x%x\n", (CVI_U32)&s_mDataPoper[iPoperIndex]);
+        _RECORD_INFO("creat OK! Handle = %p\n", &s_mDataPoper[iPoperIndex]);
         CVI_RECORD_FUNC_END;
         return (HANDLE)&s_mDataPoper[iPoperIndex];
     }
@@ -5404,7 +5436,7 @@ PSS_API CVI_S32 API_CALL CVI_REPLAY_DataSetKeyFrame(IN HANDLE hDataPopper, IN CV
     }
 
     if (!CVI_REPLAY_IsValid(hDataPopper)) {
-        _RECORD_ERR("Pkg Invalid input Exit ERR! hDataPopper = 0x%x\n", (CVI_U32)hDataPopper);
+        _RECORD_ERR("Pkg Invalid input Exit ERR! hDataPopper = %p\n", hDataPopper);
         return ERR_INVALID_HANDLE;
     }
     pPoper = (T_PSS_DataPoper*)hDataPopper;
@@ -5460,7 +5492,7 @@ PSS_API CVI_S32 API_CALL CVI_REPLAY_Pause(IN HANDLE hDataPopper)
     }
 
     if (!CVI_REPLAY_IsValid(hDataPopper)) {
-        _RECORD_ERR("Pkg Invalid input Exit ERR! hDataPopper = 0x%x\n", (CVI_U32)hDataPopper);
+        _RECORD_ERR("Pkg Invalid input Exit ERR! hDataPopper = %p\n", hDataPopper);
         CVI_RECORD_FUNC_END;
         return ERR_INVALID_HANDLE;
     }
@@ -5472,7 +5504,7 @@ PSS_API CVI_S32 API_CALL CVI_REPLAY_Pause(IN HANDLE hDataPopper)
     else
         _RECORD_ERR("Pkg Invalid no open\n");
     pthread_mutex_unlock(&pPoper->iPopMutex);
-    _RECORD_DBG("Pkg pause hDataPopper = 0x%x\n", (CVI_U32)hDataPopper);
+    _RECORD_DBG("Pkg pause hDataPopper = %p\n", hDataPopper);
     CVI_RECORD_FUNC_END;
     return iRet;
 }
@@ -5511,7 +5543,7 @@ PSS_API CVI_S32 API_CALL CVI_REPLAY_Resume(IN HANDLE hDataPopper)
     }
 
     if (!CVI_REPLAY_IsValid(hDataPopper)) {
-        _RECORD_ERR("Pkg Invalid input Exit ERR! hDataPopper = 0x%x\n", (CVI_U32)hDataPopper);
+        _RECORD_ERR("Pkg Invalid input Exit ERR! hDataPopper = %p\n", hDataPopper);
         CVI_RECORD_FUNC_END;
         return ERR_INVALID_HANDLE;
     }
@@ -5523,7 +5555,7 @@ PSS_API CVI_S32 API_CALL CVI_REPLAY_Resume(IN HANDLE hDataPopper)
     else
         _RECORD_ERR("Pkg Invalid no open\n");
     pthread_mutex_unlock(&pPoper->iPopMutex);
-    _RECORD_DBG("Pkg resume hDataPopper = 0x%x\n", (CVI_U32)hDataPopper);
+    _RECORD_DBG("Pkg resume hDataPopper = %p\n", hDataPopper);
     CVI_RECORD_FUNC_END;
     return iRet;
 }
@@ -5556,14 +5588,14 @@ PSS_API CVI_S32 API_CALL CVI_REPLAY_Release(IN HANDLE hDataPopper)
     }
     
     if (!CVI_REPLAY_IsValid(hDataPopper)) {
-        _RECORD_ERR("Pkg Invalid input Exit ERR! hDataPopper = 0x%x\n", (CVI_U32)hDataPopper);
+        _RECORD_ERR("Pkg Invalid input Exit ERR! hDataPopper = %p\n", hDataPopper);
         CVI_RECORD_FUNC_END;
         return ERR_INVALID_HANDLE;
     }
     pPoper = (T_PSS_DataPoper*)hDataPopper;
     if (pPoper->pThreadRun) {
         pPoper->pThreadRun = 0;
-        _RECORD_DBG("Wait end thread, hDataPopper = 0x%x\n", (CVI_U32)hDataPopper);
+        _RECORD_DBG("Wait end thread, hDataPopper = %p\n", hDataPopper);
         pthread_join(pPoper->pPopThread, NULL);
     }
     
@@ -5623,7 +5655,7 @@ PSS_API CVI_S32 API_CALL CVI_REPLAY_Seek(IN HANDLE hDataPopper,IN  time_t SeekTi
     }
 
     if (!CVI_REPLAY_IsValid(hDataPopper)) {
-        _RECORD_ERR("Pkg Invalid input Exit ERR! hDataPopper = 0x%x\n", (CVI_U32)hDataPopper);
+        _RECORD_ERR("Pkg Invalid input Exit ERR! hDataPopper = %p\n", hDataPopper);
         CVI_RECORD_FUNC_END;
         return ERR_INVALID_HANDLE;
     }

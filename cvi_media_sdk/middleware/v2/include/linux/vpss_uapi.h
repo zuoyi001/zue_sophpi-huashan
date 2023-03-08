@@ -159,6 +159,7 @@ struct vpss_grp_csc_cfg {
 	__u16 coef[3][3];
 	__u8 sub[3];
 	__u8 add[3];
+	__u8 scene;
 };
 
 struct vpss_int_normalize {
@@ -203,6 +204,12 @@ struct vpss_proc_amp_cfg {
 
 struct vpss_all_proc_amp_cfg {
 	CVI_S32 proc_amp[VPSS_MAX_GRP_NUM][PROC_AMP_MAX];
+};
+
+/*for record ISP bindata secne*/
+struct vpss_scene {
+	VPSS_GRP VpssGrp;
+	CVI_U8 scene;
 };
 
 /* Public */
@@ -256,6 +263,7 @@ struct vpss_all_proc_amp_cfg {
 #define CVI_VPSS_GET_AMP_CTRL _IOWR('S', 0x7a, struct vpss_proc_amp_ctrl_cfg)
 #define CVI_VPSS_GET_AMP_CFG _IOWR('S', 0x7b, struct vpss_proc_amp_cfg)
 #define CVI_VPSS_GET_ALL_AMP _IOWR('S', 0x7c, struct vpss_all_proc_amp_cfg)
+#define CVI_VPSS_GET_SCENE _IOWR('S', 0x7d, struct vpss_scene)
 
 #ifdef __cplusplus
 }

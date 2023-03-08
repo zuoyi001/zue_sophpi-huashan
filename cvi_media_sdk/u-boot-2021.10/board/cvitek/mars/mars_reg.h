@@ -71,6 +71,7 @@
 #define PINMUX_EPHY_LED 39
 #define PINMUX_I80      40
 #define PINMUX_LVDS     41
+#define PINMUX_USB_VBUS_DET     (PINMUX_BASE + 0x108)
 
 #define REG_TOP_USB_ECO			(TOP_BASE + 0xB4)
 #define BIT_TOP_USB_ECO_RX_FLUSH	0x80
@@ -117,7 +118,7 @@
 #define DW_WDT_CRR_RESTART_VAL	0x76
 
 /* SDIO Wifi */
-#define WIFI_CHIP_EN_BGA    BIT(30)
+#define WIFI_CHIP_EN_BGA    BIT(18)
 #define WIFI_CHIP_EN_QFN    BIT(2)
 
 /* RTC */

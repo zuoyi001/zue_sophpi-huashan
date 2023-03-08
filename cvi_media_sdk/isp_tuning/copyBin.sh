@@ -13,6 +13,7 @@ function copyBinToOutFolder()
 		sdrBin=${mPATH}/${mPRE_BIN_NAME}_sdr.bin
 		sdr_irBin=${mPATH}/${mPRE_BIN_NAME}_sdr_ir.bin
 		wdrBin=${mPATH}/${mPRE_BIN_NAME}_wdr.bin
+		sdr_irBin=${mPATH}/${mPRE_BIN_NAME}_sdr_ir.bin
 		outPath=$1
 
 		mkdir -p ${outPath}

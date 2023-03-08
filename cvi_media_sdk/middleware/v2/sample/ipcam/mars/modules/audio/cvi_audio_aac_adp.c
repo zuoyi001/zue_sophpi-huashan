@@ -94,8 +94,6 @@ static AACDEC_FUN_S g_stAacDecFunc = {0};
 
 static CVI_S32 InitAacAencLib(void)
 {
-    CVI_S32 s32Ret = CVI_FAILURE;
-
     if (g_stAacEncFunc.s32OpenCnt == 0)
     {
         AACENC_FUN_S stAacEncFunc;
@@ -110,6 +108,7 @@ static CVI_S32 InitAacAencLib(void)
         g_stAacEncFunc.pAACEncoderFrame = AACEncoderFrame;
         g_stAacEncFunc.pAACEncoderClose = AACEncoderClose;
 #else
+        CVI_S32 s32Ret = CVI_FAILURE;
         s32Ret = CVI_Audio_Dlopen(&(stAacEncFunc.pLibHandle), AAC_ENC_LIB_NAME);
         if (s32Ret != CVI_SUCCESS)
         {
@@ -253,8 +252,6 @@ CVI_VOID AACEncoderClose_Adp(AAC_ENCODER_S *hAacPlusEnc)
 
 static CVI_S32 InitAacAdecLib(void)
 {
-    CVI_S32 s32Ret = CVI_FAILURE;
-
     if (g_stAacDecFunc.s32OpenCnt == 0)
     {
         AACDEC_FUN_S stAacDecFunc;
@@ -274,6 +271,7 @@ static CVI_S32 InitAacAdecLib(void)
         g_stAacDecFunc.pAACFlushCodec = AACFlushCodec;
 
 #else
+        CVI_S32 s32Ret = CVI_FAILURE;
         s32Ret = CVI_Audio_Dlopen(&(stAacDecFunc.pLibHandle), AAC_DEC_LIB_NAME);
         if (s32Ret != CVI_SUCCESS)
         {

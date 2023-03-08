@@ -20,102 +20,341 @@ extern "C"
 
 /* Device Relative Settings */
 
-CVI_S32 CVI_VO_SetPubAttr(VO_DEV VoDev, const VO_PUB_ATTR_S *pstPubAttr);
-CVI_S32 CVI_VO_GetPubAttr(VO_DEV VoDev, VO_PUB_ATTR_S *pstPubAttr);
-/* CVI_VO_I80Init: init i80 per instructions
+/**
+ * @brief Set vo device attribute.
  *
- * @param VoDev: the chn which has vb to be released
- * @param pi80Instr: i80 init instructions
- * @param size: number of pi80Instr
- * @return: status of operation. CVI_SUCCESS if OK.
+ * @param VoDev(In), Device ID.
+ * @param pstPubAttr(In), Device attribute.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
+CVI_S32 CVI_VO_SetPubAttr(VO_DEV VoDev, const VO_PUB_ATTR_S *pstPubAttr);
+
+/**
+ * @brief Get vo device attribute.
+ *
+ * @param VoDev(In), Device ID.
+ * @param pstPubAttr(Out), Device Attribute.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
+CVI_S32 CVI_VO_GetPubAttr(VO_DEV VoDev, VO_PUB_ATTR_S *pstPubAttr);
+
+/**
+ * @brief Init i80 per instructions
+ *
+ * @param VoDev(In), Device ID.
+ * @param pi80Instr(In), I80 init instructions
+ * @param size(In), Number of pi80Instr
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
  */
 CVI_S32 CVI_VO_I80Init(VO_DEV VoDev, const VO_I80_INSTR_S *pi80Instr, CVI_U8 size);
 
+/**
+ * @brief Get vo device status.
+ *
+ * @param VoDev(In): Device ID.
+ *
+ * @return CVI_BOOL Return status of VoDev.
+ */
 CVI_BOOL CVI_VO_IsEnabled(VO_DEV VoDev);
+
+/**
+ * @brief Enable vo device.
+ *
+ * @param VoDev(In): Device ID.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_Enable(VO_DEV VoDev);
+
+/**
+ * @brief Disable vo device.
+ *
+ * @param VoDev(In): Device ID.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_Disable(VO_DEV VoDev);
 
+/**
+ * @brief Close vo device file descriptor.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_CloseFd(void);
+
 /* Video Relative Settings */
+/**
+ * @brief Set vo videolayer attribute.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param pstLayerAttr(In), Videolayer attribute.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_SetVideoLayerAttr(VO_LAYER VoLayer, const VO_VIDEO_LAYER_ATTR_S *pstLayerAttr);
+
+/**
+ * @brief Get vo videolayer attribute.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param pstLayerAttr(Out), Videolayer attribute.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_GetVideoLayerAttr(VO_LAYER VoLayer, VO_VIDEO_LAYER_ATTR_S *pstLayerAttr);
 
+/**
+ * @brief Enable vo videolayer.
+ *
+ * @param VoLayer(In): Videolayer ID.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_EnableVideoLayer(VO_LAYER VoLayer);
+
+/**
+ * @brief Disable vo videolayer.
+ *
+ * @param VoLayer(In): Videolayer ID.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_DisableVideoLayer(VO_LAYER VoLayer);
 
-CVI_S32 CVI_VO_SetVideoLayerPriority(VO_LAYER VoLayer, CVI_U32 u32Priority);
-CVI_S32 CVI_VO_GetVideoLayerPriority(VO_LAYER VoLayer, CVI_U32 *pu32Priority);
-
-CVI_S32 CVI_VO_SetVideoLayerCSC(VO_LAYER VoLayer, const VO_CSC_S *pstVideoCSC);
-CVI_S32 CVI_VO_GetVideoLayerCSC(VO_LAYER VoLayer, VO_CSC_S *pstVideoCSC);
-
+/**
+ * @brief Get videolayer image quality control.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param type(In), Brightness/contrast/saturation/hue.
+ * @param ctrl(out), Control info.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_GetLayerProcAmpCtrl(VO_LAYER VoLayer, PROC_AMP_E type, PROC_AMP_CTRL_S *ctrl);
+
+/**
+ * @brief Get videolayer image brightness/contrast/saturation/hue value.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param type(In), Brightness/contrast/saturation/hue.
+ * @param value(out), Value.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_GetLayerProcAmp(VO_LAYER VoLayer, PROC_AMP_E type, CVI_S32 *value);
+
+/**
+ * @brief Set videolayer image brightness/contrast/saturation/hue value.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param type(In), Brightness/contrast/saturation/hue.
+ * @param value(In), Value.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_SetLayerProcAmp(VO_LAYER VoLayer, PROC_AMP_E type, CVI_S32 value);
 
-CVI_S32 CVI_VO_BatchBegin(VO_LAYER VoLayer);
-CVI_S32 CVI_VO_BatchEnd(VO_LAYER VoLayer);
-
-
 /* Display relative operations */
-CVI_S32 CVI_VO_SetPlayToleration(VO_LAYER VoLayer, CVI_U32 u32Toleration);
-CVI_S32 CVI_VO_GetPlayToleration(VO_LAYER VoLayer, CVI_U32 *pu32Toleration);
-
-CVI_S32 CVI_VO_GetScreenFrame(VO_LAYER VoLayer, VIDEO_FRAME_INFO_S *pstVideoFrame, CVI_S32 s32MilliSec);
-CVI_S32 CVI_VO_ReleaseScreenFrame(VO_LAYER VoLayer, const VIDEO_FRAME_INFO_S *pstVideoFrame);
-
+/**
+ * @brief Set videolayer buffer length.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param u32BufLen(In), Buffer length.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_SetDisplayBufLen(VO_LAYER VoLayer, CVI_U32 u32BufLen);
+
+/**
+ * @brief Get videolayer buffer length.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param pu32BufLen(Out), Buffer length.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_GetDisplayBufLen(VO_LAYER VoLayer, CVI_U32 *pu32BufLen);
 
 /* Channel Relative Operations */
+/**
+ * @brief Set vo channel attribute.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param VoChn(In), Channel ID.
+ * @param pstChnAttr(In), Channel attribute.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_SetChnAttr(VO_LAYER VoLayer, VO_CHN VoChn, const VO_CHN_ATTR_S *pstChnAttr);
+
+/**
+ * @brief Get vo channel attribute.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param VoChn(In), Channel ID.
+ * @param pstChnAttr(Out), Channel attribute.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_GetChnAttr(VO_LAYER VoLayer, VO_CHN VoChn, VO_CHN_ATTR_S *pstChnAttr);
 
+/**
+ * @brief Enable vo channel.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param VoChn(In), Channel ID.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_EnableChn(VO_LAYER VoLayer, VO_CHN VoChn);
+
+/**
+ * @brief Disable vo channel.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param VoChn(In), Channel ID.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_DisableChn(VO_LAYER VoLayer, VO_CHN VoChn);
 
-CVI_S32 CVI_VO_SetChnDisplayPosition(VO_LAYER VoLayer, VO_CHN VoChn, const POINT_S *pstDispPos);
-CVI_S32 CVI_VO_GetChnDisplayPosition(VO_LAYER VoLayer, VO_CHN VoChn, POINT_S *pstDispPos);
-
-
-CVI_S32 CVI_VO_SetChnFrameRate(VO_LAYER VoLayer, VO_CHN VoChn, CVI_S32 s32ChnFrmRate);
-CVI_S32 CVI_VO_GetChnFrameRate(VO_LAYER VoLayer, VO_CHN VoChn, CVI_S32 *ps32ChnFrmRate);
-
-CVI_S32 CVI_VO_GetChnFrame(VO_LAYER VoLayer, VO_CHN VoChn, VIDEO_FRAME_INFO_S *pstVideoFrame, CVI_S32 s32MilliSec);
-CVI_S32 CVI_VO_ReleaseChnFrame(VO_LAYER VoLayer, VO_CHN VoChn, const VIDEO_FRAME_INFO_S *pstVideoFrame);
-
+/**
+ * @brief Pause vo channel.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param VoChn(In), Channel ID.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_PauseChn(VO_LAYER VoLayer, VO_CHN VoChn);
+
+/**
+ * @brief Resume vo channel.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param VoChn(In), Channel ID.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_ResumeChn(VO_LAYER VoLayer, VO_CHN VoChn);
 
+/**
+ * @brief Show vo channel.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param VoChn(In), Channel ID.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_ShowChn(VO_LAYER VoLayer, VO_CHN VoChn);
+
+/**
+ * @brief Hide vo channel.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param VoChn(In), Channel ID.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_HideChn(VO_LAYER VoLayer, VO_CHN VoChn);
 
-CVI_S32 CVI_VO_GetChnPTS(VO_LAYER VoLayer, VO_CHN VoChn, CVI_U64 *pu64ChnPTS);
-CVI_S32 CVI_VO_QueryChnStatus(VO_LAYER VoLayer, VO_CHN VoChn, VO_QUERY_STATUS_S *pstStatus);
-
+/**
+ * @brief Send frame to vo channel.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param VoChn(In), Channel ID.
+ * @param pstVideoFrame(In), Frame info.
+ * @param s32MilliSec(In), Timeout.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_SendFrame(VO_LAYER VoLayer, VO_CHN VoChn, VIDEO_FRAME_INFO_S *pstVideoFrame, CVI_S32 s32MilliSec);
 
+/**
+ * @brief Clear vo channel buffer.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param VoChn(In), Channel ID.
+ * @param bClrAll(In), Clear all buffer or not.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_ClearChnBuf(VO_LAYER VoLayer, VO_CHN VoChn, CVI_BOOL bClrAll);
 
-CVI_S32 CVI_VO_SetChnRecvThreshold(VO_LAYER VoLayer, VO_CHN VoChn, CVI_U32 u32Threshold);
-CVI_S32 CVI_VO_GetChnRecvThreshold(VO_LAYER VoLayer, VO_CHN VoChn, CVI_U32 *pu32Threshold);
-
+/**
+ * @brief Set vo channel rotation.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param VoChn(In), Channel ID.
+ * @param enRotation(In), Rotation.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_SetChnRotation(VO_LAYER VoLayer, VO_CHN VoChn, ROTATION_E enRotation);
+
+/**
+ * @brief Get vo channel rotation.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param VoChn(In), Channel ID.
+ * @param penRotation(Out), Rotation.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_GetChnRotation(VO_LAYER VoLayer, VO_CHN VoChn, ROTATION_E *penRotation);
 
-CVI_S32 CVI_VO_SetDevFrameRate(VO_DEV VoDev, CVI_U32 u32FrameRate);
-CVI_S32 CVI_VO_GetDevFrameRate(VO_DEV VoDev, CVI_U32 *pu32FrameRate);
 
 /* Module Parameter Settings */
-CVI_S32 CVI_VO_SetVtth(VO_DEV VoDev, CVI_U32 u32Vtth);
-CVI_S32 CVI_VO_GetVtth(VO_DEV VoDev, CVI_U32 *pu32Vtth);
-
+/**
+ * @brief Get panel status.
+ *
+ * @param VoLayer(In), Videolayer ID.
+ * @param VoChn(In), Channel ID.
+ * @param is_init(Out), Initialised or not.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_Get_Panel_Status(VO_LAYER VoLayer, VO_CHN VoChn, CVI_U32 *is_init);
 
+/**
+ * @brief Register Power Management Callback.
+ *
+ * @param VoDev(In), Device ID.
+ * @param pstPmOps(In), Power Management operator.
+ * @param pvData(In), Pointer of VO_PM_OPS_S.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_RegPmCallBack(VO_DEV VoDev, VO_PM_OPS_S *pstPmOps, void *pvData);
+
+/**
+ * @brief Unegister Power Management Callback.
+ *
+ * @param VoDev(In), Device ID.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_UnRegPmCallBack(VO_DEV VoDev);
 
+/**
+ * @brief Set vo gamma info.
+ *
+ * @param pinfo(In), gamma info.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_SetGammaInfo(VO_GAMMA_INFO_S *pinfo);
+
+/**
+ * @brief Get vo gamma info.
+ *
+ * @param pinfo(Out), gamma info.
+ *
+ * @return CVI_S32 Return CVI_SUCCESS if succeed.
+ */
 CVI_S32 CVI_VO_GetGammaInfo(VO_GAMMA_INFO_S *pinfo);
 
 #ifdef __cplusplus

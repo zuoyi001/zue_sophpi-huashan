@@ -24,9 +24,6 @@ typedef struct APP_PARAM_IRCUT_STATUS_T {
 
 typedef struct APP_PARAM_IRCUT_CFG_T {
     CVI_BOOL bInit;
-    CVI_GPIO_NUM_E eIRCUT_GPIO_A;
-    CVI_GPIO_NUM_E eIRCUT_GPIO_B;
-    CVI_GPIO_NUM_E eIR_LED_GPIO;
     CVI_BOOL bDayMode;
     CVI_BOOL bNightMode;
     CVI_CHAR sDayBinPath[APP_IPCAM_MAX_STR_LEN];
@@ -34,12 +31,10 @@ typedef struct APP_PARAM_IRCUT_CFG_T {
 } APP_PARAM_IRCUT_CFG_S;
 
 static APP_PARAM_IRCUT_CFG_S g_stIrCutCfg = {
-    .eIRCUT_GPIO_A = CVI_GPIOE_19,
-    .eIRCUT_GPIO_B = CVI_GPIOE_18,
-    .eIR_LED_GPIO = CVI_GPIOE_20,
     .sDayBinPath = "/mnt/cfg/param/cvi_sdr_bin",
     .sNightBinPath = "/mnt/cfg/param/cvi_sdr_ir_bin",
 };
+
 APP_PARAM_IRCUT_CFG_S *g_pstIrCutCfg = &g_stIrCutCfg;
 static pthread_t g_pthIRCut;
 static CVI_BOOL g_bIRCut_Running;
@@ -74,7 +69,7 @@ int app_ipcam_IRCut_Switch(CVI_GPIO_NUM_E IR_CUT_A, CVI_GPIO_NUM_E IR_CUT_B, CVI
 
     return CVI_SUCCESS;
 }
-
+#if 0
 static CVI_S32 app_ipcam_IRCutMode_Switch(int mode, ISP_IR_AUTO_ATTR_S *pstIrAttr)
 {
     if (mode == IR_CUT_SWITCH_TO_NORMAL) {
@@ -106,6 +101,7 @@ static CVI_S32 app_ipcam_IRCutMode_Switch(int mode, ISP_IR_AUTO_ATTR_S *pstIrAtt
     return CVI_SUCCESS;
 }
 
+#endif
 
 /*
  * @brief select ir-cut mode between auto and manual
@@ -144,13 +140,14 @@ void app_ipcam_IRCutMode_ManualCtrl(CVI_S32 value, CVI_S32 state)
             APP_PROF_LOG_PRINT(LEVEL_INFO, "IRCut Manual control and switch to IR mode\n");
             /* load PQ parameter */
             app_ipcam_PQBin_Load(PQ_BIN_IR);
+            #ifdef USING_VPSS_ADJUSTMENT
+            CVI_VPSS_SetGrpParamfromBin(0, 0);//grop0 load scene0
+            #endif
+            sleep(1);
             /* close ir filter*/
             app_ipcam_IRCut_Switch(IR_CUT_A, IR_CUT_B, IR_CUT_CLOSE);
             /* open ir-led */
             app_ipcam_Gpio_Value_Set(IR_LED, CVI_GPIO_VALUE_H);
-            #ifdef USING_VPSS_ADJUSTMENT
-            CVI_VPSS_SetGrpParamfromBin(0, 0);//grop0 load scene0
-            #endif
         }
     }
 }
@@ -161,17 +158,14 @@ static CVI_VOID *ThreadIRCutAutoSwitch(void *arg)
     CVI_U8 checkDayCount = 0;
     CVI_U8 checkNightCount = 0;
     
-	while(g_bIRCut_Running)
-	{   
+    while(g_bIRCut_Running) {
         if (g_stIRCutCtrl.bAutoCtrl == CVI_TRUE) {
             CVI_ISP_GetCurrentLvX100(0, &lv);
-            APP_PROF_LOG_PRINT(LEVEL_DEBUG, "IRCut Auto control lv is %d\n", lv);
+            APP_PROF_LOG_PRINT(LEVEL_DEBUG, "IRCut Auto control lv is %d, Day_LV=%d Night_LV=%d\n", lv, ENTER_DAY_LV_LEVEL, ENTER_NIGHT_LV_LEVEL);
             if (lv > ENTER_DAY_LV_LEVEL) {
                 if (checkDayCount < CHECK_COUNT) {
                     checkDayCount++;
-                }
-                else if(!g_pstIrCutCfg->bDayMode)
-                {
+                } else if(!g_pstIrCutCfg->bDayMode) {
                     APP_PROF_LOG_PRINT(LEVEL_INFO, "IRCut Manual control and switch to normal mode\n");
                     /* open ir filter*/
                     app_ipcam_IRCut_Switch(IR_CUT_A, IR_CUT_B, IR_CUT_OPEN);
@@ -186,31 +180,26 @@ static CVI_VOID *ThreadIRCutAutoSwitch(void *arg)
                     g_pstIrCutCfg->bNightMode = CVI_FALSE;
                     checkDayCount = 0;
                 }
-            }
-            else if (lv < ENTER_NIGHT_LV_LEVEL) 
-            {
+            } else if (lv < ENTER_NIGHT_LV_LEVEL) {
                 if (checkNightCount < CHECK_COUNT) {
                     checkNightCount++;
-                } 
-                else if(!g_pstIrCutCfg->bNightMode)
-                {
-                APP_PROF_LOG_PRINT(LEVEL_INFO, "IRCut Manual control and switch to IR mode\n");
+                } else if(!g_pstIrCutCfg->bNightMode) {
+                    APP_PROF_LOG_PRINT(LEVEL_INFO, "IRCut Manual control and switch to IR mode\n");
                     /* load PQ parameter */
                     app_ipcam_PQBin_Load(PQ_BIN_IR);
+                    #ifdef USING_VPSS_ADJUSTMENT
+                    CVI_VPSS_SetGrpParamfromBin(0, 0);//grop0 load scene0
+                    #endif
+                    sleep(1);
                     /* close ir filter*/
                     app_ipcam_IRCut_Switch(IR_CUT_A, IR_CUT_B, IR_CUT_CLOSE);
                     /* open ir-led */
                     app_ipcam_Gpio_Value_Set(IR_LED, CVI_GPIO_VALUE_H);
-                    #ifdef USING_VPSS_ADJUSTMENT
-                    CVI_VPSS_SetGrpParamfromBin(0, 0);//grop0 load scene0
-                    #endif
                     g_pstIrCutCfg->bDayMode = CVI_FALSE;
                     g_pstIrCutCfg->bNightMode = CVI_TRUE;
                     checkNightCount = 0;
                 }
-            } 
-            else 
-            {
+            } else {
                 checkDayCount = 0;
                 checkNightCount = 0;
             }
@@ -252,10 +241,14 @@ static CVI_VOID *ThreadIRCutAutoSwitch(void *arg)
 int app_ipcam_IRCut_Init(void)
 {
     int s32Ret = CVI_SUCCESS;
+    APP_PARAM_GPIO_CFG_S *psGpioCfg;
 
-    IR_CUT_A = g_pstIrCutCfg->eIRCUT_GPIO_A;
-    IR_CUT_B = g_pstIrCutCfg->eIRCUT_GPIO_B;
-    IR_LED = g_pstIrCutCfg->eIR_LED_GPIO;
+    psGpioCfg = app_ipcam_Gpio_Param_Get();
+    IR_CUT_A = psGpioCfg->IR_CUT_A;
+    IR_CUT_B = psGpioCfg->IR_CUT_B;
+    IR_LED   = psGpioCfg->LED_IR;
+
+    APP_PROF_LOG_PRINT(LEVEL_INFO, "gpio num ir_a=%d ir_b=%d ir_led=%d\n", IR_CUT_A, IR_CUT_B, IR_LED);
 
     app_ipcam_IRCut_Switch(IR_CUT_A, IR_CUT_B, IR_CUT_OPEN);
 

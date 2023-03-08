@@ -29,6 +29,7 @@ typedef struct APP_PARAM_SYS_CFG_T {
     uint32_t vb_pool_num;
     VI_VPSS_MODE_S stVIVPSSMode;
     VPSS_MODE_S stVPSSMode;
+    CVI_BOOL bSBMEnable;
 } APP_PARAM_SYS_CFG_S;
 
 APP_PARAM_SYS_CFG_S *app_ipcam_Sys_Param_Get(void);

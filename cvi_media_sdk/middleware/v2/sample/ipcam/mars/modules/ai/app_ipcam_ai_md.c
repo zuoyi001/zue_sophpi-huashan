@@ -213,9 +213,8 @@ static CVI_VOID *Thread_MD_Proc(CVI_VOID *pArgs)
 
         // Detect moving objects. All moving objects are store in obj_meta.
         CVI_AI_MotionDetection(Ai_Handle, &stVencFrame, &obj_meta, threshold, miniArea);
-        APP_PROF_LOG_PRINT(LEVEL_TRACE, "MD Cap Objs=%d\n");
         md_proc = GetCurTimeInMsec() - iTime_proc;
-
+        APP_PROF_LOG_PRINT(LEVEL_TRACE, "MD process takes %d\n", md_proc);
         s32Ret = CVI_VPSS_ReleaseChnFrame(VpssGrp, VpssChn, &stVencFrame);
         if (s32Ret != CVI_SUCCESS)
         {
@@ -388,7 +387,7 @@ int app_ipcam_Ai_MD_Start(void)
 
 int app_ipcam_CmdTask_Ai_MD_Switch(CVI_MQ_MSG_t *msg, CVI_VOID *userdate)
 {
-    CVI_CHAR param[256] = {0};
+    CVI_CHAR param[512] = {0};
     snprintf(param, sizeof(param), "%s", msg->payload);
     APP_PROF_LOG_PRINT(LEVEL_INFO, "%s param:%s arg2=%d\n", __FUNCTION__, param, msg->arg2);
 

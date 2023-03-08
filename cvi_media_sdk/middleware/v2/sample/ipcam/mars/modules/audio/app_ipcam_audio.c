@@ -16,6 +16,7 @@
 #include "acodec.h"
 #include "app_ipcam_gpio.h"
 #include "app_ipcam_rtsp.h"
+#include "app_ipcam_ll.h"
 #ifdef RECORD_SUPPORT
 #include "app_ipcam_record.h"
 #endif
@@ -23,8 +24,13 @@
 #include "cvi_mp3_decode.h"
 #endif
 
+#if defined(__CV180X__) || defined(__CV181X__)
+#define ACODEC_ADC          "/dev/cvitekaadc"
+#define ACODEC_DAC          "/dev/cvitekadac"
+#else
 #define ACODEC_ADC          "/dev/cv182xaadc"
 #define ACODEC_DAC          "/dev/cv182xadac"
+#endif
 #define SPEAKER_GPIO        CVI_GPIOA_15
 
 #define AUDIOAI_RECORD_PATH     "/mnt/sd/sample_record.raw"
@@ -32,6 +38,8 @@
 #define AUDIOAENC_RECORD_PATH   "/mnt/sd/sample_record.%s"
 #define AO_MAX_FRAME_NUMS       1280
 #define ADEC_MAX_FRAME_NUMS     320
+
+#define AUDIO_OVERSIZE 512 * 1024 //ao audio file 512K oversize
 
 #define pi2  (6.283185307179586476925286766559)
 #define ln10 (2.30258509299404568401799145468)
@@ -56,6 +64,7 @@ static int gst_SocketFd = -1;
 static struct sockaddr_in gst_TargetAddr;
 
 static pthread_mutex_t RsAudioMutex = PTHREAD_MUTEX_INITIALIZER;
+static void *g_pAudioDataCtx;
 
 #ifdef MP3_SUPPORT
 static int app_ipcam_Audio_MP3CB(void *inst, ST_MP3_DEC_INFO *pMp3_DecInfo, char *pBuff, int size)
@@ -183,6 +192,68 @@ static double calc_log(double x)
 static double calc_log10( double x)
 {
     return calc_log(x) / ln10;
+}
+
+static void _AudioData_Handle(void *pData, void *pArgs)
+{
+    APP_DATA_CTX_S *pDataCtx = (APP_DATA_CTX_S *)pArgs;
+    APP_DATA_PARAM_S *pstDataParam = &pDataCtx->stDataParam;
+
+    for (int i = 0; i < APP_DATA_COMSUMES_MAX; i++) {
+        if (pstDataParam->fpDataConsumes[i] != NULL) {
+            pstDataParam->fpDataConsumes[i](pData, pArgs);
+        }
+    }
+
+}
+
+static CVI_S32 _AudioData_Save(void **dst, void *src)
+{
+    if ((dst == NULL) || (src == NULL)) {
+        APP_PROF_LOG_PRINT(LEVEL_ERROR, "dst or src is NULL\n");
+        return CVI_FAILURE;
+    }
+
+    AUDIO_FRAME_S *psrc = (AUDIO_FRAME_S *)src;
+    if ((psrc->u64VirAddr[0] == NULL) || (psrc->u32Len == 0)) {
+        APP_PROF_LOG_PRINT(LEVEL_ERROR, "psrc param invalid!\n");
+        return CVI_FAILURE;
+    }
+    AUDIO_FRAME_S *pdst = (AUDIO_FRAME_S *)malloc(sizeof(AUDIO_FRAME_S));
+    if(pdst == NULL) {
+        return CVI_FAILURE;
+    }
+    memcpy(pdst, psrc, sizeof(AUDIO_FRAME_S));
+    pdst->u64VirAddr[0] = (CVI_U8 *)malloc(psrc->u32Len);
+    if(pdst->u64VirAddr[0] == NULL) {
+        free(pdst);
+        return CVI_FAILURE;
+    }
+    memcpy(pdst->u64VirAddr[0], psrc->u64VirAddr[0], psrc->u32Len);
+
+    *dst = (void *)pdst;
+
+    return CVI_SUCCESS;
+}
+
+static CVI_S32 _AudioData_Free(void **src)
+{
+    if(src == NULL || *src == NULL) {
+        APP_PROF_LOG_PRINT(LEVEL_ERROR, "src is NULL\n");
+        return CVI_FAILURE;
+    }
+
+    AUDIO_FRAME_S *psrc = NULL;
+    psrc = (AUDIO_FRAME_S *) *src;
+
+    if(psrc) {
+        if(psrc->u64VirAddr[0]) {
+            free(psrc->u64VirAddr[0]);
+        }
+        free(psrc);
+    }
+
+    return CVI_SUCCESS;
 }
 
 static float app_ipcam_Audio_Calculate_DB(short* pstBuffer, int iFrameLen)
@@ -339,7 +410,6 @@ static CVI_VOID *Thread_AudioAo_Proc(CVI_VOID *pArgs)
             app_ipcam_Audio_AoPlay(AUDIOMP3_RECORD_PATH, AUDIO_AO_PLAY_TYPE_MP3);
             MP3_RUNNING = CVI_FALSE;
         }
-        pthread_mutex_lock(&RsAudioMutex);
         if (g_stAudioPlay.iStatus)
         {
             if (app_ipcam_Audio_AoPlay(g_stAudioPlay.cAencFileName, AUDIO_AO_PLAY_TYPE_AENC) != 0)
@@ -347,7 +417,6 @@ static CVI_VOID *Thread_AudioAo_Proc(CVI_VOID *pArgs)
                 g_stAudioPlay.iStatus = 0;
             }
         }
-        pthread_mutex_unlock(&RsAudioMutex);
         if (gst_SocketFd > 0)
         {
             app_ipcam_Audio_AoPlay(g_stAudioPlay.cAencFileName, AUDIO_AO_PLAY_TYPE_INTERCOM);
@@ -413,7 +482,7 @@ static CVI_VOID *Thread_AudioAenc_Proc(CVI_VOID *pArgs)
                 //for web record aenc
                 if (fp_recex == NULL)
                 {
-                    char cAencFileName[64] = {0};
+                    char cAencFileName[128] = {0};
                     snprintf(cAencFileName, sizeof(cAencFileName), "%s_%d.%s",
                         g_stAudioRecord.cAencFileName, pastAudioCfg->enSamplerate, app_ipcam_Audio_GetFileExtensions(pastAudioCfg));
                     fp_recex = fopen(cAencFileName, "wb");
@@ -493,6 +562,61 @@ static CVI_VOID *Thread_AudioAenc_Proc(CVI_VOID *pArgs)
     return NULL;
 }
 
+static int fpAudioSendToRtsp(void *pData, void *pArgs)
+{
+    if (NULL == pData) {
+        APP_PROF_LOG_PRINT(LEVEL_ERROR, "pData is NULL\n");
+        return CVI_FAILURE;
+    }
+
+    CVI_S32 i = 0;
+    AUDIO_FRAME_S *pstAudioData = (AUDIO_FRAME_S *)pData;
+    APP_PARAM_RTSP_T *prtspCtx = app_ipcam_Rtsp_Param_Get();
+    CVI_RTSP_DATA data;
+    if (pstAudioData->u32Len > 0) {
+        memset(&data, 0, sizeof(CVI_RTSP_DATA));
+        data.dataLen[0] = pstAudioData->u32Len;
+        data.dataPtr[0] = (uint8_t *)pstAudioData->u64VirAddr[0];
+        data.blockCnt = 1;
+        for (i = 0; i < prtspCtx->session_cnt; i++) {
+            if ((!prtspCtx->bStart[i])) {
+                continue;
+            }
+            if ((NULL != prtspCtx->pstServerCtx) && (NULL != prtspCtx->pstSession[i])) {
+                if (CVI_RTSP_WriteFrame(prtspCtx->pstServerCtx, prtspCtx->pstSession[i]->audio, &data) != CVI_SUCCESS) {
+                    APP_PROF_LOG_PRINT(LEVEL_ERROR, "CVI_RTSP_WriteFrame failed\n");
+                }
+            }
+        }
+    }
+
+    return CVI_SUCCESS;
+}
+
+static int fpAudioSendToAi(void *pData, void *pArgs)
+{
+    return 0;
+    if (NULL == pData) {
+        APP_PROF_LOG_PRINT(LEVEL_ERROR, "pData is NULL\n");
+        return CVI_FAILURE;
+    }
+
+    AUDIO_FRAME_S *pstAudioData = (AUDIO_FRAME_S *)pData;
+    APP_DATA_CTX_S *pstDataCtx = (APP_DATA_CTX_S *)pArgs;
+    APP_DATA_PARAM_S *pstDataParam = &pstDataCtx->stDataParam;
+    APP_AUDIO_CFG_S *pastAudioCfg = (APP_AUDIO_CFG_S *)pstDataParam->pParam;
+    if (pstAudioData->u32Len > 0) {
+        if (pastAudioCfg->Cal_DB_Enable) {
+            float Db_value = app_ipcam_Audio_Calculate_DB((short *)pstAudioData->u64VirAddr[0], pstAudioData->u32Len);
+            if (Db_value > 150) {
+                APP_PROF_LOG_PRINT(LEVEL_INFO, "ai db value is %f \n", Db_value);
+            }
+        }
+    }
+
+    return CVI_SUCCESS;
+}
+
 static CVI_VOID *Thread_AudioAi_Proc(CVI_VOID *pArgs)
 {
     if (NULL == pArgs)
@@ -503,7 +627,6 @@ static CVI_VOID *Thread_AudioAi_Proc(CVI_VOID *pArgs)
     prctl(PR_SET_NAME, "Thread_AudioAi_Proc", 0, 0, 0);
 
     CVI_S32 s32Ret = CVI_SUCCESS;
-    APP_PARAM_RTSP_T *prtspCtx = app_ipcam_Rtsp_Param_Get();
     APP_AUDIO_CFG_S *pastAudioCfg = (APP_AUDIO_CFG_S *)pArgs;
     if (pastAudioCfg->u32ChnCnt == 1) {
         //chn0 bind aenc chn1 get raw frame
@@ -511,14 +634,13 @@ static CVI_VOID *Thread_AudioAi_Proc(CVI_VOID *pArgs)
         return NULL;
     }
 
-    int i = 0;
     FILE *fp_rec = CVI_NULL;
     CVI_U32 iAudioFactor = 0;
     CVI_U32 iAiRecordTime = 0;
     AEC_FRAME_S   stAecFrm;
     AUDIO_FRAME_S stFrame;
-    CVI_RTSP_DATA data;
-    char *pstAudioBuf = NULL;
+    AUDIO_FRAME_S stNewFrame;
+
     //AEC will output only one single channel with 2 channels in
     CVI_S32 s32OutputChnCnt = 1;//(pastAudioCfg->enSoundmode == AUDIO_SOUND_MODE_MONO) ? 1 : 2;
     if (pastAudioCfg->enBitwidth == AUDIO_BIT_WIDTH_16)
@@ -547,34 +669,24 @@ static CVI_VOID *Thread_AudioAi_Proc(CVI_VOID *pArgs)
 
         if (stFrame.u32Len > 0)
         {
-            pstAudioBuf = malloc(stFrame.u32Len * iAudioFactor);
-            if (NULL == pstAudioBuf) {
-                APP_PROF_LOG_PRINT(LEVEL_ERROR, "pstAudioBuf malloc failed!\n");
+            memcpy(&stNewFrame, &stFrame, sizeof(AUDIO_FRAME_S));
+            stNewFrame.u32Len = (stFrame.u32Len * iAudioFactor);
+            stNewFrame.u64VirAddr[0] = malloc(stNewFrame.u32Len);
+            if (NULL == stNewFrame.u64VirAddr[0]) {
+                APP_PROF_LOG_PRINT(LEVEL_ERROR, "stNewFrame.u64VirAddr[0] malloc failed!\n");
                 break;
             }
-            //rtsp audio only support mono
-            if (NULL != prtspCtx->pstServerCtx) {
-                if (pastAudioCfg->enSoundmode == AUDIO_SOUND_MODE_MONO) {
-                    memcpy(pstAudioBuf, stFrame.u64VirAddr[0], stFrame.u32Len * iAudioFactor);
-                } else {
-                    //stereo to mono
-                    app_ipcam_Audio_Stereo2Mono((short *)stFrame.u64VirAddr[0], (short *)pstAudioBuf, stFrame.u32Len);
-                }
-                data.dataLen[0] = stFrame.u32Len * iAudioFactor;
-                data.dataPtr[0] = pstAudioBuf;
-                data.blockCnt = 1;
-
-                pthread_mutex_lock(&prtspCtx->RsRtspMutex);
-                for (i = 0; i < prtspCtx->session_cnt; i++) {
-                    if (NULL != prtspCtx->pstSession[i]) {
-                        s32Ret = CVI_RTSP_WriteFrame(prtspCtx->pstServerCtx, prtspCtx->pstSession[i]->audio, &data);
-                        if (s32Ret != CVI_SUCCESS) {
-                            APP_PROF_LOG_PRINT(LEVEL_ERROR, "CVI_RTSP_WriteFrame failed\n");
-                        }
-                    }
-                }
-                pthread_mutex_unlock(&prtspCtx->RsRtspMutex);
+            if (pastAudioCfg->enSoundmode == AUDIO_SOUND_MODE_MONO) {
+                memcpy(stNewFrame.u64VirAddr[0], stFrame.u64VirAddr[0], stNewFrame.u32Len);
+            } else {
+                //stereo to mono
+                app_ipcam_Audio_Stereo2Mono((short *)stFrame.u64VirAddr[0], (short *)stNewFrame.u64VirAddr[0], stFrame.u32Len);
             }
+            s32Ret = app_ipcam_LList_Data_Push(&stNewFrame, g_pAudioDataCtx);
+            if (s32Ret != CVI_SUCCESS) {
+                APP_PROF_LOG_PRINT(LEVEL_ERROR, "Venc streaming push linklist failed!\n");
+            }
+            // test code record ai auido
             if (iAiRecordTime)
             {
                 if (fp_rec == NULL)
@@ -584,21 +696,13 @@ static CVI_VOID *Thread_AudioAi_Proc(CVI_VOID *pArgs)
                 }
                 if (fp_rec)
                 {
-                    if ((stFrame.enBitwidth != AUDIO_BIT_WIDTH_16) && (stFrame.enBitwidth != AUDIO_BIT_WIDTH_32))
+                    if ((stNewFrame.enBitwidth != AUDIO_BIT_WIDTH_16) && (stNewFrame.enBitwidth != AUDIO_BIT_WIDTH_32))
                     {
                         APP_PROF_LOG_PRINT(LEVEL_ERROR, "Not support format bitwidth\n");
                     }
                     else
                     {
-                        fwrite(pstAudioBuf, 1, (stFrame.u32Len * iAudioFactor), fp_rec);
-                        if (pastAudioCfg->Cal_DB_Enable)
-                        {
-                            float Db_value = app_ipcam_Audio_Calculate_DB((short *)pstAudioBuf, stFrame.u32Len * iAudioFactor);
-                            if (Db_value > 150)
-                            {
-                                APP_PROF_LOG_PRINT(LEVEL_INFO, "ai db value is %f \n", Db_value);
-                            }
-                        }
+                        fwrite(stNewFrame.u64VirAddr[0], 1, stNewFrame.u32Len, fp_rec);
                     }
                 }
                 iAiRecordTime--;
@@ -612,8 +716,9 @@ static CVI_VOID *Thread_AudioAi_Proc(CVI_VOID *pArgs)
                     fp_rec = NULL;
                 }
             }
-            free(pstAudioBuf);
-            pstAudioBuf = NULL;
+
+            free(stNewFrame.u64VirAddr[0]);
+            stNewFrame.u64VirAddr[0] = NULL;
         }
         else
         {
@@ -1484,7 +1589,7 @@ static int app_ipcam_CmdTask_AudioAttr_Parse(
         APP_PROF_LOG_PRINT(LEVEL_ERROR, "msg/pstAudioCfg/penStopModule is NULL!\n");
         return -1;
     }
-    CVI_CHAR param[256] = {0};
+    CVI_CHAR param[512] = {0};
     snprintf(param, sizeof(param), "%s", msg->payload);
     APP_PROF_LOG_PRINT(LEVEL_INFO, "%s param:%s\n", __FUNCTION__, param);
 
@@ -1661,6 +1766,19 @@ int app_ipcam_Audio_Init(void)
     memset(&g_stAudioPlay, 0, sizeof(g_stAudioPlay));
     pthread_mutex_unlock(&RsAudioMutex);
 
+    APP_DATA_PARAM_S stDataParam = {0};
+    stDataParam.pParam = (void *)pstAudioCfg;
+    stDataParam.fpDataSave = _AudioData_Save;
+    stDataParam.fpDataFree = _AudioData_Free;
+    stDataParam.fpDataHandle = _AudioData_Handle;
+    stDataParam.fpDataConsumes[0] = fpAudioSendToRtsp;
+    stDataParam.fpDataConsumes[1] = fpAudioSendToAi;
+
+    s32Ret = app_ipcam_LList_Data_Init(&g_pAudioDataCtx, &stDataParam);
+    if (s32Ret != CVI_SUCCESS) {
+        APP_PROF_LOG_PRINT(LEVEL_ERROR, "ink list data init failed with %#x\n", s32Ret);
+    }
+
     if (pstAudioIntercom->bEnable)
     {
         s32Ret = app_ipcam_Audio_IntercomStart(pstAudioIntercom->cIp, pstAudioIntercom->iPort);
@@ -1778,6 +1896,8 @@ int app_ipcam_Audio_UnInit(void)
     }*/
     app_ipcam_Audio_IntercomStop();
 
+    app_ipcam_LList_Data_DeInit(&g_pAudioDataCtx);
+
     g_pstAudioCfg->bInit = 0;
     return s32Ret;
 }
@@ -1819,7 +1939,7 @@ int app_ipcam_Audio_AoPlay(char *pAudioFile, AUDIO_AO_PLAY_TYPE_E eAoType)
         fseek(fp, 0, SEEK_END);
         flen = ftell(fp);
         rewind(fp);
-        if (flen <= 0)
+        if ((flen <= 0) || (flen > AUDIO_OVERSIZE))
         {
             fclose(fp);
             fp = NULL;
@@ -1849,15 +1969,16 @@ int app_ipcam_Audio_AoPlay(char *pAudioFile, AUDIO_AO_PLAY_TYPE_E eAoType)
             return CVI_FAILURE;
         }
 
-        pBuffer = (CVI_U8 *)malloc(ADEC_MAX_FRAME_NUMS);
+        int tmpLen = (pstAudioCfg->enAencType == PT_AAC) ? 1024 : ADEC_MAX_FRAME_NUMS;
+        pBuffer = (CVI_U8 *)malloc(tmpLen);
         if (pBuffer == NULL)
         {
             APP_PROF_LOG_PRINT(LEVEL_ERROR, "malloc pBuffer failed\n");
             return CVI_FAILURE;
         }
-        memset(pBuffer, 0, ADEC_MAX_FRAME_NUMS);
+        memset(pBuffer, 0, tmpLen);
         unsigned int addrlen = sizeof(gst_TargetAddr);
-        flen = recvfrom(gst_SocketFd, pBuffer, ADEC_MAX_FRAME_NUMS, 0,
+        flen = recvfrom(gst_SocketFd, pBuffer, tmpLen, 0,
             (struct sockaddr *)&gst_TargetAddr, &addrlen);
         if (flen <= 0)
         {
@@ -1868,7 +1989,9 @@ int app_ipcam_Audio_AoPlay(char *pAudioFile, AUDIO_AO_PLAY_TYPE_E eAoType)
         }
     }
 
+#ifdef MP3_SUPPORT
     void *pMp3DecHandler = NULL;
+#endif
     if (eAoType == AUDIO_AO_PLAY_TYPE_MP3)
     {
 #ifdef MP3_SUPPORT
@@ -1905,7 +2028,11 @@ int app_ipcam_Audio_AoPlay(char *pAudioFile, AUDIO_AO_PLAY_TYPE_E eAoType)
             {
                 if (pstAudioCfg->enAencType == PT_AAC)
                 {
-                    stAudioStream.u32Len = 1024; //aac len must be 1024
+                    if (flen < 1024) {
+                        stAudioStream.u32Len = flen;
+                    } else {
+                        stAudioStream.u32Len = 1024; //aac len must be 1024
+                    }
                 }
                 else
                 {
@@ -1927,7 +2054,7 @@ int app_ipcam_Audio_AoPlay(char *pAudioFile, AUDIO_AO_PLAY_TYPE_E eAoType)
             flen -= stAudioStream.u32Len;
             offset += stAudioStream.u32Len;
 
-            if (((flen <= 0) && (eAoType == AUDIO_AO_PLAY_TYPE_AENC)))
+            if (((flen <= 0) || (g_stAudioPlay.iStatus == 0)) && (eAoType == AUDIO_AO_PLAY_TYPE_AENC))
             {
                 /*s32Ret = CVI_ADEC_ClearChnBuf(pstAudioCfg->u32AdChn);
                 if (s32Ret != CVI_SUCCESS)
@@ -2115,7 +2242,7 @@ int app_ipcam_CmdTask_AudioAttr_Set(CVI_MQ_MSG_t *msg, CVI_VOID *userdate)
 
 int app_ipcam_CmdTask_Mp3_Play(CVI_MQ_MSG_t *msg, CVI_VOID *userdate)
 {
-    CVI_CHAR param[256] = {0};
+    CVI_CHAR param[512] = {0};
     snprintf(param, sizeof(param), "%s", msg->payload);
     APP_PROF_LOG_PRINT(LEVEL_INFO, "%s param:%s arg2=%d\n", __FUNCTION__, param, msg->arg2);
 
@@ -2237,16 +2364,14 @@ int app_ipcam_Audio_SetPlayStatus(APP_AUDIO_RECORD_T *pstAudioPlay)
     pthread_mutex_lock(&RsAudioMutex);
     if (memcmp(&g_stAudioPlay, pstAudioPlay, sizeof(APP_AUDIO_RECORD_T)) != 0)
     {
-        if (pstAudioPlay->iStatus == 0 && g_stAudioPlay.iStatus) {
-            if (CVI_AO_DisableChn(pstAudioCfg->u32AoDevId, pstAudioCfg->u32AoChn) != CVI_SUCCESS) {
-                APP_PROF_LOG_PRINT(LEVEL_ERROR, "CVI_AO_DisableChn(%d) failed!\n", pstAudioCfg->u32AoChn);
-            }
-            usleep(100 * 1000);
-            if (CVI_AO_EnableChn(pstAudioCfg->u32AoDevId, pstAudioCfg->u32AoChn) != CVI_SUCCESS) {
-                APP_PROF_LOG_PRINT(LEVEL_ERROR, "CVI_AO_EnableChn(%d) failed!\n", pstAudioCfg->u32AoChn);
-            }
-        }
         memcpy(&g_stAudioPlay, pstAudioPlay, sizeof(APP_AUDIO_RECORD_T));
+        if (CVI_AO_DisableChn(pstAudioCfg->u32AoDevId, pstAudioCfg->u32AoChn) != CVI_SUCCESS) {
+            APP_PROF_LOG_PRINT(LEVEL_ERROR, "CVI_AO_DisableChn(%d) failed!\n", pstAudioCfg->u32AoChn);
+        }
+        usleep(100 * 1000);
+        if (CVI_AO_EnableChn(pstAudioCfg->u32AoDevId, pstAudioCfg->u32AoChn) != CVI_SUCCESS) {
+            APP_PROF_LOG_PRINT(LEVEL_ERROR, "CVI_AO_EnableChn(%d) failed!\n", pstAudioCfg->u32AoChn);
+        }
     }
     pthread_mutex_unlock(&RsAudioMutex);
     return 0;

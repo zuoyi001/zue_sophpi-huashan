@@ -1218,7 +1218,8 @@ int sclr_dsi_dcs_read_buffer(u8 di, const u16 data_param, u8 *data, size_t len, 
 		return -1;
 	}
 
-	_reg_write(reg_base + REG_SCL_DSI_ESC, 0x04);
+	// only set necessery bits
+	_reg_write_mask(reg_base + REG_SCL_DSI_ESC, 0x07, 0x04);
 
 	// send read cmd
 	sclr_dsi_short_packet(di, (u8 *)&data_param, 2, sw_mode);
@@ -1280,7 +1281,7 @@ int sclr_dsi_config(u8 lane_num, enum sclr_dsi_fmt fmt, u16 width)
 	lane_num >>= 1;
 	val = (fmt << 30) | (lane_num << 24);
 	_reg_write_mask(reg_base + REG_SCL_DSI_HS_0, 0xc3000000, val);
-	val = (width / 6) << 16 | ((width * bit_depth[fmt] + 7) >> 3);
+	val = (width / 10) << 16 | ((width * bit_depth[fmt] + 7) >> 3);
 	_reg_write(reg_base + REG_SCL_DSI_HS_1, val);
 
 	return 0;

@@ -73,7 +73,7 @@ CVI_S32 GetBmpInfo(const char *filename, OSD_BITMAPFILEHEADER *pBmpFileHeader, O
 
     pFile = fopen((char *)filename, "rb");
     if (pFile == NULL) {
-        printf("Open file failed:%s!\n", filename);
+        //printf("Open file failed:%s!\n", filename);
         return -1;
     }
 
@@ -88,12 +88,12 @@ CVI_S32 GetBmpInfo(const char *filename, OSD_BITMAPFILEHEADER *pBmpFileHeader, O
     fread(pBmpInfo, 1, sizeof(OSD_BITMAPINFO), pFile);
     fclose(pFile);
 
-    printf("bmp width(%d) height(%d) bpp(%d) compression(%d)\n"
+    /*printf("bmp width(%d) height(%d) bpp(%d) compression(%d)\n"
         , pBmpInfo->bmiHeader.biWidth, pBmpInfo->bmiHeader.biHeight, pBmpInfo->bmiHeader.biBitCount
         , pBmpInfo->bmiHeader.biCompression);
     if (pBmpInfo->bmiHeader.biCompression == 3)
         printf("bitmask a(%#x) r(%#x) g(%#x) b(%#x)\n", pBmpInfo->bitfield.a_mask
-            , pBmpInfo->bitfield.r_mask, pBmpInfo->bitfield.g_mask, pBmpInfo->bitfield.b_mask);
+            , pBmpInfo->bitfield.r_mask, pBmpInfo->bitfield.g_mask, pBmpInfo->bitfield.b_mask);*/
     return 0;
 }
 

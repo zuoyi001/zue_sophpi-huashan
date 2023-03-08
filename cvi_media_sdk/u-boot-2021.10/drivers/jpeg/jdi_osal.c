@@ -65,8 +65,8 @@
 #define LOG_MSG_BUF_SIZE 0x100000
 static char *LOG_MSG_BUF = (char *)LOG_MSG_BUF_BASE;
 
-#define MAX_MALLOC_BLOCK_SIZE   0x200000//0x200000
-#define MAX_MALLOC_BLOCK_NUM    10
+#define MAX_MALLOC_BLOCK_SIZE   0x50000//0x200000
+#define MAX_MALLOC_BLOCK_NUM    7
 
 int jpu_level = BM_MASK_ERR;
 

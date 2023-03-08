@@ -1,1 +1,0 @@
-../mars/platform.c

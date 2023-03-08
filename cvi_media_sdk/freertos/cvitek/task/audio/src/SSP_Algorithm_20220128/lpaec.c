@@ -220,7 +220,6 @@ EXPORT void LP_AEC_free(LinearEchoState *st)
    mem_free(st->notch_mem);
 
    mem_free(st);
-
 }
 
 EXPORT void LP_AEC(LinearEchoState *st, const short *in, const short *far_end, short *out)
@@ -328,7 +327,7 @@ EXPORT void LP_AEC(LinearEchoState *st, const short *in, const short *far_end, s
 	 /* compute weight gradient */
          for (i=0;i<N;i++)  /* only calculate (N/2+1) frequency bin, two data(re/im) in each bin, so N data in total */
 	    /* W(k, m, j) = W(k, m, j-1) + delta_W(k, m, j) */
-            st->W[ j*N + i] += st->PHI[i];  
+            st->W[ j*N + i] += st->PHI[i];
       }
    } else {
       st->saturated--;

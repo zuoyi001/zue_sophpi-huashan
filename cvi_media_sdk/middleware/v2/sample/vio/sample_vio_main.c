@@ -161,9 +161,6 @@ int main(int argc, char *argv[])
 		s32Ret = SAMPLE_IMX307_ONTHEFLY_ONLINE_SC_TEST();
 		break;
 #endif
-	case 19:
-		s32Ret = SAMPLE_VIO_VoRotation_Multi();
-		break;
 	default:
 		SAMPLE_PRT("the index %d is invaild!\n", s32Index);
 		SAMPLE_VIO_Usage(argv[0]);

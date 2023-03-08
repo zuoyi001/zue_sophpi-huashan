@@ -66,8 +66,15 @@ typedef enum _CVI_GPIO_DIRECTION_E {
     CVI_GPIO_DIR_OUT        //输出
 }CVI_GPIO_DIRECTION_E;
 
-typedef void (*FunType)();
+typedef struct APP_PARAM_GPIO_CFG_T {
+    CVI_U32 IR_CUT_A;
+    CVI_U32 IR_CUT_B;
+    CVI_U32 LED_WHITE;
+    CVI_U32 LED_IR;
+}APP_PARAM_GPIO_CFG_S;
 
+typedef void (*FunType)();
+APP_PARAM_GPIO_CFG_S *app_ipcam_Gpio_Param_Get(void);
 int app_ipcam_Gpio_Export(CVI_GPIO_NUM_E gpio);
 int app_ipcam_Gpio_Unexport(CVI_GPIO_NUM_E gpio);
 int app_ipcam_Gpio_Dir_Set(CVI_GPIO_NUM_E gpio, CVI_GPIO_DIRECTION_E dir);

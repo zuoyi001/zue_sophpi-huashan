@@ -33,7 +33,7 @@ not support to enter here
 
 
 #ifdef PLATFORM_RTOS
-int cviaud_dbg = 0;
+int cviaud_dbg = 1;
 #endif
 #ifdef TYPE_ARM
 int cviaud_dbg = 0;
@@ -234,7 +234,7 @@ void *audio_ssp_init(void *para_obj, unsigned int sample_rate)
 	memcpy(&pst3Ainfo->para_obj,para_info,sizeof(ssp_para_struct));
 	pst3Ainfo->fs = sample_rate;// pst3Ainfo->para_obj.para_sample_rate;
 
-	printf("[SSP_VER20220128]user setting config param------dump---start\n");
+	//printf("[SSP_VER20220128]user setting config param------dump---start\n");
 	printf("[SSP_VER20220128]sample_rate:%d.\n", (int)pst3Ainfo->fs);
 	printf("[SSP_VER20220128]para_client_config:%d.\n",  pst3Ainfo->para_obj.para_client_config);
 	printf("[SSP_VER20220128]para_fun_config:%d.\n",  pst3Ainfo->para_obj.para_fun_config);
@@ -251,7 +251,7 @@ void *audio_ssp_init(void *para_obj, unsigned int sample_rate)
 	printf("[SSP_VER20220128]para_agc_target_low:%d.\n",  pst3Ainfo->para_obj.para_agc_target_low);
 	printf("[SSP_VER20220128]para_agc_vad_ena:%d.\n",  pst3Ainfo->para_obj.para_agc_vad_ena);
 	printf("[SSP_VER20220128]para_notch_freq:%d.\n",  pst3Ainfo->para_obj.para_notch_freq);
-	printf("[SSP_VER20220128]user setting config param------dump---end\n");
+	//printf("[SSP_VER20220128]user setting config param------dump---end\n");
 
 	//TODO: check ssp init with ssp_main.c
 	//reference from ssp_main.c
@@ -279,6 +279,7 @@ void *audio_ssp_init(void *para_obj, unsigned int sample_rate)
 
 	cond1 = pst3Ainfo->para_obj.para_fun_config & LP_AEC_ENABLE;
 	cond2 = pst3Ainfo->para_obj.para_fun_config & NLP_AES_ENABLE;
+
 	if (cond1 | cond2) {
 		LP_AEC_para(&pst3Ainfo->para_obj, &pst3Ainfo->filter_length, &pst3Ainfo->init_filter_length);
 		pst3Ainfo->aec_state = LP_AEC_init(AEC_FRAME_LENGTH, pst3Ainfo->filter_length,
@@ -540,6 +541,7 @@ int audio_ssp_deinit(void *handle)
 	cond3 = pst3Ainfo->para_obj.para_fun_config & NR_ENABLE;
 	cond4 = pst3Ainfo->para_obj.para_fun_config & AGC_ENABLE;
 	cond6 = pst3Ainfo->para_obj.para_fun_config & DELAY_ENABLE;
+
 	if (cond1 | cond2) {
 		LP_AEC_free(pst3Ainfo->aec_state);
 	}

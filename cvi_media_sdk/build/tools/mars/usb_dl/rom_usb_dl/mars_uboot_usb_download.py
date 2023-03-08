@@ -121,6 +121,22 @@ def set_macaddress(usb, libusb, mac, timeout):
     # Break command
     # usb.send_req_data(pkt.CV_USB_UBREAK, 0x04003000, 0, None)
 
+def set_filesize(usb, libusb, filesize, timeout):
+    global uboot_vidpid
+    global uboot_cvi_vidpid
+
+    if not libusb:
+        usb.restart()
+        usb.query([uboot_vidpid, uboot_cvi_vidpid], timeout)
+        time.sleep(0.2)
+
+    # Send setenv
+    cmd = array('B', [ord(c) for c in "setenv filesize "])
+    for c in [ord(ch) for ch in hex(filesize)]:
+        cmd.append(c)
+
+    usb.send_req_data(pkt.CV_USB_PRG_CMD, 0, len(cmd) + 8, cmd, 1)
+
 
 def reboot_device(usb, libusb, timeout):
     global uboot_vidpid
@@ -169,6 +185,15 @@ def main():
     uboot_cvi_vidpid = "VID:PID=3346:" + pid
     usb.query([uboot_vidpid, uboot_cvi_vidpid], timeout)
 
+    # get image addr
+    recvbuf = usb.recive_data(0, 8)
+    hex_arr = [hex(x)[2:].rjust(2, '0') for x in recvbuf]
+    hex_arr.reverse()
+    hex_join = "0x" + "".join(hex_arr)
+    pkt.IMG_ADDR = int(hex_join, 16)
+
+    set_filesize(usb, driver == "libusb", os.path.getsize(os.path.join(image_dir, "fip.bin")), timeout)
+
     for p in parts:
         if p['file_size'] != 0:
             files.append(p['file_path'])
@@ -193,7 +218,7 @@ def main():
                 usb.query([uboot_vidpid, uboot_cvi_vidpid], timeout)
                 time.sleep(0.02)
             fd = open(f, 'r+b')
-            usb.send_chunk(fd, header_size, pkt.HEADER_ADDR, 0)
+            usb.send_chunk(fd, header_size, pkt.IMG_ADDR, 0)
             fd.seek(0)
             header = array('I')
             header.fromfile(fd, int(header_size / 4))

@@ -785,7 +785,7 @@ static int app_ipcam_CmdMq_Send(
     int len = (int)CVI_MQ_MSG_HEADER_LEN;
 
     snprintf(msg.payload, CVI_MQ_MSG_PAYLOAD_LEN, "%s", param);
-    printf("msg.payload: %s, len = %"PRIdFAST32"\n", msg.payload, strlen(msg.payload));
+    //printf("msg.payload: %s, len = %"PRIdFAST32"\n", msg.payload, strlen(msg.payload));
     msg.target_id = CVI_MQ_ID(client_id, client_chn);
     msg.arg1 = cmd_id;
     msg.arg2 = cmd_val;

@@ -23,7 +23,7 @@ int CVI_NET_AddCgiResponse(void *param, char *pszfmt, ...)
     char response[2048];
     va_list stVal;
     va_start(stVal, pszfmt);
-    ret = vsprintf(response, pszfmt, stVal);
+    ret = vsnprintf(response, sizeof(response), pszfmt, stVal);
     va_end(stVal);
     add_response(hc, response);
     return ret;

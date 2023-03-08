@@ -153,6 +153,7 @@ CVI_S32 app_ipcam_Pd_threshold_Set(float threshold);
 CVI_S32 app_ipcam_Ai_Pd_Intrusion_Init();
 CVI_U32 app_ipcam_Ai_PD_ProcIntrusion_Num_Get(void);
 
+#ifdef FACE_SUPPORT
 /* Face detection function */
 APP_PARAM_AI_FD_CFG_S *app_ipcam_Ai_FD_Param_Get(void);
 CVI_VOID app_ipcam_Ai_FD_ProcStatus_Set(CVI_BOOL flag);
@@ -165,6 +166,7 @@ int app_ipcam_Ai_FD_Stop(void);
 int app_ipcam_Ai_FD_ObjDrawInfo_Get(cvai_face_t *pstAiObj);
 CVI_U32 app_ipcam_Ai_FD_ProcFps_Get(void);
 CVI_S32 app_ipcam_Ai_FD_ProcTime_Get(void);
+#endif
 
 /* motion detection function */
 APP_PARAM_AI_MD_CFG_S *app_ipcam_Ai_MD_Param_Get(void);
@@ -181,6 +183,7 @@ CVI_S32 app_ipcam_Ai_MD_ProcTime_Get(void);
 CVI_VOID app_ipcam_Ai_MD_Thresold_Set(CVI_U32 value);
 CVI_U32 app_ipcam_Ai_MD_Thresold_Get(void);
 
+#ifdef FACE_SUPPORT
 /* face ae */
 CVI_VOID app_ipcam_Ai_FD_AEStart(VIDEO_FRAME_INFO_S *pstFrame, cvai_face_t *pstFace);
 
@@ -189,14 +192,16 @@ CVI_VOID app_ipcam_Ai_FD_AEStart(VIDEO_FRAME_INFO_S *pstFrame, cvai_face_t *pstF
 CVI_S32 app_ipcam_Ai_Face_Capure_Init(cviai_handle_t *handle);
 CVI_S32 app_ipcam_Ai_Face_Capure(VIDEO_FRAME_INFO_S *stfdFrame,cvai_face_t *capture_face);
 CVI_S32 app_ipcam_Ai_Face_Capure_Stop(void);
-
+#endif
 
 /*****************************************************************
  *  The following API for command test used             S
  * **************************************************************/
 int app_ipcam_CmdTask_Ai_PD_Switch(CVI_MQ_MSG_t *msg, CVI_VOID *userdate);
 int app_ipcam_CmdTask_Ai_MD_Switch(CVI_MQ_MSG_t *msg, CVI_VOID *userdate);
+#ifdef FACE_SUPPORT
 int app_ipcam_CmdTask_Ai_FD_Switch(CVI_MQ_MSG_t *msg, CVI_VOID *userdate);
+#endif
 /*****************************************************************
  *  The above API for command test used                 E
  * **************************************************************/

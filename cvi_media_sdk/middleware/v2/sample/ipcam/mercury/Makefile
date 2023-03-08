@@ -20,7 +20,7 @@ ifeq ($(STATIC), 1)
 ELFFLAGS += -static
 endif
 
-# App source and header file 
+# App source and header file
 # ===============================================================
 
 APP_ROOT         := ..
@@ -30,6 +30,8 @@ APP_MODULE_PATH  := $(APP_MERCURY_DIR)/modules
 APP_SELFTEST_DIR := $(APP_MERCURY_DIR)/selftest
 APP_RESOURCE_DIR := $(APP_ROOT)/resource
 APP_INSTALL_DIR  := $(APP_ROOT)/install
+APP_TOOLJSON_FILE := $(APP_ROOT)/../../modules/isp/common/toolJsonGenerator/pqtool_definition.json
+IS_EXIST = $(shell if [ -f $(APP_TOOLJSON_FILE) ]; then echo "exist"; else echo "noexist"; fi)
 
 SEXT	:= c
 
@@ -280,6 +282,9 @@ $(TARGET) : $(OBJS)
 	@$(CXX) -o $@ $(OBJS) $(LIBS_ALL) $(ELFFLAGS)
 	@$(STRIP) $@
 	@echo -e $(BLUE)[LINK]$(END)[$(notdir $(CXX))] $(notdir $@)
+ifeq ("$(IS_EXIST)", "exist")
+	@cp -af $(APP_TOOLJSON_FILE) .
+endif
 
 clean:
 	$(shell if [ -d $(APP_INSTALL_DIR) ]; then rm -rf $(APP_INSTALL_DIR); fi)

@@ -29,6 +29,7 @@
 #include <command.h>
 #include <linux/delay.h>
 #include "cvi_update.h"
+#include "include/dps.h"
 
 #ifdef BUILD_ATF
 extern uint16_t cvi_usb_vid;
@@ -68,16 +69,16 @@ static uint32_t transfer_size;
 static uint8_t flagEnterDL;
 struct f_acm *acm;
 
-static uint8_t *bulkBufAlloc = (uint8_t *)BLK_BUF_ADDR; /* 512 */
-static uint8_t *cmdBufAlloc = (uint8_t *)CMD_BUF_ADDR; /* 512 */
-static uint8_t *cb0_buf = (uint8_t *)CB0_BUF_ADDR; /* 128 */
-static uint8_t *cb1_buf = (uint8_t *)CB1_BUF_ADDR; /* 128 */
-static uint8_t *cb2_buf = (uint8_t *)CB2_BUF_ADDR; /* 64 */
-static uint8_t *ep0BuffAlloc = (uint8_t *)EP0_BUF_ADDR; /* 32 */
-static uint8_t *rsp_buf = (uint8_t *)RSP_BUF_ADDR; /* 128 */
-static uint8_t *acm_buf = (uint8_t *)ACM_BUF_ADDR; /* 128 */
-static uint8_t *setup_buf = (uint8_t *)STP_BUF_ADDR; /* 32 */
-static uint8_t *handler = (uint8_t *)HANDLER_ADDR; /* 1024 */
+static uint8_t *bulkBufAlloc;
+static uint8_t *cmdBufAlloc;
+static uint8_t *cb0_buf;
+static uint8_t *cb1_buf;
+static uint8_t *cb2_buf;
+static uint8_t *ep0BuffAlloc;
+static uint8_t *rsp_buf;
+static uint8_t *acm_buf;
+static uint8_t *setup_buf;
+static uint8_t *handler;
 
 /* string will be filled then in initializing section */
 static char vendorDesc[sizeof(USB_MANUFACTURER_STRING) * 2 + 2];
@@ -179,14 +180,14 @@ void print_buf_addr(void)
 {
 	INFO("bulkBufAlloc: %p\n", bulkBufAlloc);
 	INFO("cmdBufAlloc: %p\n", cmdBufAlloc);
+	INFO("ep0BuffAlloc: %p\n", ep0BuffAlloc);
+	INFO("setup_buf: %p\n", setup_buf);
+	INFO("handler: %p\n", handler);
 	INFO("cb0_buf: %p\n", cb0_buf);
 	INFO("cb1_buf: %p\n", cb1_buf);
 	INFO("cb2_buf: %p\n", cb2_buf);
-	INFO("ep0BuffAlloc: %p\n", ep0BuffAlloc);
 	INFO("rsp_buf: %p\n", rsp_buf);
 	INFO("acm_buf: %p\n", acm_buf);
-	INFO("setup_buf: %p\n", setup_buf);
-	INFO("handler: %p\n", handler);
 }
 
 void __attribute__((optimize("O0"))) set_config_break(uint8_t value)
@@ -211,25 +212,27 @@ uint8_t __attribute__((optimize("O0"))) get_acm_config(void)
 
 static int acm_mem_init(void)
 {
-	bulkBufAlloc = memalign(32, BUF_SIZE);
-	memset(bulkBufAlloc, 0, BUF_SIZE);
-	cmdBufAlloc = memalign(32, BUF_SIZE);
-	memset(cmdBufAlloc, 0, BUF_SIZE);
+	bulkBufAlloc = memalign(CONFIG_SYS_CACHELINE_SIZE, ALIGN_CACHE_SIZE(BUF_SIZE));
+	memset(bulkBufAlloc, 0, ALIGN_CACHE_SIZE(BUF_SIZE));
+	cmdBufAlloc = memalign(CONFIG_SYS_CACHELINE_SIZE, ALIGN_CACHE_SIZE(BUF_SIZE));
+	memset(cmdBufAlloc, 0, ALIGN_CACHE_SIZE(BUF_SIZE));
+	ep0BuffAlloc = memalign(CONFIG_SYS_CACHELINE_SIZE, ALIGN_CACHE_SIZE(EP0_SIZE));
+	memset(ep0BuffAlloc, 0, ALIGN_CACHE_SIZE(EP0_SIZE));
+	setup_buf = memalign(CONFIG_SYS_CACHELINE_SIZE, ALIGN_CACHE_SIZE(STP_SIZE));
+	memset(setup_buf, 0, ALIGN_CACHE_SIZE(STP_SIZE));
+	handler = memalign(CONFIG_SYS_CACHELINE_SIZE, ALIGN_CACHE_SIZE(HANDLER_SIZE));
+	memset(handler, 0, ALIGN_CACHE_SIZE(HANDLER_SIZE));
 	cb0_buf = malloc(CB_SIZE);
 	memset(cb0_buf, 0, CB_SIZE);
 	cb1_buf = malloc(CB_SIZE);
 	memset(cb1_buf, 0, CB_SIZE);
 	cb2_buf = malloc(CB_SIZE);
-	memset(cb2_buf, 0, CB_SIZE);
-	ep0BuffAlloc = malloc(EP0_SIZE);
-	memset(ep0BuffAlloc, 0, EP0_SIZE);
+	memset(cb2_buf, 0, CB_SIZE);;
 	rsp_buf = malloc(RSP_SIZE);
 	memset(rsp_buf, 0, RSP_SIZE);
-	acm_buf = malloc(128);
-	memset(acm_buf, 0, 128);
-	setup_buf = memalign(32, 8);
-	memset(setup_buf, 0, 8);
-	handler = memalign(32, HANDLER_SIZE);
+	acm_buf = malloc(ACM_SIZE);
+	memset(acm_buf, 0, ACM_SIZE);
+
 	set_config_break(0);
 	set_acm_config(0);
 	current_speed = CH9_USB_SPEED_UNKNOWN;
@@ -243,10 +246,12 @@ static void acm_mem_release(void)
 {
 	free(bulkBufAlloc);
 	free(cmdBufAlloc);
+	free(ep0BuffAlloc);
+	free(setup_buf);
+	free(handler);
 	free(cb0_buf);
 	free(cb1_buf);
 	free(cb2_buf);
-	free(ep0BuffAlloc);
 	free(rsp_buf);
 	free(acm_buf);
 }
@@ -355,9 +360,7 @@ static void resetOutReq(void)
 	bulkOutReq->buf = cmdBuf;
 	bulkOutReq->dma = (uintptr_t)cmdBuf;
 	bulkOutReq->complete = bulkOutCmplMain;
-#ifndef DISABLE_DCACHE
-	flush_cache(bulkOutReq->dma, bulkOutReq->length);
-#endif
+	cvi_cache_flush(bulkOutReq->dma, bulkOutReq->length);
 	epOut->ops->queue(epOut, bulkOutReq);
 }
 
@@ -393,9 +396,8 @@ static void sendInReq(uint32_t length, uint8_t token, cvi_reqComplete complete,
 	bulkInReq->dma = (uintptr_t)rsp_buf;
 	bulkInReq->complete = complete;
 	VERBOSE("epIn->ops->queue\n");
-#ifndef DISABLE_DCACHE
-	flush_cache(bulkInReq->dma, bulkInReq->length);
-#endif
+
+	cvi_cache_flush(bulkInReq->dma, bulkInReq->length);
 	epIn->ops->queue(epIn, bulkInReq);
 }
 
@@ -411,9 +413,8 @@ static void resetOutReqS2D(uint64_t addr, size_t size, cvi_reqComplete complete)
 	bulkOutReq->buf = (uint8_t *)addr;
 	bulkOutReq->dma = (uintptr_t)addr;
 	bulkOutReq->complete = complete;
-#ifndef DISABLE_DCACHE
-	flush_cache(bulkOutReq->dma, bulkOutReq->length);
-#endif
+
+	cvi_cache_flush(bulkOutReq->dma, bulkOutReq->length);
 	epOut->ops->queue(epOut, bulkOutReq);
 }
 
@@ -441,9 +442,8 @@ static void sramOutReqS2D(uint64_t addr, uint32_t size)
 	bulkOutReq->buf = bulkBuf;
 	bulkOutReq->dma = (uintptr_t)bulkBuf;
 	bulkOutReq->complete = sramCompl;
-#ifndef DISABLE_DCACHE
-	flush_cache(bulkOutReq->dma, bulkOutReq->length);
-#endif
+
+	cvi_cache_flush(bulkOutReq->dma, bulkOutReq->length);
 	epOut->ops->queue(epOut, bulkOutReq);
 }
 
@@ -455,9 +455,8 @@ static void sendInReqD2S(uint64_t addr, size_t size, cvi_reqComplete complete)
 	bulkInReq->buf = (uint8_t *)addr;
 	bulkInReq->dma = (uintptr_t)addr;
 	bulkInReq->complete = complete;
-#ifndef DISABLE_DCACHE
-	flush_cache(bulkInReq->dma, bulkInReq->length);
-#endif
+
+	cvi_cache_flush(bulkInReq->dma, bulkInReq->length);
 	epIn->ops->queue(epIn, bulkInReq);
 }
 
@@ -732,16 +731,48 @@ static void bulkOutCmplMain(struct usb_ep *ep, struct usb_request *req)
 	case CVI_USB_S2D:
 		/* INFO("CVI_USB_S2D, addr = 0x%lx, len = 0x%lx\n",dest_addr, msg_s2d->size); */
 		sendInReq(length, CVI_USB_S2D, bulkCmplEmpty, NULL, 0);
+
 		if (dest_addr >= GLOBAL_MEM_START_ADDR)
-			resetOutReqS2D(dest_addr, msg_s2d->size,
-				       bulkResetOutReq);
+		{
+			resetOutReqS2D(dest_addr, msg_s2d->size, bulkResetOutReq);
+
+#ifdef CONFIG_NAND_SUPPORT
+			// Erase partition first
+			if (!strncmp((char *)((uintptr_t)HEADER_ADDR), "CIMG", 4)) {
+				strlcpy(prevExtra,
+					(char *)((uintptr_t)HEADER_ADDR + 20),
+					EXTRA_FLAG_SIZE);
+				snprintf(cmd, 255, "nand erase.part -y %s", prevExtra);
+				pr_debug("%s\n", cmd);
+				run_command(cmd, 0);
+			}
+#endif
+		}
 		else
 			sramOutReqS2D(dest_addr, msg_s2d->size);
 		return;
 	case CVI_USB_D2S:
-		/* INFO("CVI_USB_D2S\n"); */
-		sendInReqD2S(dest_addr, msg_d2s->size, bulkResetOutReq);
-		return;
+		{
+			/* INFO("CVI_USB_D2S\n"); */
+
+			if (dest_addr)
+				sendInReqD2S(dest_addr, msg_d2s->size, bulkResetOutReq);
+			else
+			{
+				unsigned char sendbuf[8];
+
+				uint64_t image_addr = CVIMMAP_ION_ADDR;
+				for (int i=0; i<sizeof(sendbuf); i++)
+				{
+					sendbuf[i] = (image_addr & 0xff);
+					image_addr >>= 8;
+				}
+
+				sendInReqD2S((uint64_t)sendbuf, sizeof(sendbuf), bulkResetOutReq);
+			}
+
+			return;
+		}
 	case CVI_USB_NONE:
 		// INFO("CVI_USB_NONE, addr = 0x%llx, len = 0x%x\n", dest_addr, length);
 		memcpy((void *)dest_addr, cmdBuf + HEADER_SIZE,
@@ -762,18 +793,6 @@ static void bulkOutCmplMain(struct usb_ep *ep, struct usb_request *req)
 		resetOutReq();
 		break;
 	case CVI_USB_PROGRAM:
-#ifdef CONFIG_NAND_SUPPORT
-		// Erase partition first
-		if (strncmp((char *)((uintptr_t)HEADER_ADDR + 20), prevExtra,
-			    EXTRA_FLAG_SIZE)) {
-			strlcpy(prevExtra,
-				(char *)((uintptr_t)HEADER_ADDR + 20),
-				EXTRA_FLAG_SIZE);
-			snprintf(cmd, 255, "nand erase.part -y %s", prevExtra);
-			pr_debug("%s\n", cmd);
-			run_command(cmd, 0);
-		}
-#endif
 		/* INFO("CVI_USB_PROGRAM\n"); */
 		_prgImage((void *)UPDATE_ADDR, 0x40, NULL);
 		sendInReq(length, CVI_USB_PROGRAM, bulkResetOutReq, NULL, 0);
@@ -872,20 +891,6 @@ static void bulkOutCmplMain(struct usb_ep *ep, struct usb_request *req)
 		resetOutReq();
 		break;
 	}
-}
-
-/* functions aligns buffer to alignValue modulo address */
-
-static uint8_t *alignBuff(void *notAllignedBuff, uint8_t alignValue)
-{
-	uint8_t offset = ((uintptr_t)notAllignedBuff) % alignValue;
-	uint8_t *ret_address =
-		&(((uint8_t *)notAllignedBuff)[alignValue - offset]);
-
-	if (offset == 0)
-		return (uint8_t *)notAllignedBuff;
-
-	return ret_address;
 }
 
 /* ACM control ... data handling is delegated to tty library code.
@@ -1234,9 +1239,8 @@ static int setup(struct usb_gadget *gadget, const CH9_UsbSetup *ctrl)
 	if (length > 0) {
 		ep0Req->length =
 			TmpCtrl.wLength < length ? TmpCtrl.wLength : length;
-#ifndef DISABLE_DCACHE
-		flush_cache(ep0Req->dma, ep0Req->length);
-#endif
+
+		cvi_cache_flush(ep0Req->dma, ep0Req->length);
 		gadget->ep0->ops->queue(gadget->ep0, ep0Req);
 	}
 	return 0;
@@ -1282,12 +1286,9 @@ int acm_app_init(void)
 	get_unicode_string(serialDesc, USB_SERIAL_NUMBER_STRING);
 
 	/*  align buffers to modulo8 address */
-	ep0Buff = alignBuff(ep0BuffAlloc, 8);
-	bulkBuf = alignBuff(bulkBufAlloc, 8);
-	cmdBuf = alignBuff(cmdBufAlloc, 8);
-	VERBOSE("bulkBuf %p bulkBufAlloc %p\n", bulkBuf, bulkBufAlloc);
-	VERBOSE("cmdBuf %p cmdBufAlloc %p\n", cmdBuf, cmdBufAlloc);
-	VERBOSE("ep0Buff %p ep0BuffAlloc %p\n", ep0Buff, ep0BuffAlloc);
+	ep0Buff = ep0BuffAlloc;
+	bulkBuf = bulkBufAlloc;
+	cmdBuf = cmdBufAlloc;
 
 	memset(ep0BuffAlloc, 0x00, EP0_SIZE);
 	memset(bulkBufAlloc, 0x00, BUF_SIZE);
@@ -1348,7 +1349,15 @@ uint32_t plat_cvi_gpio_read(uint32_t mask)
 #if defined(USB_PHY_DETECTION)
 uint8_t usb_vbus_det(void)
 {
-	return (!!(mmio_read_32(REG_TOP_CONF_INFO) & BIT_TOP_CONF_INFO_VBUS));
+	uint8_t vbus;
+	uint32_t save_pinmux;
+
+	save_pinmux = mmio_read_32(PINMUX_USB_VBUS_DET);
+	mmio_write_32(PINMUX_USB_VBUS_DET, 0);
+	vbus = (!!(mmio_read_32(REG_TOP_CONF_INFO) & BIT_TOP_CONF_INFO_VBUS));
+	mmio_write_32(PINMUX_USB_VBUS_DET, save_pinmux);
+
+	return vbus;
 }
 #endif
 
@@ -1487,18 +1496,16 @@ unconfigured:
 	bulkOutReq->dma = (uintptr_t)cmdBuf;
 	bulkOutReq->complete = bulkOutCmplMain;
 	bulkOutReq->length = transfer_size;
-#ifndef DISABLE_DCACHE
-	flush_cache(bulkOutReq->dma, bulkOutReq->length);
-#endif
+	cvi_cache_flush(bulkOutReq->dma, bulkOutReq->length);
+
 	VERBOSE("IN DATA TRANSFER\n");
 	clearReq(bulkInReq);
 	bulkInReq->buf = bulkBuf;
 	bulkInReq->dma = (uintptr_t)bulkBuf;
 	bulkInReq->complete = bulkResetOutReq;
 	bulkInReq->length = transfer_size;
-#ifndef DISABLE_DCACHE
-	flush_cache(bulkInReq->dma, bulkInReq->length);
-#endif
+	cvi_cache_flush(bulkInReq->dma, bulkInReq->length);
+
 	epOut->ops->queue(epOut, bulkOutReq);
 	NOTICE("connection speed: %d\n", gadget->speed);
 	ts = get_timer(0);

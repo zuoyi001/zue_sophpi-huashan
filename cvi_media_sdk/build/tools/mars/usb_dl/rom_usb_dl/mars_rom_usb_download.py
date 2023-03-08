@@ -21,13 +21,6 @@ def parse_Args():
         help="the folder path to dir inclued fip,rootfs kernel and xml",
     )
     parser.add_argument(
-        "--cpu",
-        metavar="arch",
-        type=str,
-        default="ca53",
-        help="ca53 or riscv",
-    )
-    parser.add_argument(
         "-v", "--verbose", help="increase output verbosity", action="store_true"
     )
     group = parser.add_mutually_exclusive_group()
@@ -56,11 +49,7 @@ def resource_path(relative_path):
 def main():
     args = parse_Args()
     image_dir = args.image_dir
-    cpu = args.cpu
-    if cpu == "riscv":
-        fip_path = resource_path("riscv_prg.bin")
-    else:
-        fip_path = os.path.join(image_dir, "fip.bin")
+    fip_path = os.path.join(image_dir, "fip.bin")
     print("fip_path: %s" % fip_path)
     fip_tx_size = 4 * 1024
 

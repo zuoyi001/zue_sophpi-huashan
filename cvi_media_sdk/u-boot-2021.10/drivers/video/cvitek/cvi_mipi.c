@@ -21,6 +21,9 @@
  * bit[0]: dcs cmd mode. 0(hw)/1(sw)
  */
 static int cmd_mode = 1;
+unsigned int pixel_clk;
+u8 lane_num;
+u8 bits;
 
 static void _fill_disp_timing(struct sclr_disp_timing *timing, struct sync_info_s *sync_info)
 {
@@ -85,10 +88,8 @@ int mipi_tx_set_combo_dev_cfg(const struct combo_dev_cfg_s *dev_cfg)
 {
 	int ret, i;
 	bool data_en[LANE_MAX_NUM] = {false, false, false, false, false};
-	u8 lane_num = 0;
 	struct sclr_disp_timing timing;
 	enum sclr_dsi_fmt dsi_fmt;
-	u8 bits;
 	bool preamble_on = false;
 	struct combo_dev_cfg_s dev_cfg_t = *dev_cfg;
 	struct disp_ctrl_gpios ctrl_gpios;
@@ -136,6 +137,7 @@ int mipi_tx_set_combo_dev_cfg(const struct combo_dev_cfg_s *dev_cfg)
 	return -EINVAL;
 	}
 	_cal_htt_extra(&dev_cfg_t, lane_num, bits);
+	pixel_clk =dev_cfg_t.pixel_clk;
 	_fill_disp_timing(&timing, &dev_cfg_t.sync_info);
 	preamble_on = (dev_cfg_t.pixel_clk * bits / lane_num) > 1500000;
 	dphy_dsi_lane_en(true, data_en, preamble_on);
@@ -206,6 +208,8 @@ int mipi_tx_set_cmd(struct cmd_info_s *cmd_info)
 
 int mipi_tx_get_cmd(struct get_cmd_info_s *get_cmd_info)
 {
+	int ret = 0;
+
 	if (get_cmd_info->get_data_size > RX_MAX_NUM) {
 		printf("get_data_size(%d) can't exceed %d!\n", get_cmd_info->get_data_size, RX_MAX_NUM);
 		return -EINVAL;
@@ -214,8 +218,14 @@ int mipi_tx_get_cmd(struct get_cmd_info_s *get_cmd_info)
 		return -EINVAL;
 	}
 
-	return sclr_dsi_dcs_read_buffer(get_cmd_info->data_type, get_cmd_info->data_param
+	if (pixel_clk)
+		dphy_dsi_set_pll(pixel_clk * 2, lane_num, bits);
+	ret = sclr_dsi_dcs_read_buffer(get_cmd_info->data_type, get_cmd_info->data_param
 		, get_cmd_info->get_data, get_cmd_info->get_data_size, cmd_mode & 0x01);
+	if (pixel_clk)
+		dphy_dsi_set_pll(pixel_clk, lane_num, bits);
+
+	return ret;
 }
 
 void mipi_tx_set_mode(unsigned long mode_flags)

@@ -324,6 +324,8 @@ static optionExt venc_long_option_ext[] = {
 	{{"sensorEn", optional_argument, NULL, 0}, ARG_INT,
 		CVI_H26X_SENSOR_EN_MIN, CVI_H26X_SENSOR_EN_MAX,
 		"sensorEn [0, 1], default = 0"},
+	{{"sliceSplitCnt", optional_argument, NULL, 0}, ARG_INT, 0, 5,
+		"sliceSplitCnt [1, 5], default = 1"},
 	{{NULL, 0, NULL, 0}, ARG_INT, 0, 0, ""}
 };
 
@@ -1028,6 +1030,8 @@ CVI_S32 parseEncArgv(sampleVenc *psv, chnInputCfg *pIc, CVI_S32 argc, char **arg
 				pIc->bIsoSendFrmEn = arg.uval;
 			} else if (!strcmp(long_options[idx].name, "sensorEn")) {
 				pIc->bSensorEn = arg.uval;
+			} else if (!strcmp(long_options[idx].name, "sliceSplitCnt")) {
+				pIc->u32SliceCnt = arg.uval;
 			} else {
 				CVI_VENC_TRACE("not exist name = %s\n", long_options[idx].name);
 				print_help(argv);

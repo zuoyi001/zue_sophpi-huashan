@@ -144,7 +144,6 @@
 		block-ts = <15>;
 	};
 
-#if 0
 	watchdog0: cv-wd@0x3010000 {
 		compatible = "snps,dw-wdt";
 		reg = <0x0 0x03010000 0x0 0x1000>;
@@ -152,6 +151,13 @@
 		clocks = <&pclk>;
 	};
 
+    pclk: pclk {
+		#clock-cells = <0>;
+		compatible = "fixed-clock";
+		clock-frequency = <25000000>;
+	};
+
+#if 0
 	pwm0: pwm@3060000 {
 		compatible = "cvitek,cvi-pwm";
 		reg = <0x0 0x3060000 0x0 0x1000>;
@@ -178,12 +184,6 @@
 		reg = <0x0 0x3063000 0x0 0x1000>;
 		clocks = <&clk MARS_CLK_PWM>;
 		#pwm-cells = <4>;
-	};
-
-	pclk: pclk {
-		#clock-cells = <0>;
-		compatible = "fixed-clock";
-		clock-frequency = <25000000>;
 	};
 #endif
 
@@ -749,12 +749,25 @@
 		clock-names = "clk_disp", "clk_dsi", "clk_bt";
 	};
 
+#if (CVIMMAP_FRAMEBUFFER_SIZE > 0)
+	reserved-memory {
+	  #size-cells = <0x2>;
+	  #address-cells = <0x2>;
+	  ranges;
+
+		fb_reserved: cvifb {
+			alloc-ranges = <0x0 CVIMMAP_FRAMEBUFFER_ADDR 0 CVIMMAP_FRAMEBUFFER_SIZE>;
+			size = <0x0 CVIMMAP_FRAMEBUFFER_SIZE>;
+		};
+	};
+
 	cvifb {
 		compatible = "cvitek,fb";
+		memory-region = <&fb_reserved>;
 		reg = <0x0 0x0a088000 0x0 0x1000>;
 		reg-names = "disp";
 	};
-
+#endif
 	dwa {
 		compatible = "cvitek,dwa";
 		reg = <0x0 0x0a0c0000 0x0 0x1000>;

@@ -172,6 +172,7 @@ static const char *spi_flash_update_block(struct spi_flash *flash, u32 offset,
 		size_t len, const char *buf, char *cmp_buf, size_t *skipped)
 {
 	char *ptr = (char *)buf;
+	u8 *tmp = NULL;
 
 	debug("offset=%#x, sector_size=%#x, len=%#zx\n",
 	      offset, flash->sector_size, len);
@@ -190,6 +191,10 @@ static const char *spi_flash_update_block(struct spi_flash *flash, u32 offset,
 		return "erase";
 	/* If it's a partial sector, copy the data into the temp-buffer */
 	if (len != flash->sector_size) {
+		for (int i = 0; i < flash->sector_size; i++) {
+			tmp = (u8 *)cmp_buf;
+			tmp[i] = 0xff;
+		}
 		memcpy(cmp_buf, buf, len);
 		ptr = cmp_buf;
 	}

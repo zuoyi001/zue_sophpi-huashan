@@ -19,6 +19,4 @@
 #error "use cvi_utask at wrong platform"
 #endif
 
-#define DISABLE_DCACHE
-
 #endif /* __PLATFORM_DEF_H__ */

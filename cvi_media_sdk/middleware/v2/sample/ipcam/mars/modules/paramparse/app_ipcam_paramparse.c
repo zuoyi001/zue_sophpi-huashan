@@ -7,6 +7,7 @@
 #include "minIni.h"
 #include "app_ipcam_paramparse.h"
 #include "app_ipcam_comm.h"
+#include "app_ipcam_gpio.h"
 
 /**************************************************************************
  *                              M A C R O S                               *
@@ -29,11 +30,16 @@ static int _Load_Param_Sys(const char *file, APP_PARAM_SYS_CFG_S *Sys)
 
     APP_PROF_LOG_PRINT(LEVEL_INFO, "loading systerm config ------------------> start \n");
 
+    Sys->bSBMEnable = ini_getl("slice_buff", "slice_buff_mode", 0, file);
+    if (Sys->bSBMEnable == 1) {
+        APP_PROF_LOG_PRINT(LEVEL_INFO, "SBM Enable !\n");
+    }
+    
     Sys->vb_pool_num = ini_getl("vb_config", "vb_pool_cnt", 0, file);
 
     for (i = 0; i < Sys->vb_pool_num; i++) {
         memset(tmp_section, 0, sizeof(tmp_section));
-        snprintf(tmp_section, sizeof(tmp_section), "vb_pool_%d", i);
+        sprintf(tmp_section, "vb_pool_%d", i);
 
         Sys->vb_pool[i].bEnable = ini_getl(tmp_section, "bEnable", 1, file);
         if (!Sys->vb_pool[i].bEnable)
@@ -177,12 +183,12 @@ static int _Load_Param_Vpss(const char *file, APP_PARAM_VPSS_CFG_T *Vpss)
         Vpss->astVpssGrpCfg[grp_idx].VpssGrp = grp_idx;
         Vpss->astVpssGrpCfg[grp_idx].bBindMode                = ini_getl(tmp_section, "bind_mode", 0, file);
         if (Vpss->astVpssGrpCfg[grp_idx].bBindMode) {
-            Vpss->astVpssGrpCfg[grp_idx].astChn[0].enModId    = CVI_ID_VPSS;
+            Vpss->astVpssGrpCfg[grp_idx].astChn[0].enModId    = ini_getl(tmp_section, "src_mod_id", 0, file);
             Vpss->astVpssGrpCfg[grp_idx].astChn[0].s32DevId   = ini_getl(tmp_section, "src_dev_id", 0, file);
             Vpss->astVpssGrpCfg[grp_idx].astChn[0].s32ChnId   = ini_getl(tmp_section, "src_chn_id", 0, file);
-            Vpss->astVpssGrpCfg[grp_idx].astChn[1].enModId    = CVI_ID_VPSS;
+            Vpss->astVpssGrpCfg[grp_idx].astChn[1].enModId    = ini_getl(tmp_section, "dst_mod_id", 0, file);
             Vpss->astVpssGrpCfg[grp_idx].astChn[1].s32DevId   = ini_getl(tmp_section, "dst_dev_id", 0, file);
-            Vpss->astVpssGrpCfg[grp_idx].astChn[1].s32ChnId   = 0;
+            Vpss->astVpssGrpCfg[grp_idx].astChn[1].s32ChnId   = ini_getl(tmp_section, "dst_chn_id", 0, file);
         }
         APP_PROF_LOG_PRINT(LEVEL_INFO, "vpss grp_idx=%d\n", grp_idx);
         VPSS_GRP_ATTR_S *pstVpssGrpAttr = &Vpss->astVpssGrpCfg[grp_idx].stVpssGrpAttr;
@@ -268,7 +274,7 @@ static int _Load_Param_Venc(const char *file, APP_PARAM_VENC_CTX_S *Venc)
     int i = 0;
     long int chn_num = 0;
     int buffSize = 0;
-    char tmp_section[16] = {0};
+    char tmp_section[32] = {0};
     char tmp_buff[PARAM_STRING_LEN] = {0};
 
     APP_PROF_LOG_PRINT(LEVEL_INFO, "loading venc config ------------------> start \n");
@@ -389,11 +395,11 @@ static int _Load_Param_Venc(const char *file, APP_PARAM_VENC_CTX_S *Venc)
     }
 
     int roi_num = ini_getl("roi_config", "max_num", 0, file);
-    APP_PROF_LOG_PRINT(LEVEL_INFO, "roi_max_num: %ld\n", roi_num);
+    APP_PROF_LOG_PRINT(LEVEL_INFO, "roi_max_num: %d\n", roi_num);
 
     for (i = 0; i < roi_num; i++) {
         memset(tmp_section, 0, sizeof(tmp_section));
-        snprintf(tmp_section, sizeof(tmp_section), "roi_index%d", i);
+        sprintf(tmp_section, "roi_index%d", i);
 
         Venc->astRoiCfg[i].u32Index = i;
         Venc->astRoiCfg[i].bEnable          = ini_getl(tmp_section, "bEnable", 0, file);
@@ -567,55 +573,70 @@ static int _Load_Param_Osdc(const char *file, APP_PARAM_OSDC_CFG_S *Osdc)
     APP_PROF_LOG_PRINT(LEVEL_INFO, "loading Osdc config ------------------> start \n");
 
     unsigned int i = 0;
-    char tmp_section[16] = {0};
+    unsigned int j = 0;
+    char tmp_buff[APP_OSD_STR_LEN_MAX] = {0};
+    char tmp_section[32] = {0};
 
+    memset(Osdc, 0, sizeof(APP_PARAM_OSDC_CFG_S));
     Osdc->enable = ini_getl("osdc_config", "enable", 0, file);
     APP_PROF_LOG_PRINT(LEVEL_INFO, "osdc enable: %d\n", Osdc->enable);
-
     if (Osdc->enable) {
-        Osdc->bShow           = ini_getl("osdc_config", "bShow", 0, file);
-        Osdc->handle          = ini_getl("osdc_config", "handle", 0, file);
-        Osdc->VpssGrp         = ini_getl("osdc_config", "vpss_grp", 0, file);
-        Osdc->VpssChn         = ini_getl("osdc_config", "vpss_chn", 0, file);
-        Osdc->CompressedSize  = ini_getl("osdc_config", "compressedsize", 0, file);
-        Osdc->format          = ini_getl("osdc_config", "format", 0, file);
-        Osdc->mmfChn.enModId  = ini_getl("osdc_config", "mod_id", 0, file);
-        Osdc->mmfChn.s32DevId = ini_getl("osdc_config", "dev_id", 0, file);
-        Osdc->mmfChn.s32ChnId = ini_getl("osdc_config", "chn_id", 0, file);
-        Osdc->bShowPdRect     = ini_getl("osdc_config", "show_pd_rect", 0, file);
-        Osdc->bShowMdRect     = ini_getl("osdc_config", "show_md_rect", 0, file);
-        Osdc->bShowFdRect     = ini_getl("osdc_config", "show_fd_rect", 0, file);
-
-        APP_PROF_LOG_PRINT(LEVEL_INFO, "handle=%d bShow=%d Format=0x%x cpsSize=%d ModeId=%d DevId=%d ChnId=%d PdRect=%d MdRect=%d FdRect=%d\n", 
-            Osdc->handle, Osdc->bShow, Osdc->format, Osdc->CompressedSize, Osdc->mmfChn.enModId, 
-            Osdc->mmfChn.s32DevId, Osdc->mmfChn.s32ChnId, Osdc->bShowPdRect, Osdc->bShowMdRect, Osdc->bShowFdRect);
-
-        Osdc->osdcObjNum = ini_getl("osdc_objs_info", "cnt", 0, file);
-        APP_PROF_LOG_PRINT(LEVEL_INFO, "osdc info cnt: %d\n", Osdc->osdcObjNum);
-
-        for (i = 0; i < Osdc->osdcObjNum; i++) {
+        for (j = 0; j < OSDC_NUM_MAX; j++) {
             memset(tmp_section, 0, sizeof(tmp_section));
-            snprintf(tmp_section, sizeof(tmp_section), "osdc_obj_info%d", i);
+            snprintf(tmp_section, sizeof(tmp_section), "osdc_config%d", j);
+            Osdc->bShow[j]           = ini_getl(tmp_section, "bShow", 0, file);
+            Osdc->handle[j]          = ini_getl(tmp_section, "handle", 0, file);
+            Osdc->VpssGrp[j]         = ini_getl(tmp_section, "vpss_grp", 0, file);
+            Osdc->VpssChn[j]         = ini_getl(tmp_section, "vpss_chn", 0, file);
+            Osdc->CompressedSize[j]  = ini_getl(tmp_section, "compressedsize", 0, file);
+            Osdc->format[j]          = ini_getl(tmp_section, "format", 0, file);
+            Osdc->mmfChn[j].enModId  = ini_getl(tmp_section, "mod_id", 0, file);
+            Osdc->mmfChn[j].s32DevId = ini_getl(tmp_section, "dev_id", 0, file);
+            Osdc->mmfChn[j].s32ChnId = ini_getl(tmp_section, "chn_id", 0, file);
+            Osdc->bShowPdRect[j]     = ini_getl(tmp_section, "show_pd_rect", 0, file);
+            Osdc->bShowMdRect[j]     = ini_getl(tmp_section, "show_md_rect", 0, file);
+            Osdc->bShowFdRect[j]     = ini_getl(tmp_section, "show_fd_rect", 0, file);
+            Osdc->osdcObjNum[j]      = ini_getl(tmp_section, "cnt", 0, file);
 
-            Osdc->osdcObj[i].bShow      = ini_getl(tmp_section, "bShow", 0, file);
-            Osdc->osdcObj[i].type       = ini_getl(tmp_section, "type", 0, file);
-            Osdc->osdcObj[i].color      = ini_getl(tmp_section, "color", 0, file);
-            Osdc->osdcObj[i].x1         = ini_getl(tmp_section, "x1", 0, file);
-            Osdc->osdcObj[i].y1         = ini_getl(tmp_section, "y1", 0, file);
-            if (RGN_CMPR_LINE == Osdc->osdcObj[i].type) {
-                Osdc->osdcObj[i].x2     = ini_getl(tmp_section, "x2", 0, file);
-                Osdc->osdcObj[i].y2     = ini_getl(tmp_section, "y2", 0, file);
-            } else if (RGN_CMPR_RECT == Osdc->osdcObj[i].type) {
-                Osdc->osdcObj[i].width  = ini_getl(tmp_section, "width", 0, file);
-                Osdc->osdcObj[i].height = ini_getl(tmp_section, "height", 0, file);
+            APP_PROF_LOG_PRINT(LEVEL_INFO, "handle=%d bShow=%d Format=0x%x cpsSize=%d ModeId=%d DevId=%d ChnId=%d PdRect=%d MdRect=%d FdRect=%d osdcObjNum=%d\n", 
+                Osdc->handle[j], Osdc->bShow[j], Osdc->format[j], Osdc->CompressedSize[j], Osdc->mmfChn[j].enModId, 
+                Osdc->mmfChn[j].s32DevId, Osdc->mmfChn[j].s32ChnId, Osdc->bShowPdRect[j], Osdc->bShowMdRect[j], Osdc->bShowFdRect[j], Osdc->osdcObjNum[j]);
+
+            for (i = 0; i < Osdc->osdcObjNum[j]; i++) {
+                memset(tmp_section, 0, sizeof(tmp_section));
+                snprintf(tmp_section, sizeof(tmp_section), "osdc%d_obj_info%d", j, i);
+
+                Osdc->osdcObj[j][i].bShow      = ini_getl(tmp_section, "bShow", 0, file);
+                Osdc->osdcObj[j][i].type       = ini_getl(tmp_section, "type", 0, file);
+                Osdc->osdcObj[j][i].color      = ini_getl(tmp_section, "color", 0, file);
+                Osdc->osdcObj[j][i].x1         = ini_getl(tmp_section, "x1", 0, file);
+                Osdc->osdcObj[j][i].y1         = ini_getl(tmp_section, "y1", 0, file);
+                if (RGN_CMPR_BIT_MAP == Osdc->osdcObj[j][i].type) {
+                    Osdc->osdcObj[j][i].enType = ini_getl(tmp_section, "entype", 0, file);
+                    if (TYPE_STRING == Osdc->osdcObj[j][i].enType) {
+                        ini_gets(tmp_section, "str", " ", tmp_buff, APP_OSD_STR_LEN_MAX, file);
+                        strncpy(Osdc->osdcObj[j][i].str, tmp_buff, APP_OSD_STR_LEN_MAX);
+                    } else if (TYPE_PICTURE == Osdc->osdcObj[j][i].enType) {
+                        ini_gets(tmp_section, "file_name", " ", tmp_buff, APP_OSD_STR_LEN_MAX, file);
+                        strncpy(Osdc->osdcObj[j][i].filename, tmp_buff, APP_OSD_STR_LEN_MAX);
+                    }
+                } else {
+                    if (RGN_CMPR_LINE == Osdc->osdcObj[j][i].type) {
+                        Osdc->osdcObj[j][i].x2     = ini_getl(tmp_section, "x2", 0, file);
+                        Osdc->osdcObj[j][i].y2     = ini_getl(tmp_section, "y2", 0, file);
+                    } else if (RGN_CMPR_RECT == Osdc->osdcObj[j][i].type) {
+                        Osdc->osdcObj[j][i].width  = ini_getl(tmp_section, "width", 0, file);
+                        Osdc->osdcObj[j][i].height = ini_getl(tmp_section, "height", 0, file);
+                    }
+                    Osdc->osdcObj[j][i].filled     = ini_getl(tmp_section, "filled", 0, file);
+                    Osdc->osdcObj[j][i].thickness  = ini_getl(tmp_section, "thickness", 0, file);
+                }
+
+                APP_PROF_LOG_PRINT(LEVEL_INFO, "type=%d color=0x%x x1=%d y1=%d x2=%d y2=%d width=%d height=%d filled=%d thickness=%d \n", 
+                    Osdc->osdcObj[j][i].type, Osdc->osdcObj[j][i].color, Osdc->osdcObj[j][i].x1, Osdc->osdcObj[j][i].y1,
+                    Osdc->osdcObj[j][i].x2, Osdc->osdcObj[j][i].y2, Osdc->osdcObj[j][i].width, Osdc->osdcObj[j][i].height,
+                    Osdc->osdcObj[j][i].filled, Osdc->osdcObj[j][i].thickness);
             }
-            Osdc->osdcObj[i].filled     = ini_getl(tmp_section, "filled", 0, file);
-            Osdc->osdcObj[i].thickness  = ini_getl(tmp_section, "thickness", 0, file);
-
-            APP_PROF_LOG_PRINT(LEVEL_INFO, "type=%d color=0x%x x1=%d y1=%d x2=%d y2=%d width=%d height=%d filled=%d thickness=%d \n", 
-                Osdc->osdcObj[i].type, Osdc->osdcObj[i].color, Osdc->osdcObj[i].x1, Osdc->osdcObj[i].y1,
-                Osdc->osdcObj[i].x2, Osdc->osdcObj[i].y2, Osdc->osdcObj[i].width, Osdc->osdcObj[i].height,
-                Osdc->osdcObj[i].filled, Osdc->osdcObj[i].thickness);
         }
     } else {
         APP_PROF_LOG_PRINT(LEVEL_WARN, "Osdc not enable!\n");
@@ -651,7 +672,25 @@ static int _Load_Param_Rtsp(const char *file, APP_PARAM_RTSP_T *Rtsp)
     return CVI_SUCCESS;
 }
 
+static int _Load_Param_Gpio(const char *file, APP_PARAM_GPIO_CFG_S *Gpio)
+{
+    APP_PROF_LOG_PRINT(LEVEL_INFO, "loading GPIO config ------------------> start \n");
+
+    Gpio->IR_CUT_A = ini_getl("gpio_config", "ir_cut_a", 0, file);
+    Gpio->IR_CUT_B = ini_getl("gpio_config", "ir_cut_b", 0, file);
+    Gpio->LED_WHITE = ini_getl("gpio_config", "led_white", 0, file);
+    Gpio->LED_IR    = ini_getl("gpio_config", "led_ir", 0, file);
+
+    APP_PROF_LOG_PRINT(LEVEL_INFO, "IR_CUT_A GPIO=%d IR_CUT_B GPIO=%d LED_WHITE GPIO=%d LED_RED GPIO=%d\n",Gpio->IR_CUT_A, Gpio->IR_CUT_B,Gpio->LED_WHITE,Gpio->LED_IR);
+
+    APP_PROF_LOG_PRINT(LEVEL_INFO, "loading GPIO config ------------------> done \n\n");
+
+    return CVI_SUCCESS;
+}
+
+
 #ifdef AI_SUPPORT
+#ifdef FACE_SUPPORT
 static int _Load_Param_Ai_FD(const char *file, APP_PARAM_AI_FD_CFG_S *Ai)
 {
     APP_PROF_LOG_PRINT(LEVEL_INFO, "loading AI PD config ------------------> start \n");
@@ -714,7 +753,7 @@ static int _Load_Param_Ai_FD(const char *file, APP_PARAM_AI_FD_CFG_S *Ai)
 
     return CVI_SUCCESS;
 }
-
+#endif
 static int _Load_Param_Ai_PD(const char *file, APP_PARAM_AI_PD_CFG_S *Ai)
 {
     APP_PROF_LOG_PRINT(LEVEL_INFO, "loading AI PD config ------------------> start \n");
@@ -865,10 +904,13 @@ int app_ipcam_Param_Load(void)
     APP_CHK_RET(_Load_Param_Cover(ParamCfgFile, app_ipcam_Cover_Param_Get()), "load Cover Param");
     APP_CHK_RET(_Load_Param_Osdc(ParamCfgFile, app_ipcam_Osdc_Param_Get()),   "load Osdc Param");
     APP_CHK_RET(_Load_Param_Rtsp(ParamCfgFile, app_ipcam_Rtsp_Param_Get()),   "load Rtsp Param");
+    APP_CHK_RET(_Load_Param_Gpio(ParamCfgFile, app_ipcam_Gpio_Param_Get()),   "load GPIO Param");
     #ifdef AI_SUPPORT
     APP_CHK_RET(_Load_Param_Ai_PD(ParamCfgFile, app_ipcam_Ai_PD_Param_Get()), "load Ai PD Param");
     APP_CHK_RET(_Load_Param_Ai_MD(ParamCfgFile, app_ipcam_Ai_MD_Param_Get()), "load Ai MD Param");
+    #ifdef FACE_SUPPORT
     APP_CHK_RET(_Load_Param_Ai_FD(ParamCfgFile, app_ipcam_Ai_FD_Param_Get()), "load Ai FD Param");
+    #endif
     #endif
 
     return CVI_SUCCESS;

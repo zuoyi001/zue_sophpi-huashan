@@ -2096,8 +2096,8 @@ struct VREG_RAW_TOP_RAW_BAYER_TYPE_TOPLEFT {
 	union CMDSET_FIELD                      ctrl;
 };
 
-struct VREG_RAW_TOP_RDMI_ENBALE {
-	union REG_RAW_TOP_RDMI_ENBALE           write;
+struct VREG_RAW_TOP_RDMI_ENABLE {
+	union REG_RAW_TOP_RDMI_ENABLE           write;
 	union CMDSET_FIELD                      ctrl;
 };
 
@@ -2180,7 +2180,7 @@ struct VREG_RAW_TOP_T {
 	struct VREG_RAW_TOP_RAW_0                RAW_0;
 	struct VREG_RAW_TOP_READ_SEL             READ_SEL;
 	struct VREG_RAW_TOP_RAW_1                RAW_1;
-	struct VREG_RESV                        _resv_0xc[1];
+	struct VREG_RESV                         _resv_0xc[1];
 	struct VREG_RAW_TOP_CTRL                 CTRL;
 	struct VREG_RAW_TOP_UP_PQ_EN             UP_PQ_EN;
 	struct VREG_RAW_TOP_RAW_2                RAW_2;
@@ -2190,7 +2190,7 @@ struct VREG_RAW_TOP_T {
 	struct VREG_RAW_TOP_DEBUG                DEBUG;
 	struct VREG_RAW_TOP_DEBUG_SELECT         DEBUG_SELECT;
 	struct VREG_RAW_TOP_RAW_BAYER_TYPE_TOPLEFT  RAW_BAYER_TYPE_TOPLEFT;
-	struct VREG_RAW_TOP_RDMI_ENBALE          RDMI_ENBALE;
+	struct VREG_RAW_TOP_RDMI_ENABLE          RDMI_ENABLE;
 	struct VREG_RAW_TOP_RDMA_SIZE            RDMA_SIZE;
 	struct VREG_RAW_TOP_DPCM_MODE            DPCM_MODE;
 	struct VREG_RAW_TOP_STVALID_STATUS       STVALID_STATUS;
@@ -2202,7 +2202,7 @@ struct VREG_RAW_TOP_T {
 	struct VREG_RAW_TOP_RO_IDLE              RO_IDLE;
 	struct VREG_RAW_TOP_RO_DONE              RO_DONE;
 	struct VREG_RAW_TOP_DMA_IDLE             DMA_IDLE;
-	struct VREG_RESV                        _resv_0x64[1];
+	struct VREG_RESV                         _resv_0x64[1];
 	struct VREG_RAW_TOP_LE_LMAP_GRID_NUMBER  LE_LMAP_GRID_NUMBER;
 	struct VREG_RAW_TOP_SE_LMAP_GRID_NUMBER  SE_LMAP_GRID_NUMBER;
 	struct VREG_RAW_TOP_CHECKSUM_0           CHECKSUM_0;

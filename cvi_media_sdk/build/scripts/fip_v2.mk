@@ -8,6 +8,7 @@ opensbi: u-boot-build
 opensbi-clean:
 	$(call print_target)
 	${Q}$(MAKE) -C ${OPENSBI_PATH} PLATFORM=generic distclean
+	${Q}rm -rf ${OPENSBI_PATH}/build
 
 FSBL_OUTPUT_PATH = ${FSBL_PATH}/build/${PROJECT_FULLNAME}
 ifeq ($(call qstrip,${CONFIG_ARCH}),riscv)
@@ -35,7 +36,7 @@ fsbl-build: u-boot-build memory-map
 
 fsbl-clean:
 	$(call print_target)
-	${Q}$(MAKE) -C ${FSBL_PATH} clean O=${FSBL_OUTPUT_PATH}
+	 
 
 u-boot-dep: fsbl-build ${OUTPUT_DIR}/elf
 	$(call print_target)

@@ -7,7 +7,7 @@
 #include "app_ipcam_ll.h"
 
 
-#define LL_DATA_CACHE_DEPTH_MAX     25
+#define LL_DATA_CACHE_DEPTH_MAX     10
 
 #define LL_INIT(N) ((N)->next = (N)->prev = (N))
 
@@ -99,9 +99,19 @@ int app_ipcam_LList_Data_Pop(void **pData, void *pArgs)
 
 int app_ipcam_LList_Data_Push(void *pData, void *pArgs)
 {
+    if (pData == NULL || pArgs == NULL) {
+        printf("pData or pArgs is NULL!\n");
+        return -1;
+    }
+
     APP_DATA_CTX_S *pstDataCtx = (APP_DATA_CTX_S *)pArgs;
     APP_DATA_PARAM_S *pstDataParam = &pstDataCtx->stDataParam;
     APP_DATA_LL_S *pHead = &pstDataCtx->stHead;
+
+    if (!pstDataCtx->bRunStatus) {
+        printf("Link List Cache Not Running Now!!\n");
+        return -1;
+    }
 
     APP_DATA_LL_S *pNewNode = NULL;
     pNewNode = (APP_DATA_LL_S *)malloc(sizeof(APP_DATA_LL_S));
@@ -112,12 +122,20 @@ int app_ipcam_LList_Data_Push(void *pData, void *pArgs)
 
     pNewNode->pData = NULL;
 
-    pstDataParam->fpDataSave(&pNewNode->pData, pData);
+    if (pstDataParam->fpDataSave(&pNewNode->pData, pData) != 0) {
+        free(pNewNode);
+        printf("data save failded!\n");
+        return -1;
+    }
 
     if (pstDataCtx->LListDepth > LL_DATA_CACHE_DEPTH_MAX) {
         void *pDataDrop = NULL;
         printf("LL cache is full and drop data. (LList depth:%d > Max:%d) \n", pstDataCtx->LListDepth, LL_DATA_CACHE_DEPTH_MAX);
-        app_ipcam_LList_Data_Pop(&pDataDrop, pArgs);
+        if (app_ipcam_LList_Data_Pop(&pDataDrop, pArgs) != 0) {
+            free(pNewNode);
+            printf("LL data drop failded!\n");
+            return -1;
+        }
         if(pDataDrop) {
             if(pstDataParam->fpDataFree) {
                 pstDataParam->fpDataFree(&pDataDrop);
@@ -130,7 +148,7 @@ int app_ipcam_LList_Data_Push(void *pData, void *pArgs)
     APP_LINK_LIST_S *pHeadLink = &pHead->link;
     APP_LINK_LIST_S *pNodeLink = &pNewNode->link;
     if (pHeadLink == NULL || pNodeLink == NULL) {
-        printf("%s:%d pHeadLink or pNodeLink is NULL\n", pHeadLink, pNodeLink);
+        printf(" pHeadLink or pNodeLink is NULL\n");
         pthread_mutex_unlock(&pstDataCtx->mutex);
         return -1;
     }
@@ -228,27 +246,32 @@ EXIT:
 
 int app_ipcam_LList_Data_DeInit(void * *pCtx)
 {
-    for (int i = 0; pCtx[i] != NULL; i++) {
-        APP_DATA_CTX_S *pstDataCtx = pCtx[i];
-        APP_DATA_PARAM_S *pstDataParam = &pstDataCtx->stDataParam;
-
-        void *pDataDrop = NULL;
-        pstDataCtx->bRunStatus = false;
-        pthread_join(pstDataCtx->pthread_id, NULL);
-        while(app_ipcam_LList_Data_Pop(&pDataDrop, pCtx[i]) == 0) {
-            if(pDataDrop) {
-                if(pstDataParam->fpDataFree) {
-                    pstDataParam->fpDataFree(&pDataDrop);
-                }
-                pDataDrop = NULL;
-            }
-        }
-        pstDataCtx->LListDepth = 0;
-        pthread_mutex_destroy(&pstDataCtx->mutex);
-
-        free(pCtx[i]);
-        pCtx[i] = NULL;
+    if ((pCtx == NULL) || (*pCtx == NULL)) {
+        printf("pCtx or *pCtx is NULL\n");
+        return -1;
     }
+
+    APP_DATA_CTX_S *pstDataCtx = *pCtx;
+    APP_DATA_PARAM_S *pstDataParam = &pstDataCtx->stDataParam;
+
+    void *pDataDrop = NULL;
+    pstDataCtx->bRunStatus = false;
+
+    pthread_join(pstDataCtx->pthread_id, NULL);
+
+    while(app_ipcam_LList_Data_Pop(&pDataDrop, *pCtx) == 0) {
+        if(pDataDrop) {
+            if(pstDataParam->fpDataFree) {
+                pstDataParam->fpDataFree(&pDataDrop);
+            }
+            pDataDrop = NULL;
+        }
+    }
+    pstDataCtx->LListDepth = 0;
+    pthread_mutex_destroy(&pstDataCtx->mutex);
+
+    free(*pCtx);
+    *pCtx = NULL;
 
     return 0;
 }

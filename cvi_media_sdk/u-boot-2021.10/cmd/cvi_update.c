@@ -49,7 +49,7 @@ int _prgImage(char *file, uint32_t chunk_header_size, char *file_name)
 {
 	uint32_t size = *(uint32_t *)((uintptr_t)file + 4);
 	uint32_t offset = *(uint32_t *)((uintptr_t)file + 8);
-#ifdef CONFIG_SPI_FLASH
+#if (defined CONFIG_SPI_FLASH)/* || (defined CONFIG_NAND_SUPPORT)*/
 	uint32_t part_size = *(uint32_t *)((uintptr_t)file + 12);
 #endif
 	//uint32_t header_crc = *(uint32_t *)((uintptr_t)file + 16);
@@ -71,25 +71,27 @@ int _prgImage(char *file, uint32_t chunk_header_size, char *file_name)
 #ifdef CONFIG_NAND_SUPPORT
 	int dev = nand_curr_device;
 	struct mtd_info *mtd = nand_info[dev];
-	int goodblocks = 0;
+	uint32_t goodblocks = 0, blocks = 0;
 
 	// Calculate real offset when programming chunk.
 	if (offset < lastend)
 		offset = lastend;
 	else
 		lastend = offset;
-	for (; goodblocks * mtd->erasesize < size; lastend += mtd->erasesize) {
+
+	blocks = (size & (mtd->erasesize - 1)) ? ALIGN(size, mtd->erasesize) : size;
+	blocks /= mtd->erasesize;
+	for (; goodblocks  < blocks; lastend += mtd->erasesize) {
 		if (!nand_block_isbad(mtd, lastend))
 			goodblocks++;
 	}
-	lastend += mtd->erasesize;
-	pr_debug("offset:0x%x lastoffset:0x%x\n", offset, lastend);
+	//pr_debug("offset:0x%x lastoffset:0x%x, end:0x%x\n", offset, lastend, part_size + offset);
 
 	snprintf(cmd, 255, "nand write %p 0x%x 0x%x",
 		 (void *)file + chunk_header_size, offset, size);
 #elif defined(CONFIG_SPI_FLASH)
-	if (update_magic == SD_UPDATE_MAGIC &&
-		strcmp(file_name, "data.spinor")) {
+	if (update_magic == SD_UPDATE_MAGIC && (!strcmp(file_name, "fip.bin") ||
+						!strcmp(file_name, "boot.spinor"))) {
 		snprintf(cmd, 255, "sf update %p 0x%x 0x%x",
 			 (void *)file + chunk_header_size, offset, size);
 	} else {
@@ -97,7 +99,7 @@ int _prgImage(char *file, uint32_t chunk_header_size, char *file_name)
 		pr_debug("%s\n", cmd);
 		run_command(cmd, 0);
 		snprintf(cmd, 255, "sf write %p 0x%x 0x%x",
-		 (void *)file + chunk_header_size, offset, size);
+			 (void *)file + chunk_header_size, offset, size);
 	}
 #else
 	if (size & (SECTOR_SIZE - 1))
@@ -108,7 +110,7 @@ int _prgImage(char *file, uint32_t chunk_header_size, char *file_name)
 	snprintf(cmd, 255, "mmc write %p 0x%x 0x%x",
 		 (void *)file + chunk_header_size, offset, size);
 #endif
-	pr_debug(cmd);
+	pr_debug("%s\n", cmd);
 	ret = run_command(cmd, 0);
 	if (ret)
 		return 0;
@@ -144,12 +146,11 @@ static int _checkHeader(char *file, char strStorage[10])
 		pr_debug("%s\n", cmd);
 		run_command(cmd, 0);
 	}
-	lastend = 0;
 #endif
 	for (int i = 0; i < total_chunk; i++) {
 		uint32_t load_size = file_sz > (MAX_LOADSIZE + chunk_sz) ?
-						   MAX_LOADSIZE + chunk_sz :
-						   file_sz;
+				     MAX_LOADSIZE + chunk_sz :
+				     file_sz;
 		snprintf(cmd, 255, "fatload %s %p %s 0x%x 0x%x;", strStorage,
 			 (void *)UPDATE_ADDR, file, load_size, pos);
 		pr_debug("%s\n", cmd);
@@ -173,15 +174,20 @@ static int _storage_update(enum storage_type_e type)
 	int ret = 0;
 	char cmd[255] = { '\0' };
 	char strStorage[10] = { '\0' };
+	uint8_t sd_index;
 
 	if (type == sd_dl) {
 		printf("Start SD downloading...\n");
 		// Consider SD card with MBR as default
 #if defined(CONFIG_NAND_SUPPORT) || defined(CONFIG_SPI_FLASH)
 		strlcpy(strStorage, "mmc 0:1", 9);
+		sd_index = 0;
 #elif defined(CONFIG_EMMC_SUPPORT)
+		sd_index = 1;
 		strlcpy(strStorage, "mmc 1:1", 9);
 #endif
+		snprintf(cmd, 255, "mmc dev %u:1 SD_HS", sd_index);
+		run_command(cmd, 0);
 		snprintf(cmd, 255, "fatload %s %p fip.bin;", strStorage,
 			 (void *)HEADER_ADDR);
 		ret = run_command(cmd, 0);
@@ -190,11 +196,15 @@ static int _storage_update(enum storage_type_e type)
 			printf("** Trying use partition 0 (without MBR) **\n");
 #if defined(CONFIG_NAND_SUPPORT) || defined(CONFIG_SPI_FLASH)
 			strlcpy(strStorage, "mmc 0:0", 9);
+			sd_index = 0;
 #elif defined(CONFIG_EMMC_SUPPORT)
+			sd_index = 1;
 			strlcpy(strStorage, "mmc 1:0", 9);
 #endif
+			snprintf(cmd, 255, "mmc dev %u:0 SD_HS", sd_index);
+			run_command(cmd, 0);
 			snprintf(cmd, 255, "fatload %s %p fip.bin;", strStorage,
-						 (void *)HEADER_ADDR);
+				 (void *)HEADER_ADDR);
 			ret = run_command(cmd, 0);
 			if (ret)
 				return ret;

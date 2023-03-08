@@ -1,4 +1,5 @@
 #include <linux/types.h>
+#include <cpu_func.h>
 
 #define L1_CACHE_BYTES     64
 #define ALIGN(x, a)              (((x) + (a) - 1) & ~((a) - 1))

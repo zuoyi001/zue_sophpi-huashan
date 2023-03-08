@@ -7,6 +7,7 @@
 extern "C"
 {
 #endif
+
 int app_ipcam_IRCut_Init(void);
 int app_ipcam_IrCut_DeInit(void);
 void app_ipcam_IRCutMode_Select(CVI_S32 value);

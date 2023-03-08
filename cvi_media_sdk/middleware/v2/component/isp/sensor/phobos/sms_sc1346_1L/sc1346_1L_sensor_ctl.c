@@ -218,38 +218,15 @@ int sc1346_1L_probe(VI_PIPE ViPipe)
 
 void sc1346_1L_init(VI_PIPE ViPipe)
 {
-	WDR_MODE_E       enWDRMode;
-	CVI_BOOL          bInit;
-	CVI_U8            u8ImgMode;
-
-	bInit       = g_pastSC1346_1L[ViPipe]->bInit;
-	enWDRMode   = g_pastSC1346_1L[ViPipe]->enWDRMode;
-	u8ImgMode   = g_pastSC1346_1L[ViPipe]->u8ImgMode;
+	CVI_U8 u8ImgMode = g_pastSC1346_1L[ViPipe]->u8ImgMode;
 
 	sc1346_1L_i2c_init(ViPipe);
 
-	/* When sensor first init, config all registers */
-	if (bInit == CVI_FALSE) {
-		if (enWDRMode == WDR_MODE_NONE) {
-			if (u8ImgMode == SC1346_1L_MODE_720P30)
-				sc1346_1L_linear_720p30_init(ViPipe);
-			else if (u8ImgMode == SC1346_1L_MODE_720P60)
-				sc1346_1L_linear_720p60_init(ViPipe);
-			else {
-			}
-		}
-	}
-	/* When sensor switch mode(linear<->WDR or resolution), config different registers(if possible) */
-	else {
-		if (enWDRMode == WDR_MODE_NONE) {
-			if (u8ImgMode == SC1346_1L_MODE_720P30)
-				sc1346_1L_linear_720p30_init(ViPipe);
-			else if (u8ImgMode == SC1346_1L_MODE_720P60)
-				sc1346_1L_linear_720p60_init(ViPipe);
-			else {
-			}
-		}
-	}
+	if ((u8ImgMode == SC1346_1L_MODE_720P30) || (u8ImgMode == SC1346_1L_MODE_720P30_WDR))
+		sc1346_1L_linear_720p30_init(ViPipe);
+	else if ((u8ImgMode == SC1346_1L_MODE_720P60) || (u8ImgMode == SC1346_1L_MODE_720P60_WDR))
+		sc1346_1L_linear_720p60_init(ViPipe);
+
 	g_pastSC1346_1L[ViPipe]->bInit = CVI_TRUE;
 }
 

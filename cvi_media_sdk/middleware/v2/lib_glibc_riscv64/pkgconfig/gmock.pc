@@ -1,5 +1,5 @@
-libdir=/root/.jenkins/workspace/cr1821_v3.0.0_daily_build/install/soc_cv1811c_wdmb_0006a_spinor/tpu_glibc_riscv64/cvitek_ai_sdk/lib
-includedir=/root/.jenkins/workspace/cr1821_v3.0.0_daily_build/install/soc_cv1811c_wdmb_0006a_spinor/tpu_glibc_riscv64/cvitek_ai_sdk/include
+libdir=/root/.jenkins/workspace/cr1821_v3.0.0_release_build/install/soc_cv1811c_wdmb_0006a_spinor/tpu_glibc_riscv64/cvitek_ai_sdk/lib
+includedir=/root/.jenkins/workspace/cr1821_v3.0.0_release_build/install/soc_cv1811c_wdmb_0006a_spinor/tpu_glibc_riscv64/cvitek_ai_sdk/include
 
 Name: gmock
 Description: GoogleMock (without main() function)

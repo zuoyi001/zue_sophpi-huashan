@@ -2,13 +2,79 @@
 
 | Version | Platform | Notes                                               | Date       | Author |
 | ------- | -------- | --------------------------------------------------- | ---------- | ------ |
+| v1.1.133| Phobos/mars | 1. 修改默认加载指定的websockets库文件            | 30/11/2022 | xulong |
+| v1.1.132| Phobos/mars | 1. 自动ir切换优化                                | 30/11/2022 | zl.wan |
+| v1.1.131| Phobos   | 1. OSDC开关概率段错误                               | 29/11/2022 | leo |
+| v1.1.130| Both     | 1. 默认打包 cv1810c 38板相关配置到 install          | 29/11/2022 | xulong |
+| v1.1.129| Both     | 1. Makefile中的一些变量使用？=的方式                  | 29/11/2022 | macro |
+| v1.1.128| Phobos   | 1. JPG线程与Venc线程互不影响                        | 24/11/2022 | leo |
+| v1.1.127| Phobos   | 1. jpg线程优先级修改 2.修改子码流flow 3.关闭cmd线程 | 23/11/2022 | leo |
+| v1.1.126| Both     | 1. 修改切分辨率时没有停所有venc对应的grp            | 22/11/2022 | xulong |
+| v1.1.125| Both     | 1. 修改静态库依赖顺序                               | 17/11/2022 | xulong |
+| v1.1.124| Both     | 1. 修复切换编码格式overflow问题                     | 16/11/2022 | xulong |
+| v1.1.123| Both     | 1.清除网页端切换子码流参数的复位标志                   | 16/11/2022 | macro |
+| v1.1.122| Mars     | 1.修复ota升级失败问题 2.恢复误删代码                   | 15/11/2022 | macro |
+| v1.1.121| Phobos   | 1.fix web下发空字符串段错误 2.fix 子码流码率设置无效| 14/11/2022 | leo |
+| v1.1.120| Mars     | 1.修复设置保存隐私区域参数，保存后会恢复上一次设置值的问题 | 14/11/2022 | macro |
+| v1.1.119| Both     | 1.修复重复调用app_ipcam_Vpss_Create创建相同grp出现的问题 | 14/11/2022 | macro |
+| v1.1.118| Phobos   | 1.防止片段过多web显示失败                           | 11/11/2022 | leo |
+| v1.1.117| Phobos   | 1.根据帧率去设置getstream的超时时间                 | 10/11/2022 | leo |
+| v1.1.116| Phobos/Mars   | 1. 增大ir切换间隔时间                          | 10/11/2022 | zl.wan |
+| v1.1.115| Phobos/Mars   | 1. 静态链接libstdc++.so.6,libgcc_s.so.1,libc.so,libatomic.so.1   | 10/11/2022 | xulong |
+| v1.1.114| Phobos/Mars   | 1. 修复 修复切size后 人型检测失效              | 10/11/2022 | xulong |
+| v1.1.113| Phobos/Mars   | 1. 修复 Mars && Phobos Audio 兼容编译报错      | 10/11/2022 | xulong |
+| v1.1.112| Phobos/Mars   | 1. 修复 Mars && Phobos 兼容编译报错            | 10/11/2022 | xulong |
+| v1.1.111| Phobos   | 1.加大venc get stream的超时时间，防止帧率降低时返回busy| 09/11/2022 | macro |
+| v1.1.110| Phobos   | 1.限制播放的音频文件大小 2.web osd信息显示不匹配    | 09/11/2022 | leo |
+| v1.1.109| Phobos   | 1.aac对讲段错误 2.p帧大于512K丢弃 3.killapp venc阻塞| 09/11/2022 | leo |
+| v1.1.108| Phobos   | 1. tmp solution for AI thread switch ,vpss can't get VB  | 09/11/2022 | hongjun |
+| v1.1.107| Phobos   | 1. 修正isp 改名导致ipcam编译报错                    | 31/10/2022 | xulong |
+| v1.1.106| Phobos   | 1. 调整osdc顺序并设置cv1800b_38板IR_cut引脚(前提引脚复用设置正确) | 29/10/2022 | zl.wan |
+| v1.1.105| Phobos   | 1. 默认不打开AI和Web                                | 29/10/2022 | xulong |
+| v1.1.104| Phobos   | 1. 优化切size 速度                                  | 28/10/2022 | xulong |
+| v1.1.103| Phobos   | 1. 修复图像偏色                                     | 27/10/2022 | leo |
+| v1.1.102| Phobos   | 1.编译错误 2.修复图像设置无效                       | 27/10/2022 | leo |
+| v1.1.101| Phobos   | 1.增大osdc区域的显示优先级                          | 26/10/2022 | zl.wan |
+| v1.1.100| Phobos   | 1.播放音频aac文件，概率段错误                       | 26/10/2022 | leo |
+| v1.1.99 | Phobos   | 1.打开音频对讲开rtsp段错误 2.killapp 概率阻塞       | 26/10/2022 | leo |
+| v1.1.98 | Mars     | 1.修正Mars osdc 区域web界面控制错误                 | 25/10/2022 | zl.wan |
+| v1.1.97 | Phobos   | 1.修正Phobos 38board ini 参数错误                   | 25/10/2022 | xulong |
+| v1.1.96 | Both     | 1.可以在 ini 里配置是否开启SBM                      | 24/10/2022 | xulong |
+| v1.1.95 | Both     | 1.新增phobos vi vi_vpss offline mode config ini     | 24/10/2022 | xulong |
+| v1.1.94 | Phobos   | 1.修复isp 获取AE统计值概率段错误                    | 21/10/2022 | leo |
+| v1.1.93 | Phobos   | 1.增加Phobos AI models                              | 21/10/2022 | xulong |
+| v1.1.92 | Phobos   | 1.增加cv1800b_evb config ini                        | 21/10/2022 | xulong |
+| v1.1.91 | Phobos/Mars   | 1.优化LL cache depth to 5 slice                | 20/10/2022 | xulong |
+| v1.1.90 | Phobos   | 1.新增OTA功能                                        | 19/10/2022 | macro  |
+| v1.1.89 | Phobos   | 1.优化切size速度                                    | 18/10/2022 | xulong |
+| v1.1.88 | Phobos   | 1.支持抓拍                                          | 18/10/2022 | leo    |
+| v1.1.87 | Phobos   | 1.ao能够立马停止播放                                | 17/10/2022 | leo    |
+| v1.1.86 | Phobos   | 1.修复关闭OSD切换分辨率overflow                     | 17/10/2022 | leo    |
+| v1.1.85 | Phobos   | 1.无图像参数oom 2.添加web OSDC关闭、OSDC文本        | 17/10/2022 | leo    |
+| v1.1.84 | Phobos/Mars  | 1. 修正 killall ipcam_mars 系统异常问题         | 17/10/2022 | xulong |
+| v1.1.83 | Phobos/Mars  | 1.默认关闭区域框 2.修复mars osdc                | 14/10/2022 | zl.wan |
+| v1.1.82 | Phobos   | 注册thermal thread的回调，用于设置fps                 | 14/10/2022 | macro  |
+| v1.1.81 | Phobos   | 1.子码流切分辨率图像异常 2.卡录片段太多段错误       | 14/10/2022 | leo    |
+| v1.1.80 | Phobos   | 1.添加录像回放功能 2.fix bug录像索引文件不修复      | 14/10/2022 | leo    |
+| v1.1.79 | Phobos   | 1. 修改数据缓存机制，init 与 deinit 对应            | 14/10/2022 | xulong |
+| v1.1.78 | Phobos   | 1.音频添加数据处理缓存机制                          | 13/10/2022 | leo    |
+| v1.1.77 | Phobos/Mars| 1.add gpio config 2.调整ai参数 3.支持phobos evb ir cut | 13/10/2022 | zl.wan |
+| v1.1.76 | Phobos   | 1. add web osd control 2.killapp audio segmentfault | 13/10/2022 | leo |
+| v1.1.75 | Phobos   | 1. fix warning                                      | 12/10/2022 | leo |
+| v1.1.74 | Phobos   | 1. add phobos sub osd 2.default open audio          | 11/10/2022 | leo |
+| v1.1.74 | Phobos   | 1. phobos unsupport face                            | 10/10/2022 | leo |
+| v1.1.73 | Phobos   | 1. add phobos sub osd                               | 10/10/2022 | leo |
+| v1.1.72 | Phobos   | 1. fix warning                                      | 10/10/2022 | hongjun |
+| v1.1.71 | Phobos   | 1. add phobos osd                                   | 08/10/2022 | leo |
+| v1.1.70 | Mars     | 1. 修改区域入侵关闭再打开多出一条线 2.降低ai帧率    | 08/10/2022 | zl.wan |
+| v1.1.69 | Phobos   | 1. fix build warning                                | 06/10/2022 | xulong |
 | v1.1.68 | Phobos   | 1. 增加Phobos config ini                            | 06/10/2022 | xulong |
-| v1.1.67 | Mars     | 1. 增加数据处理缓存机制                             | 04/10/2022 | xulong |
+| v1.1.67 | Mars     | 1. 增加数据处理缓存机制                              | 04/10/2022 | xulong |
 | v1.1.66 | Mars     | 1. suooprt sc1346 30/60fps                          | 30/09/2022 | zl.wan |
-| v1.1.65 | Mars     | 1. 修复rtsp重连 osdc线程段错误;                     | 30/09/2022 | leo |
-| v1.1.64 | Mars     | 1. 修复rtsp重连段错误; 2.音频界面文字修改           | 30/09/2022 | leo |
+| v1.1.65 | Mars     | 1. 修复rtsp重连 osdc线程段错误;                      | 30/09/2022 | leo |
+| v1.1.64 | Mars     | 1. 修复rtsp重连段错误; 2.音频界面文字修改             | 30/09/2022 | leo |
 | v1.1.63 | Mars     | 1. 添加vui                                          | 29/09/2022 | leo |
-| v1.1.62 | Both     | 1. 修复cmdTest内存泄露; 2.修复pd加载失败退出段错误  | 28/09/2022 | leo |
+| v1.1.62 | Both     | 1. 修复cmdTest内存泄露; 2.修复pd加载失败退出段错误    | 28/09/2022 | leo |
 | v1.1.61 | Mars     | 1. 修复切size pd检测效果降低 2.修复md,pd阈值范围 3.修改in部分参数| 28/09/2022 | zl.wan |
 | v1.1.60 | Mars     | 1. 修复RTSP不能开多个预览窗口问题                   | 28/09/2022 | xulong |
 | v1.1.59 | Mars     | 1. 修复音量小，播放不立刻停止; 2.修复切video段错误  | 28/09/2022 | leo |
@@ -91,3 +157,5 @@
 | v1.0.2  | Both     | 修改ipcam退出流程                                   | 05/07/2022 | xulong |
 | v1.0.1  | Both     | 修改Makefile获取platform方式                        | 05/07/2022 | xulong |
 | v1.0.0  | Both     | 将Mercury和Mars应用分开                             | 04/07/2022 | xulong |
+
+

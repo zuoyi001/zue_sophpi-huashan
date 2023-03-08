@@ -9,6 +9,8 @@
 
 #include "app_ipcam_gpio.h"
 
+static APP_PARAM_GPIO_CFG_S stGpioCfg;
+static APP_PARAM_GPIO_CFG_S *pstGpioCfg = &stGpioCfg;
 #define EVB_GPIO(x) (x<32)?(480+x):((x<64)?(448+x-32):((x<96)?(416+x-64):((x<=108)?(404+x-96):(-1))))
 #define SYSFS_GPIO_DIR "/sys/class/gpio"
 #define MAX_BUF 64
@@ -19,6 +21,11 @@
                 return -1;                                                                                         \
             }                                                                                                      \
         } while (0)
+
+APP_PARAM_GPIO_CFG_S *app_ipcam_Gpio_Param_Get(void)
+{
+    return pstGpioCfg;
+}
 
 static int GpioExport(unsigned int gpio)
 {
@@ -353,20 +360,20 @@ int app_ipcam_Gpio_Polling(CVI_GPIO_NUM_E gpio, CVI_GPIO_EDGE_E edge, FunType Fp
 {
     int ret = 0;
     CHECK_GPIO_NUMBER(gpio);
-    
+
     // open gpio
     GpioExport(gpio);
-    
+
     // set input mode
     ret = GpioDirectionSet(gpio, CVI_GPIO_DIR_IN);
 
     // set interrupt trigger
-    ret = GpioEdgeSet(gpio, edge);
+    ret |= GpioEdgeSet(gpio, edge);
 
-    ret = GpioPoll(gpio, POLLPRI | POLLERR, Fp);
-    
+    ret |= GpioPoll(gpio, POLLPRI | POLLERR, Fp);
+
     // operated and released
-    ret = GpioUnexport(gpio);
+    ret |= GpioUnexport(gpio);
     
     return ret;
 }

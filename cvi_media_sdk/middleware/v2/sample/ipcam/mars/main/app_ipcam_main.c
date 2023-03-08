@@ -122,35 +122,35 @@ static int app_ipcam_Exit(void)
     APP_CHK_RET(app_ipcam_Record_UnInit(), "running SD Record");
     #endif
 
-    #ifdef AI_SUPPORT
-    APP_CHK_RET(app_ipcam_Ai_PD_Stop(), "PD Stop");
-
-    APP_CHK_RET(app_ipcam_Ai_MD_Stop(), "MD Stop");
-
-    APP_CHK_RET(app_ipcam_Ai_FD_Stop(), "FD Stop");
-    #endif
-
     APP_CHK_RET(app_ipcam_Osdc_DeInit(), "OsdC DeInit");
 
     APP_CHK_RET(app_ipcam_Osd_DeInit(), "OSD Normal DeInit");
 
     APP_CHK_RET(app_ipcam_Cover_DeInit(), "Cover DeInit");
 
-    APP_CHK_RET(app_ipcam_rtsp_Server_Destroy(), "RTSP Server Destroy");
+    #ifdef AI_SUPPORT
+    APP_CHK_RET(app_ipcam_Ai_PD_Stop(), "PD Stop");
+
+    APP_CHK_RET(app_ipcam_Ai_MD_Stop(), "MD Stop");
+
+    #ifdef FACE_SUPPORT
+    APP_CHK_RET(app_ipcam_Ai_FD_Stop(), "FD Stop");
+    #endif
+    #endif
 
     #ifdef AUDIO_SUPPORT
     APP_CHK_RET(app_ipcam_Audio_UnInit(), "Audio Stop");
     #endif
 
-    APP_CHK_RET(app_ipcam_Vpss_Unbind_Vpss(), "vpss unbind vpss");
-    
-    APP_CHK_RET(app_ipcam_Vi_DeInit(), "Vi DeInit");
-
-    APP_CHK_RET(app_ipcam_Vpss_Destroy(), "Vpss Destroy");
+    APP_CHK_RET(app_ipcam_Vpss_DeInit(), "Vpss DeInit");
 
     APP_CHK_RET(app_ipcam_Venc_Stop(APP_VENC_ALL), "Venc Stop");
-    
+
+    APP_CHK_RET(app_ipcam_Vi_DeInit(), "Vi DeInit");
+
     APP_CHK_RET(app_ipcam_Sys_DeInit(), "System DeInit");
+
+    APP_CHK_RET(app_ipcam_rtsp_Server_Destroy(), "RTSP Server Destroy");
 
     return CVI_SUCCESS;
 
@@ -219,7 +219,9 @@ int main(int argc, char *argv[])
     APP_CHK_RET(app_ipcam_Ai_MD_Start(), "running AI MD");
 
     /* start AI FD (Face Detection)*/
+    #ifdef FACE_SUPPORT
     APP_CHK_RET(app_ipcam_Ai_FD_Start(), "running AI FD");
+    #endif
     #endif
 
     #ifdef RECORD_SUPPORT
@@ -228,7 +230,7 @@ int main(int argc, char *argv[])
     #endif
 
     /* enable receive a command form another progress for test ipcam */
-    APP_CHK_RET(app_ipcam_CmdTask_Create(), "running cmd test");
+    //APP_CHK_RET(app_ipcam_CmdTask_Create(), "running cmd test");
 
     while (1) {
         sleep(1);

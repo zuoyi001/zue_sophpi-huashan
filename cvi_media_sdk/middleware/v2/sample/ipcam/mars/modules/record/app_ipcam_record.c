@@ -12,8 +12,9 @@
 #define RECORD_ONE_DAY              (24 * 60 * 60)
 #define REPLAY_ONLY_I_FRAME         (0)
 
-#define REPLAY_VIDEO_PATH           "/mnt/sd/video.265"
-#define REPLAY_AUDIO_PATH           "/mnt/sd/audio.g711u"
+#define REPLAY_VIDEO_PATH           "/mnt/sd/video_%s.%s"
+#define REPLAY_AUDIO_PATH           "/mnt/sd/audio_%s.g711u"
+#define REPLAY_MAX_SEG              80
 
 static HANDLE iPkgHand = NULL;
 static CVI_S32 gst_ReplayVideoFd = -1;
@@ -30,6 +31,21 @@ typedef enum
 static bool gst_bRecordKeyFrame = 0;
 static char *pstCheckSeg;
 static int gst_bStart = 0;
+
+static char *app_ipcam_Record_GetFileExtensions(CVI_CHAR iFrameType)
+{
+    switch (iFrameType)
+    {
+        case CVI_RECORD_FRAME_TYPE_H265:
+            return "265";
+        case CVI_RECORD_FRAME_TYPE_H264:
+            return "264";
+        case CVI_RECORD_FRAME_TYPE_G711U:
+            return "g711u";
+        default:
+            return "data";
+    }
+}
 
 static int app_ipcam_Record_Create()
 {
@@ -105,26 +121,62 @@ static CVI_S32 app_ipcam_Record_GetStream(HANDLE hDataPopper, PT_FRAME_INFO pFra
         return 0;
     }
 
+    char cFileName[128];
+    char cReplayTime[32];
+
+    struct tm Begin;
+    time_t tBeginTime = pFrameInfo->iShowTime;
+
     if (pFrameInfo->iFrameType != CVI_RECORD_FRAME_TYPE_G711U)
     {
         if (gst_ReplayVideoFd <= 0)
         {
-            gst_ReplayVideoFd = open(REPLAY_VIDEO_PATH, O_WRONLY | O_CREAT | O_TRUNC);
+            localtime_r(&tBeginTime, &Begin);
+            memset(cReplayTime, 0, sizeof(cReplayTime));
+            if (snprintf(cReplayTime, sizeof(cReplayTime), "%04d%02d%02d%02d%02d%02d",
+                (Begin.tm_year + 1900), (Begin.tm_mon + 1), Begin.tm_mday, Begin.tm_hour, Begin.tm_min, Begin.tm_sec) < 0) {
+                APP_PROF_LOG_PRINT(LEVEL_ERROR, "snprintf err\n");
+            }
+            memset(cFileName, 0, sizeof(cFileName));
+            if (snprintf(cFileName, sizeof(cFileName), REPLAY_VIDEO_PATH, cReplayTime, app_ipcam_Record_GetFileExtensions(pFrameInfo->iFrameType)) < 0) {
+                APP_PROF_LOG_PRINT(LEVEL_ERROR, "snprintf err\n");
+            }
+            gst_ReplayVideoFd = open(cFileName, O_WRONLY | O_CREAT | O_TRUNC);
+            if (gst_ReplayVideoFd <= 0) {
+                APP_PROF_LOG_PRINT(LEVEL_ERROR, "open %s failed!\n", cFileName);
+                app_ipcam_Record_StopReplay();
+                return 0;
+            }
         }
 
         if (gst_ReplayVideoFd)
         {
             if (pFrameInfo->iFrameLen != (CVI_U32)write(gst_ReplayVideoFd, pFrameInfo->pBuf, pFrameInfo->iFrameLen))
             {
-                APP_PROF_LOG_PRINT(LEVEL_ERROR, "h265 write err\n");
+                APP_PROF_LOG_PRINT(LEVEL_ERROR, "video write err\n");
             }
         }
     }
     else
     {
-        if(gst_ReplayAudioFd <= 0)
+        if (gst_ReplayAudioFd <= 0)
         {
-            gst_ReplayAudioFd = open(REPLAY_AUDIO_PATH, O_WRONLY | O_CREAT | O_TRUNC);
+            localtime_r(&tBeginTime, &Begin);
+            memset(cReplayTime, 0, sizeof(cReplayTime));
+            if (snprintf(cReplayTime, sizeof(cReplayTime), "%04d%02d%02d%02d%02d%02d",
+                (Begin.tm_year + 1900), (Begin.tm_mon + 1), Begin.tm_mday, Begin.tm_hour, Begin.tm_min, Begin.tm_sec) < 0) {
+                APP_PROF_LOG_PRINT(LEVEL_ERROR, "snprintf err\n");
+            }
+            memset(cFileName, 0, sizeof(cFileName));
+            if (snprintf(cFileName, sizeof(cFileName), REPLAY_AUDIO_PATH, cReplayTime) < 0) {
+                APP_PROF_LOG_PRINT(LEVEL_ERROR, "snprintf err\n");
+            }
+            gst_ReplayAudioFd = open(cFileName, O_WRONLY | O_CREAT | O_TRUNC);
+            if (gst_ReplayAudioFd <= 0) {
+                APP_PROF_LOG_PRINT(LEVEL_ERROR, "open %s failed!\n", cFileName);
+                app_ipcam_Record_StopReplay();
+                return 0;
+            }
         }
 
         if (gst_ReplayAudioFd)
@@ -196,6 +248,8 @@ int app_ipcam_Record_Init()
 
 int app_ipcam_Record_UnInit()
 {
+    //avoid lost video
+    CVI_RECORD_Pause();
     mRecordThread.bRun_flag = 0;
     if (mRecordThread.mRun_PID != 0)
     {
@@ -214,7 +268,7 @@ CVI_S32 app_ipcam_Record_AudioInput(PAYLOAD_TYPE_E enType, AUDIO_STREAM_S *pstSt
     T_FRAME_INFO pstFrameInfo;
     memset(&pstFrameInfo, 0x0, sizeof(pstFrameInfo));
 
-    if ((stLastAudioNum != 0) && ((stLastAudioNum + 1) != stFrameNum) && gst_bRecordKeyFrame)
+    if ((enType == PT_G711U) && (stLastAudioNum != 0) && ((stLastAudioNum + 1) != stFrameNum) && gst_bRecordKeyFrame)
     {
         APP_PROF_LOG_PRINT(LEVEL_WARN, "====audio miss frame (%d %d)=====\n", stLastAudioNum, stFrameNum);
     }
@@ -478,7 +532,7 @@ static int app_ipcam_CmdTask_Record_Parse(CVI_MQ_MSG_t *msg, CVI_VOID *userdate)
         APP_PROF_LOG_PRINT(LEVEL_ERROR, "msg is NULL!\n");
         return -1;
     }
-    CVI_CHAR param[256] = {0};
+    CVI_CHAR param[512] = {0};
     snprintf(param, sizeof(param), "%s", msg->payload);
     APP_PROF_LOG_PRINT(LEVEL_INFO, "%s param:%s\n", __FUNCTION__, param);
 
@@ -644,8 +698,8 @@ CVI_S32 app_ipcam_Set_Record_Check(char *pReplayTime)
     CVI_RECORD_RECORD_TS_S * pReadHead = NULL;
 
     //20210520141414
-    sscanf(pReplayTime, "%04d%02d%02d%02d%02d%02d", &iYear, &iMonth, &iDays);
-    APP_PROF_LOG_PRINT(LEVEL_INFO, "Replay Time:%04d-%02d-%02d %02d:%02d:%02d\n", iYear, iMonth, iDays);
+    sscanf(pReplayTime, "%04d%02d%02d", &iYear, &iMonth, &iDays);
+    APP_PROF_LOG_PRINT(LEVEL_INFO, "Replay Time:%04d-%02d-%02d\n", iYear, iMonth, iDays);
 
     CVI_REPLAY_QueryByMonth(iYear, iMonth, &MonthDays);
     if (0 != MonthDays)
@@ -677,9 +731,16 @@ CVI_S32 app_ipcam_Set_Record_Check(char *pReplayTime)
         }
         memset(pstCheckSeg, 0, iBufSize);
 
+        int iSegCnt = 0;
         pReadHead = pRecSegHead;
         while (pReadHead)
         {
+            //avoid seg too much; web show fail
+            if (iSegCnt > REPLAY_MAX_SEG) {
+                break;
+            }
+            iSegCnt++;
+
             struct tm Begin;
             struct tm End;
             time_t tBeginTime = pReadHead->tBeginTime;

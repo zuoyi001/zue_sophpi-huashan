@@ -40,15 +40,8 @@ static void cvi_usb_hw_init(void)
 int cvi_usb_polling(void)
 {
 	cvi_usb_hw_init();
-#ifdef DISABLE_DCACHE
-	NOTICE("Disable DCACHE before entering UTASK\n");
-	dcache_disable();
-#endif
+
 	acm_app();
-#ifdef DISABLE_DCACHE
-	NOTICE("Enable DCACHE after leaving UTASK\n");
-	dcache_enable();
-#endif
 
 	return 0;
 }

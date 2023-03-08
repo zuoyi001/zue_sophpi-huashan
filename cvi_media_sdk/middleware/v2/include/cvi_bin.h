@@ -93,20 +93,6 @@ CVI_S32 CVI_BIN_GetBinName(CVI_CHAR *binName);
  * return: please refer to CVI_BIN_ImportBinData
  */
 CVI_S32 CVI_BIN_LoadParamFromBinEx(enum CVI_BIN_SECTION_ID id, CVI_U8 *buf, CVI_U32 u32DataLength);
-/* CVI_BIN_SetAutoCoverBinFlag:
- * set the flag that decide whether to cover bin when not match.
- *
- * [in]	u8Cover: [0]don't cover(default) [1]cover
- * return: 0: Success;
- */
-CVI_S32 CVI_BIN_SetAutoCoverBinFlag(CVI_U8 u8Cover);
-/* CVI_BIN_GetAutoCoverBinFlag:
- * get Cover Bin stete
- *
- * [in]	void
- * return: Cover Bin state;
- */
-CVI_U8 CVI_BIN_GetAutoCoverBinFlag(void);
 /* CVI_BIN_GetBinTotalLen:
  *   Get length of bin data
  *

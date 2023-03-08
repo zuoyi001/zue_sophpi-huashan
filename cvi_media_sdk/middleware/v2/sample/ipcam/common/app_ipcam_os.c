@@ -111,8 +111,8 @@ static void *app_ipcam_task_entry(void *arg)
     prctl(PR_SET_NAME, (unsigned long int)task->attr.name, 0, 0, 0);
     pthread_getschedparam(pthread_self(), &policy, &sched_param);
 
-    APP_PROF_LOG_PRINT(LEVEL_INFO, "%s: PID:%d,TID:%ld, PTHREAD:0x%lx, POLICY=%d, PRIORITY=%d\n",
-        task->attr.name, getpid(), syscall(SYS_gettid), pthread_self(), policy, sched_param.sched_priority);
+    APP_PROF_LOG_PRINT(LEVEL_INFO, "%s: PID:%d,TID:%ld, PTHREAD:%lu, POLICY=%d, PRIORITY=%d\n",
+        task->attr.name, getpid(), syscall(SYS_gettid), (unsigned long int)pthread_self(), policy, sched_param.sched_priority);
 
     task->attr.entry(task->attr.param);
 
@@ -157,8 +157,8 @@ int app_ipcam_task_create(
 
     pthread_attr_destroy(&pthread_attr);
 
-    APP_PROF_LOG_PRINT(LEVEL_INFO, "PID:%d, TID:%ld, pPID: %ld\n",
-        getpid(), syscall(SYS_gettid), pthread_self());
+    APP_PROF_LOG_PRINT(LEVEL_INFO, "PID:%d, TID:%ld, pPID: %lu\n",
+        getpid(), syscall(SYS_gettid), (unsigned long)pthread_self());
 
     *task = pTaskHandle;
 

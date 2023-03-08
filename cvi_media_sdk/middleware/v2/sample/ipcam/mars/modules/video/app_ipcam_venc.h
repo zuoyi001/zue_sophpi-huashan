@@ -42,6 +42,7 @@ typedef enum APP_VATTR_FLAG_T {
 } APP_VATTR_FLAG_E;
 
 typedef enum APP_VENC_CHN_T {
+    APP_VENC_NULL = 0,
     APP_VENC_1ST = 0x01,
     APP_VENC_2ND = 0x02,
     APP_VENC_3RD = 0x04,
@@ -221,6 +222,7 @@ typedef struct APP_VENC_CHN_CFG_T {
     FILE *pFile;
     CVI_U32 frameNum;
     CVI_U32 fileNum;
+    CVI_BOOL bFirstStreamTCost; // for get first streaming time cost
     CVI_CHAR SavePath[32];
     volatile CVI_S32 savePic;
 } APP_VENC_CHN_CFG_S;
@@ -255,8 +257,8 @@ int app_ipcam_Venc_Start(APP_VENC_CHN_E VencIdx);
 int app_ipcam_Venc_Stop(APP_VENC_CHN_E VencIdx);
 void app_ipcam_JpgCapFlag_Set(CVI_BOOL bEnable);
 int app_ipcam_VencSize_Set(void);
-int app_ipcam_VencResize_Stop(void);
-int app_ipcam_VencResize_Start(void);
+int app_ipcam_VencResize_Stop(APP_VENC_CHN_E enVencChn);
+int app_ipcam_VencResize_Start(APP_VENC_CHN_E enVencChn);
 
 /*****************************************************************
  *  The following API for command test used             S

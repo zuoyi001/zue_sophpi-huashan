@@ -249,6 +249,8 @@ CVI_VOID SAMPLE_COMM_VENC_InitChnInputCfg(chnInputCfg *pIc)
 	pIc->bEsBufQueueEn = CVI_H26X_ES_BUFFER_QUEUE_DEFAULT;
 	pIc->bIsoSendFrmEn = CVI_H26X_ISO_SEND_FRAME_DEFAUL;
 	pIc->bSensorEn = CVI_H26X_SENSOR_EN_DEFAULT;
+
+	pIc->u32SliceCnt = 1;
 }
 
 CVI_S32 SAMPLE_COMM_VENC_SaveStream(PAYLOAD_TYPE_E enType,
@@ -905,6 +907,12 @@ CVI_S32 SAMPLE_COMM_VENC_Create(
 			CVI_VENC_ERR("SAMPLE_COMM_VENC_SetH264Vui, %d\n", s32Ret);
 			goto ERR_SAMPLE_COMM_VENC_CREATE;
 		}
+
+		s32Ret = SAMPLE_COMM_VENC_SetH264SliceSplit(pIc, VencChn);
+		if (s32Ret != CVI_SUCCESS) {
+			CVI_VENC_ERR("SAMPLE_COMM_VENC_SetH264SliceSplit, %d\n", s32Ret);
+			goto ERR_SAMPLE_COMM_VENC_CREATE;
+		}
 	}
 
 	if (enType == PT_H265) {
@@ -917,6 +925,12 @@ CVI_S32 SAMPLE_COMM_VENC_Create(
 		s32Ret = SAMPLE_COMM_VENC_SetH265Vui(pIc, VencChn);
 		if (s32Ret != CVI_SUCCESS) {
 			CVI_VENC_ERR("SAMPLE_COMM_VENC_SetH265Vui, %d\n", s32Ret);
+			goto ERR_SAMPLE_COMM_VENC_CREATE;
+		}
+
+		s32Ret = SAMPLE_COMM_VENC_SetH265SliceSplit(pIc, VencChn);
+		if (s32Ret != CVI_SUCCESS) {
+			CVI_VENC_ERR("SAMPLE_COMM_VENC_SetH265SliceSplit, %d\n", s32Ret);
 			goto ERR_SAMPLE_COMM_VENC_CREATE;
 		}
 	}
@@ -1873,6 +1887,64 @@ CVI_S32 SAMPLE_COMM_VENC_SetChnParam(chnInputCfg *pIc, VENC_CHN VencChn)
 	s32Ret = CVI_VENC_SetChnParam(VencChn, pstChnParam);
 	if (s32Ret != CVI_SUCCESS) {
 		CVI_VENC_ERR("CVI_VENC_SetChnParam fail\n");
+		return CVI_FAILURE;
+	}
+
+	return s32Ret;
+}
+
+CVI_S32 SAMPLE_COMM_VENC_SetH264SliceSplit(
+	chnInputCfg * pIc,
+	VENC_CHN VencChn)
+{
+	CVI_S32 s32Ret = CVI_SUCCESS;
+	VENC_H264_SLICE_SPLIT_S stH264Split, *pstH264Split = &stH264Split;
+
+	s32Ret = CVI_VENC_GetH264SliceSplit(VencChn, pstH264Split);
+	if (s32Ret != CVI_SUCCESS) {
+		CVI_VENC_ERR("GetH264SliceSplit failed!\n");
+		return CVI_FAILURE;
+	}
+
+	if (pIc->u32SliceCnt > 1) {
+		pstH264Split->bSplitEnable = 1;
+		pstH264Split->u32MbLineNum = ((pIc->height + 15) / 16 + (pIc->u32SliceCnt - 1)) / pIc->u32SliceCnt;
+	} else {
+		pstH264Split->bSplitEnable = 0;
+	}
+
+	s32Ret = CVI_VENC_SetH264SliceSplit(VencChn, pstH264Split);
+	if (s32Ret != CVI_SUCCESS) {
+		CVI_VENC_ERR("SetH264SliceSplit failed!\n");
+		return CVI_FAILURE;
+	}
+
+	return s32Ret;
+}
+
+CVI_S32 SAMPLE_COMM_VENC_SetH265SliceSplit(
+	chnInputCfg * pIc,
+	VENC_CHN VencChn)
+{
+	CVI_S32 s32Ret = CVI_SUCCESS;
+	VENC_H265_SLICE_SPLIT_S stH265Split, *pstH265Split = &stH265Split;
+
+	s32Ret = CVI_VENC_GetH265SliceSplit(VencChn, pstH265Split);
+	if (s32Ret != CVI_SUCCESS) {
+		CVI_VENC_ERR("GetH265SliceSplit failed!\n");
+		return CVI_FAILURE;
+	}
+
+	if (pIc->u32SliceCnt > 1) {
+		pstH265Split->bSplitEnable = 1;
+		pstH265Split->u32LcuLineNum = ((pIc->height + 63) / 64 + (pIc->u32SliceCnt - 1)) / pIc->u32SliceCnt;
+	} else {
+		pstH265Split->bSplitEnable = 0;
+	}
+
+	s32Ret = CVI_VENC_SetH265SliceSplit(VencChn, pstH265Split);
+	if (s32Ret != CVI_SUCCESS) {
+		CVI_VENC_ERR("SetH265SliceSplit failed!\n");
 		return CVI_FAILURE;
 	}
 

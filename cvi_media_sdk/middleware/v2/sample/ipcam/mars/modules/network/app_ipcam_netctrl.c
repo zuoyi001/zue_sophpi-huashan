@@ -28,6 +28,7 @@
 #include "app_ipcam_venc.h"
 #include "app_ipcam_ircut.h"
 #include "app_ipcam_rtsp.h"
+#include "app_ipcam_ota.h"
 #ifdef AI_SUPPORT
 #include "app_ipcam_ai.h"
 #endif
@@ -134,8 +135,18 @@
     if (SRC != DST) {                               \
         FLAG = CVI_TRUE;                            \
         continue;                                   \
+    } else if (SRC == DST) {                        \
+        FLAG = CVI_FALSE;                           \
+        continue;                                   \
     }                                               \
 } while(0);
+
+#define OSD_TIME_INDEX  0
+#define OSD_TEXT1_INDEX 1
+#define OSD_TEXT2_INDEX 3
+#define OSD_TEXT3_INDEX 4
+#define OSD_TEXT4_INDEX 5
+#define OSD_TEXT5_INDEX 6
 
 /**************************************************************************
  *                           C O N S T A N T S                            *
@@ -174,7 +185,7 @@ static int s_irCut = 0;
 static int s_keepColor = 0;
 static int s_ds = 0;
 
-static CVI_BOOL bNeedStopRtsp = CVI_FALSE;
+APP_VENC_ATTR_CHANGE_S stResetVencFlag[APP_VENC_CHN_NUM];
 /**************************************************************************
  *               F U N C T I O N    D E C L A R A T I O N S               *
  **************************************************************************/
@@ -367,10 +378,7 @@ static int TakePhotoCallBack(void *param, const char *cmd, const char *val)
 static int ImagePage_Get_Amp(PROC_AMP_E AmpType)
 {
     int s32Ret = CVI_SUCCESS;
-
-    VENC_CHN VencChn = app_ipcam_WebSocketChn_Get();
-    APP_VENC_CHN_CFG_S *pstVencChnCfg = app_ipcam_VencChnCfg_Get(VencChn);
-    int vpssGrp = pstVencChnCfg->VpssGrp;
+    int vpssGrp = 0;
 
     CVI_S32 value = 0;
     s32Ret = CVI_VPSS_GetGrpProcAmp(vpssGrp, AmpType, &value);
@@ -387,10 +395,7 @@ static int ImagePage_Set_Amp(PROC_AMP_E AmpType, int value)
     printf("enter: %s, AmpType:%d value:%d\n", __func__, AmpType, value);
 
     int s32Ret = CVI_SUCCESS;
-    int vpssGrp;
-    VENC_CHN VencChn = app_ipcam_WebSocketChn_Get();
-    APP_VENC_CHN_CFG_S *pstVencChnCfg = app_ipcam_VencChnCfg_Get(VencChn);
-    vpssGrp = pstVencChnCfg->VpssGrp;
+    int vpssGrp = 0;
 
     if (100 < value) {
         value = 100;
@@ -1132,32 +1137,6 @@ static int GetImgInfoCallBack(void *param, const char *cmd, const char *val)
 *   video page start
 */
 
-static void app_ipcam_Framerate_Set(CVI_U8 viPipe, CVI_U8 fps)
-{
-    ISP_PUB_ATTR_S stPubAttr;
-
-    memset(&stPubAttr, 0, sizeof(stPubAttr));
-
-    CVI_ISP_GetPubAttr(viPipe, &stPubAttr);
-
-    stPubAttr.f32FrameRate = fps;
-
-    printf("set pipe: %d, fps: %d\n", viPipe, fps);
-
-    CVI_ISP_SetPubAttr(viPipe, &stPubAttr);
-}
-
-static CVI_U8 app_ipcam_Framerate_Get(CVI_U8 viPipe)
-{
-    ISP_PUB_ATTR_S stPubAttr;
-
-    memset(&stPubAttr, 0, sizeof(stPubAttr));
-
-    CVI_ISP_GetPubAttr(viPipe, &stPubAttr);
-
-    return stPubAttr.f32FrameRate;
-}
-
 static int app_ipcam_VencAttr_Get(APP_VENC_ATTR_INFO_S stVencAttrInfo[])
 {
     CVI_U32 u32PicWidth;
@@ -1252,6 +1231,50 @@ static int app_ipcam_VencAttr_Get(APP_VENC_ATTR_INFO_S stVencAttrInfo[])
             default:
                 break;
         }
+
+        if (stVencAttrInfo[VencChn].fps == -1) {
+            stVencAttrInfo[VencChn].fps = app_ipcam_Framerate_Get(0);
+        }
+    }
+
+    return 0;
+}
+
+static int app_ipcam_VencBitrate_Set(VENC_CHN vencChn, CVI_U32 u32BitRate)
+{
+    VENC_CHN_ATTR_S stChnAttr = {0};
+    memset(&stChnAttr, 0, sizeof(VENC_CHN_ATTR_S));
+    if (CVI_VENC_GetChnAttr(vencChn, &stChnAttr)) {
+        printf("CVI_VENC_GetChnAttr failed\n");
+        return -1;
+    }
+
+    switch (stChnAttr.stRcAttr.enRcMode) {
+        case VENC_RC_MODE_H264CBR:
+            stChnAttr.stRcAttr.stH264Cbr.u32BitRate = u32BitRate;
+            break;
+        case VENC_RC_MODE_H264VBR:
+            stChnAttr.stRcAttr.stH264Vbr.u32MaxBitRate = u32BitRate;
+            break;
+        case VENC_RC_MODE_H264AVBR:
+            stChnAttr.stRcAttr.stH264AVbr.u32MaxBitRate = u32BitRate;
+            break;
+        case VENC_RC_MODE_H265CBR:
+            stChnAttr.stRcAttr.stH265Cbr.u32BitRate = u32BitRate;
+            break;
+        case VENC_RC_MODE_H265VBR:
+            stChnAttr.stRcAttr.stH265Vbr.u32MaxBitRate = u32BitRate;
+            break;
+        case VENC_RC_MODE_H265AVBR:
+            stChnAttr.stRcAttr.stH265AVbr.u32MaxBitRate = u32BitRate;
+            break;
+        default:
+            break;
+    }
+    
+    if (CVI_VENC_SetChnAttr(vencChn, &stChnAttr)) {
+        printf("CVI_VENC_GetChnAttr failed\n");
+        return -1;
     }
 
     return 0;
@@ -1447,33 +1470,18 @@ static CVI_BOOL app_ipcam_VencAttrChange_Check(APP_VENC_ATTR_INFO_S NewInfo[])
     int fps = app_ipcam_Framerate_Get(0);
 
     for (int i = 0; i < APP_VENC_CHN_NUM; i++) {
-        APP_PARAM_SAME_CHK(CurInfo[i].resolution, NewInfo[i].resolution, NewInfo[i].bNeedChange);
-        APP_PARAM_SAME_CHK(CurInfo[i].codec, NewInfo[i].codec, NewInfo[i].bNeedChange);
-        APP_PARAM_SAME_CHK(CurInfo[i].profile, NewInfo[i].profile, NewInfo[i].bNeedChange);
-        APP_PARAM_SAME_CHK(CurInfo[i].bitrate, NewInfo[i].bitrate, NewInfo[i].bNeedChange);
-        APP_PARAM_SAME_CHK(CurInfo[i].rc, NewInfo[i].rc, NewInfo[i].bNeedChange);
-        APP_PARAM_SAME_CHK(fps, NewInfo[i].fps, NewInfo[i].bNeedChange);
-        APP_PARAM_SAME_CHK(CurInfo[i].enabled, NewInfo[i].enabled, NewInfo[i].bNeedChange);
-    }
+        APP_PARAM_SAME_CHK(CurInfo[i].resolution, NewInfo[i].resolution, stResetVencFlag[i].bResolution);
+        APP_PARAM_SAME_CHK(CurInfo[i].codec, NewInfo[i].codec, stResetVencFlag[i].bCodec);
+        APP_PARAM_SAME_CHK(CurInfo[i].profile, NewInfo[i].profile, stResetVencFlag[i].bProfile);
+        APP_PARAM_SAME_CHK(CurInfo[i].bitrate, NewInfo[i].bitrate, stResetVencFlag[i].bBitrate);
+        APP_PARAM_SAME_CHK(CurInfo[i].rc, NewInfo[i].rc, stResetVencFlag[i].bRCMode);
+        APP_PARAM_SAME_CHK(fps, NewInfo[i].fps, stResetVencFlag[i].bFps);
 
-    for (int i = 0; i < APP_VENC_CHN_NUM; i++) {
-        if (NewInfo[i].bNeedChange) {
-            bNeedResize = CVI_TRUE;
-            break;
-        }
-    }
+        bNeedResize |= stResetVencFlag[i].bResolution | stResetVencFlag[i].bCodec | stResetVencFlag[i].bProfile 
+            | stResetVencFlag[i].bBitrate | stResetVencFlag[i].bRCMode | stResetVencFlag[i].bFps;
 
-    for (int i = 0; i < APP_VENC_CHN_NUM; i++) {
-        if (NewInfo[i].bNeedChange) {
-            bNeedResize = CVI_TRUE;
-            break;
-        }
-    }
-
-    for (int i = 0; i < APP_VENC_CHN_NUM; i++) {
-        APP_PARAM_SAME_CHK(CurInfo[i].codec, NewInfo[i].codec, bNeedStopRtsp);
-        if (bNeedStopRtsp) 
-            break;
+        stResetVencFlag[i].bNeedStopVenc |= stResetVencFlag[i].bResolution | stResetVencFlag[i].bCodec
+            | stResetVencFlag[i].bProfile | stResetVencFlag[i].bRCMode;
     }
 
     return bNeedResize;
@@ -1481,97 +1489,116 @@ static CVI_BOOL app_ipcam_VencAttrChange_Check(APP_VENC_ATTR_INFO_S NewInfo[])
 
 static int app_ipcam_VencAttr_Set(APP_VENC_ATTR_INFO_S info[])
 {
-    CVI_S32 ret;
+    // CVI_S32 ret;
     CVI_U32 VpssGrp;
     CVI_U32 VpssChn;
 
     APP_VENC_CHN_CFG_S *pstVencChnCfg = NULL;
     VPSS_CHN_ATTR_S *pVpssChnAttr = NULL;
 
-    app_ipcam_VencResize_Stop();
+    APP_VENC_CHN_E enVencChn = APP_VENC_NULL;
+    for(int i = 0; i < APP_VENC_CHN_NUM; i++) {
+        if (stResetVencFlag[i].bNeedStopVenc)
+            enVencChn |= APP_VENC_1ST << i;
+        printf("enVencChn=0x%x\n", enVencChn);
+    }
+
+    if (enVencChn != APP_VENC_NULL) {
+        app_ipcam_VencResize_Stop(enVencChn);
+    }
 
     for(int i = 0; i < APP_VENC_CHN_NUM; i++) {
-        if (!info[i].bNeedChange)
-            continue;
-
         pstVencChnCfg = app_ipcam_VencChnCfg_Get(i);
+        if (stResetVencFlag[i].bCodec || stResetVencFlag[i].bRCMode ) {
+            switch (info[i].codec) {
+            case APP_VIDEOENCTYPE_H264:
+                pstVencChnCfg->enType = PT_H264;
+                switch (info[i].rc) {
+                case APP_VIDEORCMODE_CBR:
+                    pstVencChnCfg->enRcMode = VENC_RC_MODE_H264CBR;
+                    break;
+                case APP_VIDEORCMODE_VBR:
+                    pstVencChnCfg->enRcMode = VENC_RC_MODE_H264VBR;
+                    break;
+                case APP_VIDEORCMODE_AVBR:
+                    pstVencChnCfg->enRcMode = VENC_RC_MODE_H264AVBR;
+                    break;
+                }
 
-        pstVencChnCfg->u32MaxBitRate = info[i].bitrate;
-        pstVencChnCfg->u32BitRate = info[i].bitrate;
-
-        switch (info[i].codec) {
-        case APP_VIDEOENCTYPE_H264:
-            pstVencChnCfg->enType = PT_H264;
-            switch (info[i].rc) {
-            case APP_VIDEORCMODE_CBR:
-                pstVencChnCfg->enRcMode = VENC_RC_MODE_H264CBR;
                 break;
-            case APP_VIDEORCMODE_VBR:
-                pstVencChnCfg->enRcMode = VENC_RC_MODE_H264VBR;
-                break;
-            case APP_VIDEORCMODE_AVBR:
-                pstVencChnCfg->enRcMode = VENC_RC_MODE_H264AVBR;
-                break;
-            }
-
-            break;
-        case APP_VIDEOENCTYPE_H265:
-            pstVencChnCfg->enType = PT_H265;
-            switch (info[i].rc) {
-            case APP_VIDEORCMODE_CBR:
-                pstVencChnCfg->enRcMode = VENC_RC_MODE_H265CBR;
-                break;
-            case APP_VIDEORCMODE_VBR:
-                pstVencChnCfg->enRcMode = VENC_RC_MODE_H265VBR;
-                break;
-            case APP_VIDEORCMODE_AVBR:
-                pstVencChnCfg->enRcMode = VENC_RC_MODE_H265AVBR;
-                break;
-            }
-            break;
-        default:
-            break;
-        }
-
-        if(pstVencChnCfg->enType == PT_H264)
-        {
-            switch (info[i].profile) {
-            case APP_VIDEOPROFILE_BASE:
-                pstVencChnCfg->u32Profile = H264E_PROFILE_BASELINE;
-                break;
-            case APP_VIDEOPROFILE_MAIN:
-                pstVencChnCfg->u32Profile = H264E_PROFILE_MAIN;
-                break;
-            case APP_VIDEOPROFILE_HIGH:
-                pstVencChnCfg->u32Profile = H264E_PROFILE_HIGH;
+            case APP_VIDEOENCTYPE_H265:
+                pstVencChnCfg->enType = PT_H265;
+                switch (info[i].rc) {
+                case APP_VIDEORCMODE_CBR:
+                    pstVencChnCfg->enRcMode = VENC_RC_MODE_H265CBR;
+                    break;
+                case APP_VIDEORCMODE_VBR:
+                    pstVencChnCfg->enRcMode = VENC_RC_MODE_H265VBR;
+                    break;
+                case APP_VIDEORCMODE_AVBR:
+                    pstVencChnCfg->enRcMode = VENC_RC_MODE_H265AVBR;
+                    break;
+                }
                 break;
             default:
-                printf("%s cmd failed profile err %d\n", __func__, info[i].profile);
                 break;
             }
         }
 
-        APP_RESOLUTION_GET(i, info[i].resolution, pstVencChnCfg->u32Width, pstVencChnCfg->u32Height);
+        if (stResetVencFlag[i].bProfile) {
+            if(pstVencChnCfg->enType == PT_H264) {
+                switch (info[i].profile) {
+                case APP_VIDEOPROFILE_BASE:
+                    pstVencChnCfg->u32Profile = H264E_PROFILE_BASELINE;
+                    break;
+                case APP_VIDEOPROFILE_MAIN:
+                    pstVencChnCfg->u32Profile = H264E_PROFILE_MAIN;
+                    break;
+                case APP_VIDEOPROFILE_HIGH:
+                    pstVencChnCfg->u32Profile = H264E_PROFILE_HIGH;
+                    break;
+                default:
+                    printf("%s cmd failed profile err %d\n", __func__, info[i].profile);
+                    break;
+                }
+            }
+        }
 
-        VpssGrp = pstVencChnCfg->VpssGrp;
-        VpssChn = pstVencChnCfg->VpssChn;
+        if (stResetVencFlag[i].bResolution) {
+            APP_RESOLUTION_GET(i, info[i].resolution, pstVencChnCfg->u32Width, pstVencChnCfg->u32Height);
+            VpssGrp = pstVencChnCfg->VpssGrp;
+            VpssChn = pstVencChnCfg->VpssChn;
+            pVpssChnAttr = &app_ipcam_Vpss_Param_Get()->astVpssGrpCfg[VpssGrp].astVpssChnAttr[VpssChn];
+            pVpssChnAttr->u32Width = pstVencChnCfg->u32Width;
+            pVpssChnAttr->u32Height = pstVencChnCfg->u32Height;
+        }
 
-        pVpssChnAttr = &app_ipcam_Vpss_Param_Get()->astVpssGrpCfg[VpssGrp].astVpssChnAttr[VpssChn];
-        pVpssChnAttr->u32Width = pstVencChnCfg->u32Width;
-        pVpssChnAttr->u32Height = pstVencChnCfg->u32Height;
+        if (stResetVencFlag[i].bBitrate) {
+            pstVencChnCfg->u32MaxBitRate = info[i].bitrate;
+            pstVencChnCfg->u32BitRate = info[i].bitrate;
+            app_ipcam_VencBitrate_Set(i, info[i].bitrate);
+        }
     }
 
     /* need re-start rtsp server when codec changed */
-    if (bNeedStopRtsp) {
-        app_ipcam_rtsp_Server_Destroy();
-        app_ipcam_Rtsp_Server_Create();
-        bNeedStopRtsp = CVI_FALSE;
+    for(int i = 0; i < APP_VENC_CHN_NUM; i++) {
+        if (stResetVencFlag[i].bCodec) {
+            app_ipcam_rtsp_Server_Destroy();
+            app_ipcam_Rtsp_Server_Create();
+            break;
+        }
     }
 
-    app_ipcam_VencResize_Start();
+    if (enVencChn != APP_VENC_NULL) {
+        app_ipcam_VencResize_Start(enVencChn);
+    }
 
-    app_ipcam_Framerate_Set(0, info[0].fps);
-
+    for(int i = 0; i < APP_VENC_CHN_NUM; i++) {
+        if (stResetVencFlag[i].bFps) {
+            app_ipcam_Framerate_Set(0, info[0].fps);
+            break;
+        }
+    }
     return 0;
 }
 
@@ -1594,37 +1621,52 @@ static int SetStreamCfgCallBack(void *param, const char *cmd, const char *val)
     }
 
     cJsonObj = cJSON_GetObjectItem(cJsonRoot, "main_enabled");
+    _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
     info[0].enabled = atoi(cJsonObj->valuestring);
     cJsonObj = cJSON_GetObjectItem(cJsonRoot, "main_codec");
+    _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
     info[0].codec = atoi(cJsonObj->valuestring);
     cJsonObj = cJSON_GetObjectItem(cJsonRoot, "main_resolution");
+    _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
     info[0].resolution = atoi(cJsonObj->valuestring);
     cJsonObj = cJSON_GetObjectItem(cJsonRoot, "main_fps");
+    _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
     info[0].fps = atoi(cJsonObj->valuestring);
     cJsonObj = cJSON_GetObjectItem(cJsonRoot, "main_profile");
+    _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
     info[0].profile = atoi(cJsonObj->valuestring);
     cJsonObj = cJSON_GetObjectItem(cJsonRoot, "main_rc");
+    _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
     info[0].rc = atoi(cJsonObj->valuestring);
     cJsonObj = cJSON_GetObjectItem(cJsonRoot, "main_bitrate");
+    _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
     info[0].bitrate = atoi(cJsonObj->valuestring);
 
     cJsonObj = cJSON_GetObjectItem(cJsonRoot, "sub_enabled");
+    _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
     info[1].enabled = atoi(cJsonObj->valuestring);
     cJsonObj = cJSON_GetObjectItem(cJsonRoot, "sub_codec");
+    _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
     info[1].codec = atoi(cJsonObj->valuestring);
     cJsonObj = cJSON_GetObjectItem(cJsonRoot, "sub_resolution");
+    _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
     info[1].resolution = atoi(cJsonObj->valuestring);
     cJsonObj = cJSON_GetObjectItem(cJsonRoot, "sub_fps");
+    _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
     info[1].fps = atoi(cJsonObj->valuestring);
     cJsonObj = cJSON_GetObjectItem(cJsonRoot, "sub_profile");
+    _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
     info[1].profile = atoi(cJsonObj->valuestring);
     cJsonObj = cJSON_GetObjectItem(cJsonRoot, "sub_rc");
+    _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
     info[1].rc = atoi(cJsonObj->valuestring);
     cJsonObj = cJSON_GetObjectItem(cJsonRoot, "sub_bitrate");
+    _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
     info[1].bitrate = atoi(cJsonObj->valuestring);
 
     if (app_ipcam_VencAttrChange_Check(info)) {
         ret = app_ipcam_VencAttr_Set(info);
+        memset(&stResetVencFlag, 0, sizeof(APP_VENC_ATTR_CHANGE_S) * APP_VENC_CHN_NUM);
     } else {
         printf("all video channel attr not change!\n");
     }
@@ -1640,7 +1682,7 @@ static int SetRoiCfgCallBack(void *param, const char *cmd, const char *val)
     char decode[1024] = {0};
     cJSON *cJsonRoot = NULL;
     cJSON *cJsonObj = NULL;
-    APP_VENC_ATTR_INFO_S info[APP_VENC_CHN_NUM] = {0};
+    // APP_VENC_ATTR_INFO_S info[APP_VENC_CHN_NUM] = {0};
 
     UrlDecode(val, decode);
     printf("%s\n", decode);
@@ -1653,47 +1695,55 @@ static int SetRoiCfgCallBack(void *param, const char *cmd, const char *val)
 
     int i = 0;
     char tmpStr[32];
-    APP_PARAM_VENC_CTX_S *pstVencCtx = app_ipcam_Venc_Param_Get();
+    // APP_PARAM_VENC_CTX_S *pstVencCtx = app_ipcam_Venc_Param_Get();
     APP_VENC_ROI_CFG_S stRoiAttr[MAX_NUM_ROI];
     for (i = 0; i < MAX_NUM_ROI; i++) {
         memset(tmpStr, 0, sizeof(tmpStr));
         snprintf(tmpStr, sizeof(tmpStr), "%s%d", "roi_enable", i);
         cJsonObj = cJSON_GetObjectItem(cJsonRoot, tmpStr);
+        _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
         stRoiAttr[i].bEnable = atoi(cJsonObj->valuestring);
 
         memset(tmpStr, 0, sizeof(tmpStr));
         snprintf(tmpStr, sizeof(tmpStr), "%s%d", "roi_venc", i);
         cJsonObj = cJSON_GetObjectItem(cJsonRoot, tmpStr);
+        _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
         stRoiAttr[i].VencChn = atoi(cJsonObj->valuestring);
         if (stRoiAttr[i].bEnable) {
             memset(tmpStr, 0, sizeof(tmpStr));
             snprintf(tmpStr, sizeof(tmpStr), "%s%d", "roi_abs_qp", i);
             cJsonObj = cJSON_GetObjectItem(cJsonRoot, tmpStr);
+            _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
             stRoiAttr[i].bAbsQp = atoi(cJsonObj->valuestring);
             
             memset(tmpStr, 0, sizeof(tmpStr));
             snprintf(tmpStr, sizeof(tmpStr), "%s%d", "roi_qp", i);
             cJsonObj = cJSON_GetObjectItem(cJsonRoot, tmpStr);
+            _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
             stRoiAttr[i].u32Qp = atoi(cJsonObj->valuestring);
 
             memset(tmpStr, 0, sizeof(tmpStr));
             snprintf(tmpStr, sizeof(tmpStr), "%s%d", "roi_x", i);
             cJsonObj = cJSON_GetObjectItem(cJsonRoot, tmpStr);
+            _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
             stRoiAttr[i].u32X = atoi(cJsonObj->valuestring);
 
             memset(tmpStr, 0, sizeof(tmpStr));
             snprintf(tmpStr, sizeof(tmpStr), "%s%d", "roi_y", i);
             cJsonObj = cJSON_GetObjectItem(cJsonRoot, tmpStr);
+            _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
             stRoiAttr[i].u32Y = atoi(cJsonObj->valuestring);
 
             memset(tmpStr, 0, sizeof(tmpStr));
             snprintf(tmpStr, sizeof(tmpStr), "%s%d", "roi_width", i);
             cJsonObj = cJSON_GetObjectItem(cJsonRoot, tmpStr);
+            _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
             stRoiAttr[i].u32Width = atoi(cJsonObj->valuestring);
 
             memset(tmpStr, 0, sizeof(tmpStr));
             snprintf(tmpStr, sizeof(tmpStr), "%s%d", "roi_hight", i);
             cJsonObj = cJSON_GetObjectItem(cJsonRoot, tmpStr);
+            _NULL_POINTER_CHECK_(cJsonObj->valuestring, -1);
             stRoiAttr[i].u32Height = atoi(cJsonObj->valuestring);
         }
     }
@@ -1751,7 +1801,7 @@ static int SetRecordCallBack(void *param, const char *cmd, const char *val)
         }
         else
         {
-            printf("date invalid record_date:%s\n", __func__, tmpStr);
+            printf("date invalid record_date:%s\n", tmpStr);
         }
     } else {
         printf("%s %d: error no support setting, %s %s\n", __func__, __LINE__, cmd, val);
@@ -1760,7 +1810,40 @@ static int SetRecordCallBack(void *param, const char *cmd, const char *val)
 
     return ret;
 }
+
+static int StopRepalyCallBack(void *param, const char *cmd, const char *val)
+{
+    printf("enter: %s [%s|%s]\n", __func__, cmd, val);
+    app_ipcam_Record_StopReplay();
+    return 0;
+}
+
+static int StartRepalyCallBack(void *param, const char *cmd, const char *val)
+{
+    printf("enter: %s [%s|%s]\n", __func__, cmd, val);
+    int ret = 0;
+    if (strstr(val, "replay_date") != NULL){
+        char tmpStr[256];
+        NetString2Str(val, tmpStr);
+        if (strlen("20210520141414") == strlen(tmpStr))
+        {
+            printf("replay_date:%s\n", tmpStr);
+            app_ipcam_Record_StartReplay(tmpStr);
+        }
+        else
+        {
+            printf("date invalid replay_date:%s\n", tmpStr);
+        }
+    } else {
+        printf("%s %d: error no support setting, %s %s\n", __func__, __LINE__, cmd, val);
+    }
+    CVI_NET_AddCgiResponse(param, "ret: %d\n", ret);
+
+    return ret;
+}
+
 #endif
+
 #ifdef AI_SUPPORT
 int CVI_IPC_NetCtrlSetMd(APP_MD_INFO_S psmdinfo)
 {
@@ -1805,46 +1888,27 @@ int CVI_IPC_NetCtrlSetPd(APP_PD_INFO_S pspdinfo)
             return 0;
         }
     }
-    if (pstPdInfo->Intrusion_bEnable != pspdinfo.Intrusion_enabled)
+       
+    if (!((pstPdInfo->region_stRect_x1 == pspdinfo.region_stRect_x1) &&
+        (pstPdInfo->region_stRect_y1 == pspdinfo.region_stRect_y1) &&
+        (pstPdInfo->region_stRect_x2 == pspdinfo.region_stRect_x2) &&
+        (pstPdInfo->region_stRect_y2 == pspdinfo.region_stRect_y2) &&
+        (pstPdInfo->region_stRect_x3 == pspdinfo.region_stRect_x3) &&
+        (pstPdInfo->region_stRect_y3 == pspdinfo.region_stRect_y3) &&
+        (pstPdInfo->region_stRect_x4 == pspdinfo.region_stRect_x4) &&
+        (pstPdInfo->region_stRect_y4 == pspdinfo.region_stRect_y4) &&
+        (pstPdInfo->region_stRect_x5 == pspdinfo.region_stRect_x5) &&
+        (pstPdInfo->region_stRect_y5 == pspdinfo.region_stRect_y5) &&
+        (pstPdInfo->region_stRect_x6 == pspdinfo.region_stRect_x6) &&
+        (pstPdInfo->region_stRect_y6 == pspdinfo.region_stRect_y6)) ||
+        (pstPdInfo->Intrusion_bEnable != pspdinfo.Intrusion_enabled)) 
     {
-        pstPdInfo->Intrusion_bEnable = pspdinfo.Intrusion_enabled;
-        if(!pspdinfo.Intrusion_enabled)
+        app_ipcam_Ai_PD_Stop();
+        if(pstPdInfo->Intrusion_bEnable != pspdinfo.Intrusion_enabled)
         {
-            APP_PARAM_OSDC_CFG_S *stOsdcCfg = app_ipcam_Osdc_Param_Get();
-            for(int i=0; i<6; i++)
-            {
-                stOsdcCfg->osdcObj[stOsdcCfg->osdcObjNum].bShow = 0;
-                stOsdcCfg->osdcObjNum = stOsdcCfg->osdcObjNum - 1;
-            }
-            return 0;
+            pstPdInfo->Intrusion_bEnable = pspdinfo.Intrusion_enabled;
         }
-        else
-        {
-            APP_PARAM_OSDC_CFG_S *stOsdcCfg = app_ipcam_Osdc_Param_Get();
-            for(int i=0; i<6; i++)
-            {
-                stOsdcCfg->osdcObj[stOsdcCfg->osdcObjNum].bShow = 1;
-                stOsdcCfg->osdcObjNum = stOsdcCfg->osdcObjNum + 1;
-            }
-            return 0;
-        }
-    }
-    else
-    {
-        if (!((pstPdInfo->region_stRect_x1 == pspdinfo.region_stRect_x1) &&
-              (pstPdInfo->region_stRect_y1 == pspdinfo.region_stRect_y1) &&
-              (pstPdInfo->region_stRect_x2 == pspdinfo.region_stRect_x2) &&
-              (pstPdInfo->region_stRect_y2 == pspdinfo.region_stRect_y2) &&
-              (pstPdInfo->region_stRect_x3 == pspdinfo.region_stRect_x3) &&
-              (pstPdInfo->region_stRect_y3 == pspdinfo.region_stRect_y3) &&
-              (pstPdInfo->region_stRect_x4 == pspdinfo.region_stRect_x4) &&
-              (pstPdInfo->region_stRect_y4 == pspdinfo.region_stRect_y4) &&
-              (pstPdInfo->region_stRect_x5 == pspdinfo.region_stRect_x5) &&
-              (pstPdInfo->region_stRect_y5 == pspdinfo.region_stRect_y5) &&
-              (pstPdInfo->region_stRect_x6 == pspdinfo.region_stRect_x6) &&
-              (pstPdInfo->region_stRect_y6 == pspdinfo.region_stRect_y6)))
-        {
-            app_ipcam_Ai_PD_Stop();
+        else{
             pstPdInfo->region_stRect_x1 = pspdinfo.region_stRect_x1;
             pstPdInfo->region_stRect_y1 = pspdinfo.region_stRect_y1;
             pstPdInfo->region_stRect_x2 = pspdinfo.region_stRect_x2;
@@ -1857,10 +1921,11 @@ int CVI_IPC_NetCtrlSetPd(APP_PD_INFO_S pspdinfo)
             pstPdInfo->region_stRect_y5 = pspdinfo.region_stRect_y5;
             pstPdInfo->region_stRect_x6 = pspdinfo.region_stRect_x6;
             pstPdInfo->region_stRect_y6 = pspdinfo.region_stRect_y6;
-            app_ipcam_Ai_PD_Start();
-            return 0;
         }
+        app_ipcam_Ai_PD_Start();
+        return 0;
     }
+    
     if(pstPdInfo->threshold != pspdinfo.threshold)
     {
         pstPdInfo->threshold = pspdinfo.threshold;
@@ -1896,7 +1961,6 @@ static int GetAiInfoCallBack(void *param, const char *cmd, const char *val)
     cJSON_AddNumberToObject(cjsonAiAttr, "pd_intrusion_enable", pstPdInfo->Intrusion_bEnable);
     cJSON_AddNumberToObject(cjsonAiAttr, "pd_threshold", (int)(pstPdInfo->threshold * 100));
 
-    APP_PARAM_OSD_CFG_T *pstOsdInfo = app_ipcam_Osd_Param_Get();
     cJSON_AddNumberToObject(cjsonAiAttr, "region_x1",  pstPdInfo->region_stRect_x1);
     cJSON_AddNumberToObject(cjsonAiAttr, "region_y1",  pstPdInfo->region_stRect_y1);
     cJSON_AddNumberToObject(cjsonAiAttr, "region_x2",  pstPdInfo->region_stRect_x2);
@@ -1941,55 +2005,72 @@ static int SetAiInfoCallBack(void *param, const char *cmd, const char *val)
     }
     //md
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "md_enable");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     MdInfo.enabled = atoi(cjsonObj->valuestring);
 
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "md_threshold");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     MdInfo.threshold = atoi(cjsonObj->valuestring);
 
     //pd
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "pd_enable");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     PdInfo.enabled = atoi(cjsonObj->valuestring);
   
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "pd_threshold");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     PdInfo.threshold = atoi(cjsonObj->valuestring) / 100.0;
 
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "pd_intrusion_enable");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     PdInfo.Intrusion_enabled = atoi(cjsonObj->valuestring);
 
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "region_x1");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     PdInfo.region_stRect_x1 = atoi(cjsonObj->valuestring);
 
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "region_y1");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     PdInfo.region_stRect_y1 = atoi(cjsonObj->valuestring);
 
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "region_x2");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     PdInfo.region_stRect_x2 = atoi(cjsonObj->valuestring);
 
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "region_y2");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     PdInfo.region_stRect_y2 = atoi(cjsonObj->valuestring);
 
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "region_x3");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     PdInfo.region_stRect_x3 = atoi(cjsonObj->valuestring);
 
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "region_y3");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     PdInfo.region_stRect_y3 = atoi(cjsonObj->valuestring);
 
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "region_x4");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     PdInfo.region_stRect_x4 = atoi(cjsonObj->valuestring);
 
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "region_y4");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     PdInfo.region_stRect_y4 = atoi(cjsonObj->valuestring);
 
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "region_x5");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     PdInfo.region_stRect_x5 = atoi(cjsonObj->valuestring);
 
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "region_y5");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     PdInfo.region_stRect_y5 = atoi(cjsonObj->valuestring);
 
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "region_x6");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     PdInfo.region_stRect_x6 = atoi(cjsonObj->valuestring);
 
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "region_y6");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     PdInfo.region_stRect_y6 = atoi(cjsonObj->valuestring);
   
     ret = CVI_IPC_NetCtrlSetMd(MdInfo);
@@ -2014,13 +2095,49 @@ static int GetOsdInfoCallBack(void *param, const char *cmd, const char *val)
     cJSON* cjsonOsdAttr = NULL;
     char* str = NULL;
 
-    APP_PARAM_OSD_CFG_T *pstOsdInfo = app_ipcam_Osd_Param_Get();
     APP_OSDC_OBJS_INFO_S *pstOsdcPrivacy = app_ipcam_OsdcPrivacy_Param_Get();
 
     cjsonOsdAttr = cJSON_CreateObject();
 
     printf("enter: %s\n", __func__);
 
+#ifdef ARCH_CV180X
+    APP_PARAM_OSDC_CFG_S *pstOsdcCfg = app_ipcam_Osdc_Param_Get();
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_global", pstOsdcCfg->enable);
+    printf("\n");
+    // timestamp
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_time", pstOsdcCfg->osdcObj[0][OSD_TIME_INDEX].bShow);
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_ts_x", pstOsdcCfg->osdcObj[0][OSD_TIME_INDEX].x1);
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_ts_y", pstOsdcCfg->osdcObj[0][OSD_TIME_INDEX].y1);
+    // text1
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_text1", pstOsdcCfg->osdcObj[0][OSD_TEXT1_INDEX].bShow);
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_text1_x", pstOsdcCfg->osdcObj[0][OSD_TEXT1_INDEX].x1);
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_text1_y", pstOsdcCfg->osdcObj[0][OSD_TEXT1_INDEX].y1);
+    cJSON_AddStringToObject(cjsonOsdAttr, "osd_text1_content", pstOsdcCfg->osdcObj[0][OSD_TEXT1_INDEX].str);
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_text1_color", pstOsdcCfg->osdcObj[0][OSD_TEXT1_INDEX].color);
+    // text2
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_text2", pstOsdcCfg->osdcObj[0][OSD_TEXT2_INDEX].bShow);
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_text2_x", pstOsdcCfg->osdcObj[0][OSD_TEXT2_INDEX].x1);
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_text2_y", pstOsdcCfg->osdcObj[0][OSD_TEXT2_INDEX].y1);
+    cJSON_AddStringToObject(cjsonOsdAttr, "osd_text2_content", pstOsdcCfg->osdcObj[0][OSD_TEXT2_INDEX].str);
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_text2_color", pstOsdcCfg->osdcObj[0][OSD_TEXT2_INDEX].color);
+    // text3
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_text3", pstOsdcCfg->osdcObj[0][OSD_TEXT3_INDEX].bShow);
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_text3_x", pstOsdcCfg->osdcObj[0][OSD_TEXT3_INDEX].x1);
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_text3_y", pstOsdcCfg->osdcObj[0][OSD_TEXT3_INDEX].y1);
+    cJSON_AddStringToObject(cjsonOsdAttr, "osd_text3_content1", pstOsdcCfg->osdcObj[0][OSD_TEXT3_INDEX].str);
+    cJSON_AddStringToObject(cjsonOsdAttr, "osd_text3_content2", pstOsdcCfg->osdcObj[0][OSD_TEXT4_INDEX].str);
+    cJSON_AddStringToObject(cjsonOsdAttr, "osd_text3_content3", pstOsdcCfg->osdcObj[0][OSD_TEXT5_INDEX].str);
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_text3_color", pstOsdcCfg->osdcObj[0][OSD_TEXT3_INDEX].color);
+    // privacy area
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_privacy", pstOsdcPrivacy->bShow);
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_privacy_x", pstOsdcPrivacy->x1);
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_privacy_y", pstOsdcPrivacy->y1);
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_privacy_width", pstOsdcPrivacy->width);
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_privacy_hight", pstOsdcPrivacy->height);
+    cJSON_AddNumberToObject(cjsonOsdAttr, "osd_privacy_color", pstOsdcPrivacy->color);
+#else
+    APP_PARAM_OSD_CFG_T *pstOsdInfo = app_ipcam_Osd_Param_Get();
     cJSON_AddNumberToObject(cjsonOsdAttr, "osd_global", pstOsdInfo->bEnable);
     printf("\n");
     // timestamp
@@ -2051,7 +2168,7 @@ static int GetOsdInfoCallBack(void *param, const char *cmd, const char *val)
     cJSON_AddNumberToObject(cjsonOsdAttr, "osd_privacy_width", pstOsdcPrivacy->width);
     cJSON_AddNumberToObject(cjsonOsdAttr, "osd_privacy_hight", pstOsdcPrivacy->height);
     cJSON_AddNumberToObject(cjsonOsdAttr, "osd_privacy_color", pstOsdcPrivacy->color);
-    // cJSON_AddNumberToObject(cjsonOsdAttr, "osd_privacy_num", pstOsdcPrivacy->bShow);
+#endif
 
     str = cJSON_Print(cjsonOsdAttr);
     if (str) {
@@ -2063,6 +2180,8 @@ static int GetOsdInfoCallBack(void *param, const char *cmd, const char *val)
     return 0;
 }
 
+#ifdef ARCH_CV180X
+#else
 static int app_ipcam_OsdString_Update(APP_PARAM_OSD_ATTR_S *pstOsdAttr, RGN_CHN_ATTR_S *regChnAttr)
 {
     BITMAP_S bitmap;
@@ -2155,12 +2274,16 @@ static int app_ipcam_OsdInfo_Set(APP_PARAM_OSD_CFG_T *pstOsdInfo)
         }
 
         regChnAttr.bShow = (pstOsdInfo->bEnable == CVI_TRUE) ? pstOsdInfo->astOsdAttr[i].bShow : CVI_FALSE;
-        regChnAttr.unChnAttr.stOverlayChn.stPoint.s32X = pstOsdInfo->astOsdAttr[i].stRect.s32X;
-        regChnAttr.unChnAttr.stOverlayChn.stPoint.s32Y = pstOsdInfo->astOsdAttr[i].stRect.s32Y;
-
         ret = CVI_RGN_SetDisplayAttr(handle, pstMmfChn, &regChnAttr);
         if (ret != CVI_SUCCESS) {
-            printf("CVI_RGN_SetDisplayAttr failed \n");
+            printf("CVI_RGN_SetDisplayAttr set bShow failed \n");
+        }
+
+        regChnAttr.unChnAttr.stOverlayChn.stPoint.s32X = pstOsdInfo->astOsdAttr[i].stRect.s32X;
+        regChnAttr.unChnAttr.stOverlayChn.stPoint.s32Y = pstOsdInfo->astOsdAttr[i].stRect.s32Y;
+        ret = CVI_RGN_SetDisplayAttr(handle, pstMmfChn, &regChnAttr);
+        if (ret != CVI_SUCCESS) {
+            printf("CVI_RGN_SetDisplayAttr stPoint failed \n");
         }
 
         /* only string changed then re-draw it */
@@ -2171,6 +2294,7 @@ static int app_ipcam_OsdInfo_Set(APP_PARAM_OSD_CFG_T *pstOsdInfo)
 
     return CVI_SUCCESS;
 }
+#endif
 
 static int SetOsdInfoCallBack(void *param, const char *cmd, const char *val)
 {
@@ -2179,9 +2303,6 @@ static int SetOsdInfoCallBack(void *param, const char *cmd, const char *val)
     cJSON *cjsonParser = NULL;
     cJSON *cjsonObj = NULL;
     int ret = 0;
-
-    APP_PARAM_OSD_CFG_T *pstOsdInfo = app_ipcam_Osd_Param_Get();
-    APP_OSDC_OBJS_INFO_S *pstOsdcPrivacy = app_ipcam_OsdcPrivacy_Param_Get();
 
     printf("%zu %zu\n", strlen(cmd), strlen(val));
     UrlDecode(val, decode);
@@ -2192,118 +2313,341 @@ static int SetOsdInfoCallBack(void *param, const char *cmd, const char *val)
         printf("parse fail.\n");
         return -1;
     }
+#ifdef ARCH_CV180X
+    APP_PARAM_OSDC_CFG_S *pstOsdcCfg = app_ipcam_Osdc_Param_Get();
+    APP_OSDC_OBJS_INFO_S *pstOsdcPrivacy = app_ipcam_OsdcPrivacy_Param_Get();
+    APP_PARAM_OSDC_CFG_S stOsdcCfg;
+    memcpy(&stOsdcCfg, pstOsdcCfg, sizeof(APP_PARAM_OSDC_CFG_S));
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "global_switch");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+    stOsdcCfg.enable = atoi(cjsonObj->valuestring);
+    // timestamp
+    cjsonObj = cJSON_GetObjectItem(cjsonParser, "ts_switch");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+    stOsdcCfg.osdcObj[0][OSD_TIME_INDEX].bShow = atoi(cjsonObj->valuestring);
+    cjsonObj = cJSON_GetObjectItem(cjsonParser, "ts_x");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+    stOsdcCfg.osdcObj[0][OSD_TIME_INDEX].x1 = atoi(cjsonObj->valuestring);
+    cjsonObj = cJSON_GetObjectItem(cjsonParser, "ts_y");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+    stOsdcCfg.osdcObj[0][OSD_TIME_INDEX].y1 = atoi(cjsonObj->valuestring);
+    // text1
+    cjsonObj = cJSON_GetObjectItem(cjsonParser, "text1_switch");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+    stOsdcCfg.osdcObj[0][OSD_TEXT1_INDEX].bShow = atoi(cjsonObj->valuestring);
+    cjsonObj = cJSON_GetObjectItem(cjsonParser, "text1_x");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+    stOsdcCfg.osdcObj[0][OSD_TEXT1_INDEX].x1 = atoi(cjsonObj->valuestring);
+    cjsonObj = cJSON_GetObjectItem(cjsonParser, "text1_y");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+    stOsdcCfg.osdcObj[0][OSD_TEXT1_INDEX].y1 = atoi(cjsonObj->valuestring);
+    cjsonObj = cJSON_GetObjectItem(cjsonParser, "text1_content");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+    if (!(strcmp(cjsonObj->valuestring, "") == 0))
+    {
+        memcpy(stOsdcCfg.osdcObj[0][OSD_TEXT1_INDEX].str, cjsonObj->valuestring, APP_OSD_STR_LEN_MAX);
+    }
+    else
+    {
+        memcpy(stOsdcCfg.osdcObj[0][OSD_TEXT1_INDEX].str, " ", APP_OSD_STR_LEN_MAX);
+    }
+
+    // text2
+    //because conflict with pd instruction rect
+    if (stOsdcCfg.osdcObj[0][OSD_TEXT2_INDEX].type == RGN_CMPR_BIT_MAP) {
+        cjsonObj = cJSON_GetObjectItem(cjsonParser, "text2_switch");
+        _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+        stOsdcCfg.osdcObj[0][OSD_TEXT2_INDEX].bShow = atoi(cjsonObj->valuestring);
+        cjsonObj = cJSON_GetObjectItem(cjsonParser, "text2_x");
+        _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+        stOsdcCfg.osdcObj[0][OSD_TEXT2_INDEX].x1 = atoi(cjsonObj->valuestring);
+        cjsonObj = cJSON_GetObjectItem(cjsonParser, "text2_y");
+        _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+        stOsdcCfg.osdcObj[0][OSD_TEXT2_INDEX].y1 = atoi(cjsonObj->valuestring);
+        cjsonObj = cJSON_GetObjectItem(cjsonParser, "text2_content");
+        _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+        if (!(strcmp(cjsonObj->valuestring, "") == 0))
+        {
+            memcpy(stOsdcCfg.osdcObj[0][OSD_TEXT2_INDEX].str, cjsonObj->valuestring, APP_OSD_STR_LEN_MAX);
+        }
+        else
+        {
+            memcpy(stOsdcCfg.osdcObj[0][OSD_TEXT2_INDEX].str, " ", APP_OSD_STR_LEN_MAX);
+        }
+    }
+
+    // text3
+    //because conflict with pd instruction rect
+    if (stOsdcCfg.osdcObj[0][OSD_TEXT3_INDEX].type == RGN_CMPR_BIT_MAP) {
+        cjsonObj = cJSON_GetObjectItem(cjsonParser, "text3_switch");
+        _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+        stOsdcCfg.osdcObj[0][OSD_TEXT3_INDEX].bShow = stOsdcCfg.osdcObj[0][OSD_TEXT4_INDEX].bShow = stOsdcCfg.osdcObj[0][OSD_TEXT5_INDEX].bShow 
+                                        = atoi(cjsonObj->valuestring);
+        cjsonObj = cJSON_GetObjectItem(cjsonParser, "text3_x");
+        _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+        stOsdcCfg.osdcObj[0][OSD_TEXT3_INDEX].x1 = stOsdcCfg.osdcObj[0][OSD_TEXT4_INDEX].x1 = stOsdcCfg.osdcObj[0][OSD_TEXT5_INDEX].x1 
+                                        = atoi(cjsonObj->valuestring);
+        cjsonObj = cJSON_GetObjectItem(cjsonParser, "text3_y");
+        _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+        stOsdcCfg.osdcObj[0][OSD_TEXT3_INDEX].y1 = atoi(cjsonObj->valuestring);
+        stOsdcCfg.osdcObj[0][OSD_TEXT4_INDEX].y1 = stOsdcCfg.osdcObj[0][OSD_TEXT3_INDEX].y1 + 100;
+        stOsdcCfg.osdcObj[0][OSD_TEXT5_INDEX].y1 = stOsdcCfg.osdcObj[0][OSD_TEXT4_INDEX].y1 + 100;
+        cjsonObj = cJSON_GetObjectItem(cjsonParser, "text3_content1");
+        _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+        if (!(strcmp(cjsonObj->valuestring, "") == 0))
+        {
+            memcpy(stOsdcCfg.osdcObj[0][OSD_TEXT3_INDEX].str, cjsonObj->valuestring, APP_OSD_STR_LEN_MAX);
+        }
+        else
+        {
+            memcpy(stOsdcCfg.osdcObj[0][OSD_TEXT3_INDEX].str, " ", APP_OSD_STR_LEN_MAX);
+        }
+        cjsonObj = cJSON_GetObjectItem(cjsonParser, "text3_content2");
+        _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+        if (!(strcmp(cjsonObj->valuestring, "") == 0))
+        {
+            memcpy(stOsdcCfg.osdcObj[0][OSD_TEXT4_INDEX].str, cjsonObj->valuestring, APP_OSD_STR_LEN_MAX);
+        }
+        else
+        {
+            memcpy(stOsdcCfg.osdcObj[0][OSD_TEXT4_INDEX].str, " ", APP_OSD_STR_LEN_MAX);
+        }
+        cjsonObj = cJSON_GetObjectItem(cjsonParser, "text3_content3");
+        _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+        if (!(strcmp(cjsonObj->valuestring, "") == 0))
+        {
+            memcpy(stOsdcCfg.osdcObj[0][OSD_TEXT5_INDEX].str, cjsonObj->valuestring, APP_OSD_STR_LEN_MAX);
+        }
+        else
+        {
+            memcpy(stOsdcCfg.osdcObj[0][OSD_TEXT5_INDEX].str, " ", APP_OSD_STR_LEN_MAX);
+        }
+    }
+    // privacy area
+    CVI_U32 i = 0;
+    for (i = 0; i < stOsdcCfg.osdcObjNum[0]; i++) {
+        if ((stOsdcCfg.osdcObj[0][i].filled == CVI_TRUE) &&
+            (stOsdcCfg.osdcObj[0][i].type == RGN_CMPR_RECT)) {
+            cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_switch");
+            _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+            pstOsdcPrivacy->bShow= stOsdcCfg.osdcObj[0][i].bShow = atoi(cjsonObj->valuestring);
+            cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_x");
+            _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+            pstOsdcPrivacy->x1 = stOsdcCfg.osdcObj[0][i].x1 = atoi(cjsonObj->valuestring);
+            cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_y");
+            _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+            pstOsdcPrivacy->y1 = stOsdcCfg.osdcObj[0][i].y1 = atoi(cjsonObj->valuestring);
+            cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_width");
+            _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+            pstOsdcPrivacy->width = stOsdcCfg.osdcObj[0][i].width = atoi(cjsonObj->valuestring);
+            cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_hight");
+            _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+            pstOsdcPrivacy->height = stOsdcCfg.osdcObj[0][i].height = atoi(cjsonObj->valuestring);
+            cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_color");
+            _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+            IDX_TO_COLOR(0, atoi(cjsonObj->valuestring), stOsdcCfg.osdcObj[0][i].color);
+            COLOR_TO_IDX(0, pstOsdcPrivacy->color, stOsdcCfg.osdcObj[0][i].color);
+            break;
+        }
+    }
+
+    if (0 != memcmp(&stOsdcCfg, pstOsdcCfg, sizeof(APP_PARAM_OSDC_CFG_S))) {
+        app_ipcam_Osdc_Status(stOsdcCfg.enable);
+        memcpy(pstOsdcCfg, &stOsdcCfg, sizeof(APP_PARAM_OSDC_CFG_S));
+    }
+#else
+    APP_PARAM_OSD_CFG_T *pstOsdInfo = app_ipcam_Osd_Param_Get();
+    APP_PARAM_OSDC_CFG_S *pstOsdcCfg = app_ipcam_Osdc_Param_Get();
+    APP_OSDC_OBJS_INFO_S *pstOsdcPrivacy = app_ipcam_OsdcPrivacy_Param_Get();
+    APP_PARAM_OSDC_CFG_S stOsdcCfg;
+    memcpy(&stOsdcCfg, pstOsdcCfg, sizeof(APP_PARAM_OSDC_CFG_S));
+    cjsonObj = cJSON_GetObjectItem(cjsonParser, "global_switch");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->bEnable = atoi(cjsonObj->valuestring);
     // timestamp
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "ts_switch");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[0].bShow = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "ts_x");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[0].stRect.s32X = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "ts_y");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[0].stRect.s32Y = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "ts_type");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[0].ts_format = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "ts_font_size");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[0].font_size = atoi(cjsonObj->valuestring);
     // text1
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text1_switch");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[1].bShow = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text1_x");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[1].stRect.s32X = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text1_y");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[1].stRect.s32Y = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text1_font_size");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[1].font_size = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text1_color");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[1].color = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text1_content");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     if (strcmp(pstOsdInfo->astOsdAttr[1].str, cjsonObj->valuestring) == 0) {
         pstOsdInfo->astOsdAttr[1].bChange = CVI_FALSE;
     } else {
         pstOsdInfo->astOsdAttr[1].bChange = CVI_TRUE;
-        memcpy(pstOsdInfo->astOsdAttr[1].str, cjsonObj->valuestring, strlen(cjsonObj->valuestring)+1);
+        if (!(strcmp(cjsonObj->valuestring, "") == 0))
+        {
+            memcpy(pstOsdInfo->astOsdAttr[1].str, cjsonObj->valuestring, strlen(cjsonObj->valuestring)+1);
+        }
+        else
+        {
+            memcpy(pstOsdInfo->astOsdAttr[6].str, " ",2);
+        }
     }
     // text2
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text2_switch");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[7].bShow = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text2_x");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[7].stRect.s32X = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text2_y");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[7].stRect.s32Y = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text2_font_size");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[7].font_size = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text2_color");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[7].color = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text2_content");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     if (strcmp(pstOsdInfo->astOsdAttr[7].str, cjsonObj->valuestring) == 0) {
         pstOsdInfo->astOsdAttr[7].bChange = CVI_FALSE;
     } else {
         pstOsdInfo->astOsdAttr[7].bChange = CVI_TRUE;
-        memcpy(pstOsdInfo->astOsdAttr[7].str, cjsonObj->valuestring, strlen(cjsonObj->valuestring)+1);
+        if (!(strcmp(cjsonObj->valuestring, "") == 0))
+        {
+            memcpy(pstOsdInfo->astOsdAttr[7].str, cjsonObj->valuestring, strlen(cjsonObj->valuestring)+1);
+        }
+        else
+        {
+            memcpy(pstOsdInfo->astOsdAttr[6].str, " ",2);
+        }
     }
     // text3
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text3_switch");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[4].bShow = pstOsdInfo->astOsdAttr[5].bShow = pstOsdInfo->astOsdAttr[6].bShow 
                                     = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text3_x");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[4].stRect.s32X = pstOsdInfo->astOsdAttr[5].stRect.s32X = pstOsdInfo->astOsdAttr[6].stRect.s32X 
                                     = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text3_y");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[4].stRect.s32Y = atoi(cjsonObj->valuestring);
     pstOsdInfo->astOsdAttr[5].stRect.s32Y = pstOsdInfo->astOsdAttr[4].stRect.s32Y + 100;
     pstOsdInfo->astOsdAttr[6].stRect.s32Y = pstOsdInfo->astOsdAttr[5].stRect.s32Y + 100;
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text3_font_size");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[4].font_size = pstOsdInfo->astOsdAttr[5].font_size = pstOsdInfo->astOsdAttr[6].font_size 
                                     = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text3_color");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     pstOsdInfo->astOsdAttr[4].color = pstOsdInfo->astOsdAttr[5].color = pstOsdInfo->astOsdAttr[6].color
                                     = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text3_content1");
-
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     if (strcmp(pstOsdInfo->astOsdAttr[4].str, cjsonObj->valuestring) == 0) {
         pstOsdInfo->astOsdAttr[4].bChange = CVI_FALSE;
     } else {
         pstOsdInfo->astOsdAttr[4].bChange = CVI_TRUE;
-        memcpy(pstOsdInfo->astOsdAttr[4].str, cjsonObj->valuestring, strlen(cjsonObj->valuestring)+1);
+        if (!(strcmp(cjsonObj->valuestring, "") == 0))
+        {
+            memcpy(pstOsdInfo->astOsdAttr[4].str, cjsonObj->valuestring, strlen(cjsonObj->valuestring)+1);
+        }
+        else
+        {
+            memcpy(pstOsdInfo->astOsdAttr[6].str, " ",2);
+        }
     }
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text3_content2");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     if (strcmp(pstOsdInfo->astOsdAttr[5].str, cjsonObj->valuestring) == 0) {
         pstOsdInfo->astOsdAttr[5].bChange = CVI_FALSE;
     } else {
         pstOsdInfo->astOsdAttr[5].bChange = CVI_TRUE;
-        memcpy(pstOsdInfo->astOsdAttr[5].str, cjsonObj->valuestring, strlen(cjsonObj->valuestring)+1);
+        if (!(strcmp(cjsonObj->valuestring, "") == 0))
+        {
+            memcpy(pstOsdInfo->astOsdAttr[5].str, cjsonObj->valuestring, strlen(cjsonObj->valuestring)+1);
+        }
+        else
+        {
+            memcpy(pstOsdInfo->astOsdAttr[6].str, " ",2);
+        }
+        
     }
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "text3_content3");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     if (strcmp(pstOsdInfo->astOsdAttr[6].str, cjsonObj->valuestring) == 0) {
         pstOsdInfo->astOsdAttr[6].bChange = CVI_FALSE;
     } else {
         pstOsdInfo->astOsdAttr[6].bChange = CVI_TRUE;
-        memcpy(pstOsdInfo->astOsdAttr[6].str, cjsonObj->valuestring, strlen(cjsonObj->valuestring)+1);
+        if (!(strcmp(cjsonObj->valuestring, "") == 0))
+        {
+            memcpy(pstOsdInfo->astOsdAttr[6].str, cjsonObj->valuestring, strlen(cjsonObj->valuestring)+1);
+        }
+        else
+        {
+            memcpy(pstOsdInfo->astOsdAttr[6].str, " ",2);
+        }
     }
     // privacy area
-    cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_switch");
-    pstOsdcPrivacy->bShow = atoi(cjsonObj->valuestring);
-    cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_x");
-    pstOsdcPrivacy->x1 = atoi(cjsonObj->valuestring);
-    cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_y");
-    pstOsdcPrivacy->y1 = atoi(cjsonObj->valuestring);
-    cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_width");
-    pstOsdcPrivacy->width = atoi(cjsonObj->valuestring);
-    cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_hight");
-    pstOsdcPrivacy->height = atoi(cjsonObj->valuestring);
-    cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_color");
-    pstOsdcPrivacy->color = atoi(cjsonObj->valuestring);
+    CVI_U32 i = 0;
+    for (i = 0; i < stOsdcCfg.osdcObjNum[0]; i++) {
+        if ((stOsdcCfg.osdcObj[0][i].filled == CVI_TRUE) &&
+            (stOsdcCfg.osdcObj[0][i].type == RGN_CMPR_RECT)) {
+            cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_switch");
+            _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+            pstOsdcPrivacy->bShow= stOsdcCfg.osdcObj[0][i].bShow = atoi(cjsonObj->valuestring);
+            cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_x");
+            _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+            pstOsdcPrivacy->x1 = stOsdcCfg.osdcObj[0][i].x1 = atoi(cjsonObj->valuestring);
+            cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_y");
+            _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+            pstOsdcPrivacy->y1 = stOsdcCfg.osdcObj[0][i].y1 = atoi(cjsonObj->valuestring);
+            cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_width");
+            _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+            pstOsdcPrivacy->width = stOsdcCfg.osdcObj[0][i].width = atoi(cjsonObj->valuestring);
+            cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_hight");
+            _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+            pstOsdcPrivacy->height = stOsdcCfg.osdcObj[0][i].height = atoi(cjsonObj->valuestring);
+            cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_color");
+            _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
+            IDX_TO_COLOR(0, atoi(cjsonObj->valuestring), stOsdcCfg.osdcObj[0][i].color);
+            COLOR_TO_IDX(0, pstOsdcPrivacy->color, stOsdcCfg.osdcObj[0][i].color);
+            break;
+        }
+    }
 
-    // cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_filled");
-    // pstOsdcPrivacy->filled = atoi(cjsonObj->valuestring);
-    // cjsonObj = cJSON_GetObjectItem(cjsonParser, "privacy_thickness");
-    // pstOsdcPrivacy->thickness = atoi(cjsonObj->valuestring);
-
+    if (0 != memcmp(&stOsdcCfg, pstOsdcCfg, sizeof(APP_PARAM_OSDC_CFG_S))) {
+        app_ipcam_Osdc_Status(stOsdcCfg.enable);
+        memcpy(pstOsdcCfg, &stOsdcCfg, sizeof(APP_PARAM_OSDC_CFG_S));
+    }
+    
     ret = app_ipcam_OsdInfo_Set(pstOsdInfo);
     if (ret != CVI_SUCCESS) {
         printf("app_ipcam_OsdInfo_Set failed !\n");
     }
-
+#endif
     CVI_NET_AddCgiResponse(param, "ret: %d\n", ret);
 
     cJSON_Delete(cjsonParser);
@@ -2361,7 +2705,6 @@ static int SetAudioInfoCallBack(void *param, const char *cmd, const char *val)
 {
     printf("enter: %s [%s|%s]\n", __func__, cmd, val);
     int ret = 0;
-    int value = 0;
     char tmpStr[64];
     char decode[1024] = {0};
     APP_PARAM_AUDIO_CFG_T stAudioCfg;
@@ -2378,26 +2721,36 @@ static int SetAudioInfoCallBack(void *param, const char *cmd, const char *val)
     }
     memcpy(&stAudioCfg, app_ipcam_Audio_Param_Get(), sizeof(APP_PARAM_AUDIO_CFG_T));
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "main_enabled");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     stAudioCfg.astAudioIntercom.bEnable = atoi(cjsonObj->valuestring);
 
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "ip");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     memcpy(stAudioCfg.astAudioIntercom.cIp, cjsonObj->valuestring, strlen(cjsonObj->valuestring) + 1);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "port");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     memcpy(tmpStr, cjsonObj->valuestring, strlen(cjsonObj->valuestring) + 1);
     stAudioCfg.astAudioIntercom.iPort = atoi(tmpStr);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "in_slider");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     stAudioCfg.astAudioVol.iAdcLVol = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "out_slider");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     stAudioCfg.astAudioVol.iDacRVol = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "amplifier_enable");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     stAudioCfg.bInit = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "codec_select");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     stAudioCfg.astAudioCfg.enAencType = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "samplerate_select");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     stAudioCfg.astAudioCfg.enSamplerate = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "anr");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     stAudioCfg.astAudioVqe.bAiAnrEnable = atoi(cjsonObj->valuestring);
     cjsonObj = cJSON_GetObjectItem(cjsonParser, "agc");
+    _NULL_POINTER_CHECK_(cjsonObj->valuestring, -1);
     stAudioCfg.astAudioVqe.bAiAgcEnable = atoi(cjsonObj->valuestring);
 
     if (stAudioCfg.astAudioIntercom.bEnable)
@@ -2421,10 +2774,6 @@ static int RecordAudioInfoCallBack(void *param, const char *cmd, const char *val
 {
     printf("enter: %s [%s|%s]\n", __func__, cmd, val);
     int ret = 0;
-    // val :  brightness=126
-    // char *pValue = NULL;
-    // char array[NET_VALUE_LEN_MAX] = {0};
-    int value = 0;
     APP_AUDIO_RECORD_T stAudioRecord;
 
     memset(&stAudioRecord, 0, sizeof(APP_AUDIO_RECORD_T));
@@ -2450,6 +2799,51 @@ static int RecordAudioInfoCallBack(void *param, const char *cmd, const char *val
 #endif
 /*
 *   audio page end
+*/
+
+/*
+*   OTA page start
+*/
+static int OTAGetStatusCallBack(void *param , const char *cmd , const char *val)
+{
+    printf("enter: %s [%s|%s]\n", __func__, cmd, val);
+    char buf[512] = {0};
+    int ret = app_ipcam_OTA_GetUpgradeStatus(buf , sizeof(buf));
+
+    CVI_NET_AddCgiResponse(param, "%s\n", buf);
+    return ret;
+}
+
+static int OTAGetVersionCallBack(void *param , const char *cmd , const char *val)
+{
+    printf("enter: %s [%s|%s]\n", __func__, cmd, val);
+    char buf[512] = {0};
+    int ret = app_ipcam_OTA_GetSystemVersion(buf , sizeof(buf));
+    CVI_NET_AddCgiResponse(param, "%s\n", buf);
+    return ret;
+}
+
+static int OTAUploadCallBack(void *param , const char *cmd , const char *val)
+{
+    printf("enter: %s [%s|%s]\n", __func__, cmd, val);
+
+    pthread_t otaUploadID;
+    char buf[512] = "<hr>OTA Upload Start...\n";
+    CVI_NET_AddCgiResponse(param, "%s\n", buf);
+    if(app_ipcam_OTA_UploadFW(param) != NULL)
+    {
+        app_ipcam_OTA_CloseThreadBeforeUpgrade();
+        pthread_create(&otaUploadID , NULL , app_ipcam_OTA_UnpackAndUpdate , NULL);
+        memcpy(buf , "<hr>OTA Upgrade and Reboot..\n" , sizeof("<hr>OTA Upgrade and Reboot..\n"));
+    }
+    else
+        memcpy(buf , "<hr>OTA Upgrade failed!\n" , sizeof("<hr>OTA Upgrade failed!\n"));
+    CVI_NET_AddCgiResponse(param, "%s\n", buf);
+
+    return 0;
+}
+/*
+*   OTA page end
 */
 
 /*
@@ -2487,6 +2881,8 @@ static int app_ipcam_IcgiRegister_Video(void)
 #ifdef RECORD_SUPPORT
     IcgiRegister("set_record_sectret.cgi", NULL, (void *)SetRecordCallBack);
     IcgiRegister("get_record_sectret.cgi", NULL, (void *)GetRecordCallBack);
+    IcgiRegister("start_replay_sectret.cgi", NULL, (void *)StartRepalyCallBack);
+    IcgiRegister("stop_replay_sectret.cgi", NULL, (void *)StopRepalyCallBack);
 #endif
     return 0;
 }
@@ -2527,6 +2923,19 @@ static int app_ipcam_IcgiRegister_Ai(void)
     return 0;
 }
 #endif
+
+/*
+*  OTA page get/upload CB list
+*/
+static int app_ipcam_IcgiRegister_OTA()
+{
+    printf("enter: %s\n", __func__);
+    IcgiRegister("getotastatus.cgi", NULL, (void *)OTAGetStatusCallBack);
+    IcgiRegister("getversion.cgi", NULL, (void *)OTAGetVersionCallBack);
+    IcgiRegister("upload.cgi", NULL, (void *)OTAUploadCallBack);
+    return 0;
+}
+
 int app_ipcam_NetCtrl_Init()
 {
     printf("app_ipcam_NetCtrl_Init\n");
@@ -2543,6 +2952,7 @@ int app_ipcam_NetCtrl_Init()
 #ifdef AI_SUPPORT
     app_ipcam_IcgiRegister_Ai();
 #endif
+    app_ipcam_IcgiRegister_OTA();
     CVI_NET_Init();
 
     return 0;

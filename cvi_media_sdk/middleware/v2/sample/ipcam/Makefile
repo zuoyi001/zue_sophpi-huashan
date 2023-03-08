@@ -7,7 +7,7 @@ TOPTARGETS := all clean install
 
 ifneq ($(findstring $(CHIP_ARCH), CV182X CV183X), )
 SUBDIRS := cmd mercury
-else ifneq ($(findstring $(CHIP_ARCH), MARS PHOBOS), )
+else ifneq ($(findstring $(CHIP_ARCH), MARS PHOBOS CV180X CV181X), )
 SUBDIRS := cmd mars
 else
 $(error UNKNOWN chip series - $(CHIP_ARCH))

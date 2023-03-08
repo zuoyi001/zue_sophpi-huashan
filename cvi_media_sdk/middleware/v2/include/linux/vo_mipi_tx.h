@@ -90,7 +90,7 @@ struct cmd_info_s {
  * data_type: DSI data type
  * data_param: data param,low 8 bit:first param.high 8 bit:second param, set 0 if not use
  * get_data_size: read data size
- * get_data: read data memery address, should  malloc by user
+ * get_data: read data memery address, should  malloc by driver
  */
 struct get_cmd_info_s {
 	unsigned int        devno;

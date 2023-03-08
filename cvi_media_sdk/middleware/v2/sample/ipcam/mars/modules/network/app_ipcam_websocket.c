@@ -202,7 +202,7 @@ int app_ipcam_WebSocket_Stream_Send(void *pData, void *pArgs)
 
     VENC_STREAM_S *pstStream = (VENC_STREAM_S *)pData;
     VENC_PACK_S *ppack;
-    char *pAddr = NULL;
+    unsigned char *pAddr = NULL;
     CVI_U32 packSize = 0;
     CVI_U32 total_packSize = 0;
 
@@ -253,7 +253,7 @@ int app_ipcam_WebSocket_AiFps_Send(void)
     }
     char AiFps[10] = {0};
     #ifdef AI_SUPPORT
-    snprintf(AiFps, sizeof(AiFps), "%d %d %d", (intmax_t)app_ipcam_Ai_PD_ProcFps_Get(), (intmax_t)app_ipcam_Ai_MD_ProcFps_Get(),(intmax_t)app_ipcam_Ai_PD_ProcIntrusion_Num_Get());
+    snprintf(AiFps, sizeof(AiFps), "%d %d %d", app_ipcam_Ai_PD_ProcFps_Get(), app_ipcam_Ai_MD_ProcFps_Get(), app_ipcam_Ai_PD_ProcIntrusion_Num_Get());
     #else
     snprintf(AiFps, sizeof(AiFps), "N N N");
     #endif
@@ -282,10 +282,8 @@ int app_ipcam_WebSocket_AiFps_Send(void)
     if (g_wsi != NULL) {
         lws_callback_on_writable(g_wsi);
     } else {
-        if (s_aiData != NULL) {
-            free(s_aiData);
-            s_aiData = NULL;
-        }
+        free(s_aiData);
+        s_aiData = NULL;
     }
     pthread_mutex_unlock(&g_aiMutexLock);
    

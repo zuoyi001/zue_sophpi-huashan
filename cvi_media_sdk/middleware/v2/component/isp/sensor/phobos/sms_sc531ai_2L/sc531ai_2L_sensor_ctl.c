@@ -334,6 +334,8 @@ static void sc531ai_2l_linear_1620p30_init(VI_PIPE ViPipe)
 	sc531ai_2l_write_register(ViPipe, 0x4509, 0x20);
 	sc531ai_2l_write_register(ViPipe, 0x4837, 0x14);
 	sc531ai_2l_write_register(ViPipe, 0x5010, 0x10);
+	sc531ai_2l_write_register(ViPipe, 0x5780, 0x66);
+	sc531ai_2l_write_register(ViPipe, 0x578d, 0x40);
 	sc531ai_2l_write_register(ViPipe, 0x5799, 0x06);
 	sc531ai_2l_write_register(ViPipe, 0x57ad, 0x00);
 	sc531ai_2l_write_register(ViPipe, 0x5ae0, 0xfe);

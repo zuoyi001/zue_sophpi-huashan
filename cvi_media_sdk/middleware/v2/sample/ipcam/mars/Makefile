@@ -5,8 +5,6 @@ ifeq ($(PARAM_FILE), )
 	include $(PARAM_FILE)
 endif
 
-# DEFS += -DSLICE_BUFF_MODE
-
 # add sensor -D definition
 include $(BUILD_PATH)/.config
 include ../sensor.mk
@@ -19,7 +17,7 @@ endif
 
 STATIC = 1
 
-# App source and header file 
+# App source and header file
 # ===============================================================
 
 APP_ROOT         := ..
@@ -29,6 +27,8 @@ APP_MODULE_PATH  := $(APP_MARS_DIR)/modules
 APP_SELFTEST_DIR := $(APP_MARS_DIR)/selftest
 APP_RESOURCE_DIR := $(APP_ROOT)/resource
 APP_INSTALL_DIR  := $(APP_ROOT)/install
+APP_TOOLJSON_FILE := $(APP_ROOT)/../../modules/isp/common/toolJsonGenerator/pqtool_definition.json
+IS_EXIST = $(shell if [ -f $(APP_TOOLJSON_FILE) ]; then echo "exist"; else echo "noexist"; fi)
 
 SEXT	:= c
 
@@ -50,7 +50,7 @@ SDIR	+= $(APP_MODULE_PATH)/osd
 INCS	+= -I$(APP_MODULE_PATH)/osd
 
 # audio 
-AUDIO_ENABLE = 0
+AUDIO_ENABLE ?= 1
 ifeq ($(AUDIO_ENABLE), 1)
 SDIR	+= $(APP_MODULE_PATH)/audio
 INCS	+= -I$(APP_MODULE_PATH)/audio
@@ -74,7 +74,7 @@ SDIR	+= $(APP_MODULE_PATH)/peripheral/ircut
 INCS	+= -I$(APP_MODULE_PATH)/peripheral/ircut
 
 # AI
-AI_ENABLE = 1
+AI_ENABLE ?= 0
 ifeq ($(AI_ENABLE), 1)
 SDIR	+= $(APP_MODULE_PATH)/ai
 INCS	+= -I$(APP_MODULE_PATH)/ai
@@ -82,18 +82,31 @@ INCS	+= -I$(APP_RESOURCE_DIR)/jpegturbo/cr182x/include
 endif
 
 # RECORD
-RECORD_ENBALE = 0
+RECORD_ENBALE ?= 0
 ifeq ($(RECORD_ENBALE), 1)
 DEFS 	+= -DRECORD_SUPPORT
 SDIR	+= $(APP_MODULE_PATH)/record
 INCS	+= -I$(APP_MODULE_PATH)/record
 endif
 
-NET_ENABLE = 0
+NET_ENABLE ?= 0
 ifeq ($(NET_ENABLE), 1)
 DEFS += -DWEB_SOCKET
 SDIR	+= $(APP_MODULE_PATH)/network
 INCS	+= -I$(APP_MODULE_PATH)/network
+
+SDIR	+= $(APP_MODULE_PATH)/ota
+INCS	+= -I$(APP_MODULE_PATH)/ota
+
+# priority load the specified so of the websockets
+ifeq ($(SDK_VER), musl_riscv64)
+WEB_SOCKET_LIB_DIR = $(APP_RESOURCE_DIR)/libwebsockets/libmusl_riscv64
+else ifeq ($(SDK_VER), glibc_riscv64)
+WEB_SOCKET_LIB_DIR = $(APP_RESOURCE_DIR)/libwebsockets/libglibc_riscv64
+else
+$(error "SDK_VER = $(SDK_VER) not match??")
+endif
+
 endif
 
 # self test
@@ -101,9 +114,8 @@ SDIR	+= $(APP_SELFTEST_DIR)
 INCS	+= -I$(APP_SELFTEST_DIR)
 
 # SRCS ?= $(wildcard $(SDIR)/*.c)
-SRCS ?= $(shell find $(SDIR) -type f -name "*.$(SEXT)")
-OBJS = $(patsubst %.c, %.o, $(SRCS))
-DEPS = $(SRCS:.c=.d)
+ALL_SRCS ?= $(shell find $(SDIR) -type f -name "*.$(SEXT)")
+
 # ipcam source		E
 # ===============================================================
 
@@ -113,9 +125,11 @@ DEPS = $(SRCS:.c=.d)
 # Dependent MW library
 # Video && ISP && Sensor
 # ===============================================================
-INCS += -I$(MW_INC) -I$(ISP_INC) -I$(KERNEL_INC) -I$(MW_INC)/isp/mars/
+CHIP_ARCH_LOWER = $(shell echo $(CHIP_ARCH) | tr A-Z a-z)
 
-LIBS = -L$(MW_LIB) -lcvi_bin -lcvi_bin_isp -lvpu -lvenc -lvdec -losdc -lsns_full $(ISP_LIB) -lsys 
+INCS += -I$(MW_INC) -I$(ISP_INC) -I$(KERNEL_INC) -I$(MW_INC)/isp/$(CHIP_ARCH_LOWER)/
+
+LIBS = -L$(WEB_SOCKET_LIB_DIR) -L$(MW_LIB) -lcvi_bin -lcvi_bin_isp -lvpu -lvenc -lvdec -losdc -lsns_full $(ISP_LIB) -lsys 
 LIBS += -L$(MW_LIB)/3rd
 ifeq ($(SDK_VER), musl_riscv64)
 LIBS += -L$(APP_RESOURCE_DIR)/jpegturbo/cr182x/uclibc_lib
@@ -154,11 +168,19 @@ DEFS += -DAI_SUPPORT
 INCS += -I$(MW_INC)/cviai
 
 ifeq ($(STATIC), 1)		# AI libs static link
-AISDK = -lcviai-static -lcviai_app-static
+AISDK = -lcviai-static
 JPEG-TUBRO = -lturbojpeg
+
+ifeq ($(CHIP_ARCH), CV180X)
+IVE = -lcvi_ive_tpu-static
+else
+DEFS += -DFACE_SUPPORT
+AISDK += -lcviai_app-static
 IVE = -lcvi_ive
-TPU = -lcvikernel-static -lcviruntime-static -lcvimath-static -lcnpy -lz
 OPENCV = -lopencv_core -lopencv_imgproc
+endif
+TPU = -lcvikernel-static -lcviruntime-static -lcnpy -lcvimath-static -lz
+
 LIBS += -Wl,--start-group $(AISDK) $(IVE) $(TPU) $(OPENCV) $(JPEG-TUBRO) -Wl,--end-group
 else	# AI libs dynamic link
 AISDK = -lcviai -lcviai_app
@@ -185,7 +207,7 @@ $(error "SDK_VER = $(SDK_VER) not match??")
 endif
 INCS += -I$(RTSP_LIB_DIR)/include
 ifeq ($(STATIC), 1)
-LIBS += -L$(RTSP_LIB_DIR)/lib -Wl,--start-group -lcvi_rtsp -lBasicUsageEnvironment -lgroupsock -lliveMedia -lUsageEnvironment -Wl,--end-group
+LIBS += -L$(RTSP_LIB_DIR)/lib -Wl,--start-group -lcvi_rtsp -lliveMedia -lgroupsock -lBasicUsageEnvironment -lUsageEnvironment -Wl,--end-group
 else
 LIBS += -L$(RTSP_LIB_DIR)/lib -lcvi_rtsp
 endif
@@ -239,18 +261,11 @@ INCS += -I$(APP_RESOURCE_DIR)/thttpd/include
 LIBS += -L$(THTTPD_LIB_DIR) -lthttpd
 
 # websockets
-ifeq ($(SDK_VER), musl_riscv64)
-WEB_SOCKET_LIB_DIR = $(APP_RESOURCE_DIR)/libwebsockets/libmusl_riscv64
-else ifeq ($(SDK_VER), glibc_riscv64)
-WEB_SOCKET_LIB_DIR = $(APP_RESOURCE_DIR)/libwebsockets/libglibc_riscv64
-else
-$(error "SDK_VER = $(SDK_VER) not match??")
-endif
 INCS += -I$(APP_RESOURCE_DIR)/libwebsockets/include
 INCS += -I$(APP_RESOURCE_DIR)/libwebsockets/include/libwebsockets
 INCS += -I$(APP_RESOURCE_DIR)/libwebsockets/include/libwebsockets/protocols
 INCS += -I$(APP_RESOURCE_DIR)/libwebsockets/include/libwebsockets/transports
-LIBS += -L$(WEB_SOCKET_LIB_DIR) -lwebsockets
+LIBS += -lwebsockets
 
 # openssl
 OPENSSL_LIB_DIR = $(APP_RESOURCE_DIR)/openssl/lib64bit
@@ -267,16 +282,27 @@ CFLAGS += -Wno-unused-parameter -D_GNU_SOURCE
 ifeq ($(SDK_VER), musl_riscv64)
 ELFFLAGS += -march=rv64imafdcvxthead -mcmodel=medany -mabi=lp64d
 else ifeq ($(SDK_VER), glibc_riscv64)
-ELFFLAGS += -march=rv64imafdcvxthead -mcmodel=medany -mabi=lp64dv
+ELFFLAGS += -march=rv64imafdcvxthead -mcmodel=medany -mabi=lp64d
 else
 $(error "SDK_VER = $(SDK_VER) not match??")
 endif
 
 ifeq ($(STATIC), 1)
-ALL_LIBS = -Wl,-Bstatic $(LIBS) -Wl,-Bdynamic
+# ALL_LIBS = -Wl,-Bstatic $(LIBS) -Wl,-Bdynamic
+ALL_LIBS = $(LIBS) -static 
 else
 ALL_LIBS = $(LIBS)
 endif
+
+ifeq ($(CHIP_ARCH), CV180X)
+SRCS ?= $(filter-out $(APP_MODULE_PATH)/ai/face/%.c, $(ALL_SRCS))
+else
+SRCS ?= $(ALL_SRCS)
+endif
+
+OBJS = $(patsubst %.c, %.o, $(SRCS))
+DEPS = $(SRCS:.c=.d)
+
 # debug
 # ===============================================================
 # $(info "ALL_LIBS=$(ALL_LIBS)")
@@ -284,7 +310,7 @@ endif
 
 # target 
 # ===============================================================
-TARGET = ipcam_mars
+TARGET = ipcam_$(CHIP_ARCH_LOWER)
 # ===============================================================
 
 .PHONY : clean all install prepare_mp3
@@ -298,6 +324,9 @@ $(TARGET) : $(OBJS)
 	@$(CXX) -o $@ $(OBJS) $(ALL_LIBS) $(ELFFLAGS)
 	@$(STRIP) $@
 	@echo -e $(BLUE)[LINK]$(END)[$(notdir $(CXX))] $(notdir $@)
+ifeq ("$(IS_EXIST)", "exist")
+	@cp -af $(APP_TOOLJSON_FILE) .
+endif
 
 clean:
 	$(shell if [ -d $(APP_INSTALL_DIR) ]; then rm -rf $(APP_INSTALL_DIR); fi)
@@ -306,6 +335,10 @@ clean:
 install:
 	$(shell if [ ! -d $(APP_INSTALL_DIR) ]; then mkdir $(APP_INSTALL_DIR); fi)
 	@cp -f $(TARGET) $(APP_INSTALL_DIR)
+	@cp -f $(APP_RESOURCE_DIR)/ai_models/mars/mobiledetv2-pedestrian-d0-ls-384.cvimodel $(APP_INSTALL_DIR)
+	@cp -f $(APP_RESOURCE_DIR)/bitmap/tiger.bmp $(APP_INSTALL_DIR)
+	@cp -rf $(APP_RESOURCE_DIR)/www $(APP_INSTALL_DIR)
+	@cp -f $(APP_ROOT)/parameter/mars/param_config_ai_sbm_mini.ini $(APP_INSTALL_DIR)/param_config.ini
 
 prepare_ai:
 	@echo "prepare for uclibc ai"
@@ -318,6 +351,17 @@ prepare_ai:
 	@cp -f $(ROOT_DIR)/../../install/soc_$(PROJECT_FULLNAME)/tpu_$(SDK_VER)/cvitek_tpu_sdk/lib/libcvimath* $(MW_LIB)/3rd;
 	@cp -f $(ROOT_DIR)/../../install/soc_$(PROJECT_FULLNAME)/tpu_$(SDK_VER)/cvitek_tpu_sdk/lib/libcviruntime* $(MW_LIB)/3rd;
 	@cp -f $(ROOT_DIR)/../../install/soc_$(PROJECT_FULLNAME)/tpu_$(SDK_VER)/cvitek_tpu_sdk/lib/libz.* $(MW_LIB)/3rd;
+	@cp -rf $(ROOT_DIR)/../../cviai/include $(MW_INC)/cviai;
+
+prepare_phobos_ai:
+	@echo "prepare for phobos ai"
+	@cp -f $(ROOT_DIR)/../../install/soc_$(PROJECT_FULLNAME)/tpu_$(SDK_VER)/cvitek_ai_sdk/lib/libcviai* $(MW_LIB)/3rd;
+	@cp -f $(ROOT_DIR)/../../install/soc_$(PROJECT_FULLNAME)/tpu_$(SDK_VER)/cvitek_tpu_sdk/lib/libcnpy.* $(MW_LIB)/3rd;
+	@cp -f $(ROOT_DIR)/../../install/soc_$(PROJECT_FULLNAME)/tpu_$(SDK_VER)/cvitek_tpu_sdk/lib/libcvikernel* $(MW_LIB)/3rd;
+	@cp -f $(ROOT_DIR)/../../install/soc_$(PROJECT_FULLNAME)/tpu_$(SDK_VER)/cvitek_tpu_sdk/lib/libcvimath* $(MW_LIB)/3rd;
+	@cp -f $(ROOT_DIR)/../../install/soc_$(PROJECT_FULLNAME)/tpu_$(SDK_VER)/cvitek_tpu_sdk/lib/libcviruntime* $(MW_LIB)/3rd;
+	@cp -f $(ROOT_DIR)/../../install/soc_$(PROJECT_FULLNAME)/tpu_$(SDK_VER)/cvitek_tpu_sdk/lib/libz.* $(MW_LIB)/3rd;
+	@cp -f $(ROOT_DIR)/../../install/soc_$(PROJECT_FULLNAME)/tpu_$(SDK_VER)/cvitek_ive_sdk/lib/libcvi_ive_tpu* $(MW_LIB)/3rd;
 	@cp -rf $(ROOT_DIR)/../../cviai/include $(MW_INC)/cviai;
 	
 prepare_mp3:

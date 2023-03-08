@@ -16,34 +16,13 @@ extern "C" {
 #endif
 #endif /* __cplusplus */
 
+#include "linux/cvi_base.h"
+
 #define CVI_CHIP_TEST  0x0
 
 #ifndef CVI_CHIP_NAME
 #define CVI_CHIP_NAME "MARS"
 #endif
-
-#define CVI1822 0x0
-#define CVI1832 0x1
-#define CVI1835 0x2
-#define CVI1838 0x3
-#define CVI1829 0x4
-#define CVI1826 0x5
-#define CVI1821 0x6
-#define CVI1820 0x7
-#define CVI1823 0x8
-#define CVI1825 0x9
-#define CV1820A 10
-#define CV1821A 11
-#define CV1822A 12
-#define CV1823A 13
-#define CV1825A 14
-#define CV1826A 15
-#define CR1820 16
-#define CR1821 17
-#define CR1822 18
-#define CR1823 19
-#define CR1825 20
-#define CR1826 21
 
 #define CVIU01 0x1
 #define CVIU02 0x2
@@ -53,14 +32,22 @@ extern "C" {
 #define CVI_SUSPENDBOOT 0x3
 #define CVI_WARMBOOT 0x4
 
-#define IS_CHIP_CV183X(x) (((x) == CVI1829) || ((x) == CVI1832) || ((x) == CVI1835) || ((x) == CVI1838))
-#define IS_CHIP_CV182X(x) (((x) == CVI1820) || ((x) == CVI1821) || ((x) == CVI1822) \
-						|| ((x) == CVI1823) || ((x) == CVI1825) || ((x) == CVI1826))
+#define IS_CHIP_CV183X(x) (((x) == E_CHIPID_CV1829) || ((x) == E_CHIPID_CV1832) \
+						|| ((x) == E_CHIPID_CV1835) || ((x) == E_CHIPID_CV1838))
+#define IS_CHIP_CV182X(x) (((x) == E_CHIPID_CV1820) || ((x) == E_CHIPID_CV1821) \
+						|| ((x) == E_CHIPID_CV1822) || ((x) == E_CHIPID_CV1823) \
+						|| ((x) == E_CHIPID_CV1825) || ((x) == E_CHIPID_CV1826))
 
-#define IS_CHIP_MARS(x) (((x) == CV1820A) || ((x) == CV1821A) || ((x) == CV1822A) \
-						|| ((x) == CV1823A) || ((x) == CV1825A) || ((x) == CV1826A) \
-						|| ((x) == CR1820) || ((x) == CR1821) || ((x) == CR1822) \
-						|| ((x) == CR1823) || ((x) == CR1825) || ((x) == CR1826))
+#define IS_CHIP_MARS(x) (((x) == E_CHIPID_CV1820A) || ((x) == E_CHIPID_CV1821A) \
+						|| ((x) == E_CHIPID_CV1822A) || ((x) == E_CHIPID_CV1823A) \
+						|| ((x) == E_CHIPID_CV1825A) || ((x) == E_CHIPID_CV1826A) \
+						|| ((x) == E_CHIPID_CV1810C) || ((x) == E_CHIPID_CV1811C) \
+						|| ((x) == E_CHIPID_CV1812C) || ((x) == E_CHIPID_CV1811H) \
+						|| ((x) == E_CHIPID_CV1812H) || ((x) == E_CHIPID_CV1813H))
+
+#define IS_CHIP_PKG_TYPE_QFN(x) (((x) == E_CHIPID_CV1820A) || ((x) == E_CHIPID_CV1821A) \
+						|| ((x) == E_CHIPID_CV1822A) || ((x) == E_CHIPID_CV1810C) \
+						|| ((x) == E_CHIPID_CV1811C) || ((x) == E_CHIPID_CV1812C))
 
 #define MMF_VER_PRIX "_MMF_V"
 
@@ -343,8 +330,11 @@ extern "C" {
 #define VPSS_DEV_0               0
 #define VPSS_DEV_1               1
 #define VPSS_MAX_GRP_NUM         16
+#define VPSS_ONLINE_NUM          3
 #define VPSS_ONLINE_GRP_0        0
 #define VPSS_ONLINE_GRP_1        1
+#define VPSS_ONLINE_GRP_2        2
+
 #ifdef ARCH_MARS
 #define VPSS_MAX_PHY_CHN_NUM     4	/* sc_d, sc_v1, sc_v2, sc_v3 */
 #else

@@ -58,6 +58,7 @@ struct cvi_vpss_ctx {
 	VPSS_GRP_ATTR_S stGrpAttr;
 	VPSS_CROP_INFO_S stGrpCropInfo;
 	CVI_U8 chnNum;
+	CVI_U8 u8DevId;
 	struct VPSS_CHN_CFG stChnCfgs[VPSS_MAX_CHN_NUM];
 	struct crop_size frame_crop;
 	struct mutex lock;

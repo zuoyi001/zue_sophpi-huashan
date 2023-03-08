@@ -4,7 +4,7 @@
  * Author: jinyu zhao <jinyu.zhaok@cvitek.com>
  *
  * cvitek SARADC driver for U-Boot
- * /
+ */
 #include <common.h>
 #include <errno.h>
 #include <dm.h>
@@ -20,9 +20,9 @@ enum channel {
 	ADC2,
 	ADC3,
 	/* no die domain ADC ch1, ch2, ch3 */
-	RTC_ADC1,/* ADC4 <== VDDC_RTC */
-	RTC_ADC2,/* ADC5 <== PWR_GPIO1 */
-	RTC_ADC3,/* ADC6 <== PWR_VBAT_DET */
+	PWR_ADC1,/* ADC4 <== PWR_GPIO2 */
+	PWR_ADC2,/* ADC5 <== PWR_GPIO1 */
+	PWR_ADC3,/* ADC6 <== PWR_VBAT_DET */
 };
 
 struct cvitek_adc_regs {
@@ -47,6 +47,16 @@ struct cvitek_adc_priv {
 	int active_channel;
 };
 
+static void cvitek_adc_cyc_setting(struct cvitek_adc_regs *regs)
+{
+	uint32_t value;
+
+	value = readl(&regs->cyc_set);
+	value &= ~(0xf << 12);
+	value |= (0xf << 12);//set saradc clock cycle=840ns
+	writel(value, &regs->cyc_set);
+}
+
 int cvitek_adc_channel_data(struct udevice *dev, int channel,
 			    unsigned int *data)
 {
@@ -66,9 +76,9 @@ int cvitek_adc_channel_data(struct udevice *dev, int channel,
 	case ADC3:
 		regs = (struct cvitek_adc_regs *)priv->top_domain_base;
 		break;
-	case RTC_ADC1:
-	case RTC_ADC2:
-	case RTC_ADC3:
+	case PWR_ADC1:
+	case PWR_ADC2:
+	case PWR_ADC3:
 		regs = (struct cvitek_adc_regs *)priv->rtc_domain_base;
 		break;
 	}
@@ -82,15 +92,15 @@ int cvitek_adc_channel_data(struct udevice *dev, int channel,
 		;
 
 	switch (channel) {
-	case RTC_ADC1:
+	case PWR_ADC1:
 	case ADC1:
 		value = readl(&regs->ch1_result) & uc_pdata->data_mask;
 		break;
-	case RTC_ADC2:
+	case PWR_ADC2:
 	case ADC2:
 		value = readl(&regs->ch2_result) & uc_pdata->data_mask;
 		break;
-	case RTC_ADC3:
+	case PWR_ADC3:
 	case ADC3:
 		value = readl(&regs->ch3_result) & uc_pdata->data_mask;
 		break;
@@ -115,9 +125,9 @@ int cvitek_adc_start_channel(struct udevice *dev, int channel)
 	case ADC3:
 		regs = (struct cvitek_adc_regs *)priv->top_domain_base;
 		break;
-	case RTC_ADC1:
-	case RTC_ADC2:
-	case RTC_ADC3:
+	case PWR_ADC1:
+	case PWR_ADC2:
+	case PWR_ADC3:
 		channel -= 3;
 		regs = (struct cvitek_adc_regs *)priv->rtc_domain_base;
 		break;
@@ -125,6 +135,9 @@ int cvitek_adc_start_channel(struct udevice *dev, int channel)
 
 	// Disable saradc interrupt
 	writel(0x0, &regs->intr_en);
+
+	// Set saradc cycle
+	cvitek_adc_cyc_setting(regs);
 
 	// Set channel
 	value = readl(&regs->ctrl);

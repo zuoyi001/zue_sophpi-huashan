@@ -18,6 +18,7 @@
 #define RTC_FC_COARSE_CAL 0x44
 #define RTC_FC_FINE_EN 0x48
 #define RTC_FC_FINE_CAL 0x50
+#define RTC_POR_RST_CTRL 0xAC
 
 #define REG_RTC_BASE (RTC_SYS_BASE + 0x00026000)
 #define RTC_ANA_CALIB 0x0
@@ -31,6 +32,7 @@
 #define RTC_EN_SUSPEND_REQ 0xE4
 #define RTC_PG_REG 0xF0
 #define RTC_ST_ON_REASON 0xF8
+#define RTC_ST_OFF_REASON 0xFC
 
 #define RTC_INFO0 (REG_RTC_BASE + 0x1C)
 #define RTC_INFO1 (REG_RTC_BASE + 0x20)

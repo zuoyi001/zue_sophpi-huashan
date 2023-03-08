@@ -1,0 +1,10 @@
+/dts-v1/;
+#include "mars_base_riscv.dtsi"
+#include "mars_asic_bga.dtsi"
+#include "mars_asic_spinand.dtsi"
+#include "mars_default_memmap.dtsi"
+
+/ {
+
+};
+

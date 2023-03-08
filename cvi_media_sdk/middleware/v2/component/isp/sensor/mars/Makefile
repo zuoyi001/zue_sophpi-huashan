@@ -44,6 +44,9 @@ gcore_gc2053_1L:
 gcore_gc2093:
 	$(call MAKE_SENSOR, ${@})
 
+gcore_gc2093_slave:
+	$(call MAKE_SENSOR, ${@})
+
 gcore_gc2145:
 	$(call MAKE_SENSOR, ${@})
 
@@ -71,9 +74,6 @@ ov_os08a20:
 ov_ov4689:
 	$(call MAKE_SENSOR, ${@})
 
-ov_ov5647:
-	$(call MAKE_SENSOR, ${@})
-
 ov_ov6211:
 	$(call MAKE_SENSOR, ${@})
 
@@ -95,7 +95,16 @@ sms_sc035gs_1L:
 sms_sc035hgs:
 	$(call MAKE_SENSOR, ${@})
 
+sms_sc1336_2L:
+	$(call MAKE_SENSOR, ${@})
+
+sms_sc1336_slave:
+	$(call MAKE_SENSOR, ${@})
+
 sms_sc1346_1L:
+	$(call MAKE_SENSOR, ${@})
+
+sms_sc1346_1L_slave:
 	$(call MAKE_SENSOR, ${@})
 
 sms_sc200ai:
@@ -126,6 +135,9 @@ sms_sc3336:
 	$(call MAKE_SENSOR, ${@})
 
 sms_sc2335:
+	$(call MAKE_SENSOR, ${@})
+
+sms_sc2336:
 	$(call MAKE_SENSOR, ${@})
 
 sms_sc4336:

@@ -54,6 +54,14 @@ $(function () {
     func_record_check();
   });
 
+  $("#replay_start").click(function () {
+    func_replay_start();
+  });
+
+  $("#replay_stop").click(function () {
+    func_replay_stop();
+  });
+
   func_get_roi_cfg();
   $("#save_roi_cfg").click(function () {
     func_set_roi_cfg();
@@ -103,6 +111,19 @@ function func_get_record() {
     $("#record_segment").val(obj.segment);
 	$("#record_status").val(obj.start);
   })
+}
+
+function func_replay_start() {
+	var value = document.getElementById("replay_date").value
+    $.get('/cgi/start_replay_sectret?replay_date=' + value, function (data, status) {
+      alert("result: " + status);
+    });
+}
+
+function func_replay_stop() {
+    $.get('/cgi/stop_replay_sectret.cgi', function (data, status) {
+      alert("result: " + status);
+    });
 }
 
 function func_set_roi_cfg() {

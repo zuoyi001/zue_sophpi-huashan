@@ -1,0 +1,37 @@
+# SPDX-License-Identifier: GPL-2.0-only
+#
+# Generic efuse drivers configuration
+#
+
+menuconfig EFUSE
+	bool "Efuse drivers"
+	default y
+	help
+		Efuse drivers offer a generic mechanism for
+		efuse management.
+		Only support mars and phobos currently
+		Efuse driver build-in is better
+
+if EFUSE
+
+config MARS_EFUSE
+	tristate "Efuse driver for CVITEK Mars"
+	depends on ARCH_MARS || COMPILE_TEST
+	default y
+	help
+		Select this driver for CVITEK mars efuse
+		This driver is used for program and read efuse
+		This driver can also be built as a module
+		But build-in is better.
+
+config PHOBOS_EFUSE
+	tristate "Efuse driver for CVITEK Phobos"
+	depends on ARCH_PHOBOS || COMPILE_TEST
+	default y
+	help
+		Select this driver for CVITEK phobos efuse op
+		This driver is used for program and read efuse
+		This driver can also be built as a module
+                But build-in is better.
+
+endif

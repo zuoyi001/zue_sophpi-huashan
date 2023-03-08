@@ -83,6 +83,16 @@ typedef struct APP_VENC_ATTR_INFO_T {
     // int MaxStillQP;
 } APP_VENC_ATTR_INFO_S;
 
+typedef struct APP_VENC_ATTR_CHANGE_T {
+    CVI_BOOL bNeedStopVenc;
+    CVI_BOOL bCodec;
+    CVI_BOOL bResolution;
+    CVI_BOOL bFps;
+    CVI_BOOL bProfile;
+    CVI_BOOL bRCMode;
+    CVI_BOOL bBitrate;
+} APP_VENC_ATTR_CHANGE_S;
+
 typedef enum APP_VIDEOENCTYPE_T {
     APP_VIDEOENCTYPE_H264 = 0,
     APP_VIDEOENCTYPE_H265 = 1,

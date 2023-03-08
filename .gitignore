@@ -1,1 +1,3 @@
 *.cmd
+host-tools/*
+host-tools.tar.gz

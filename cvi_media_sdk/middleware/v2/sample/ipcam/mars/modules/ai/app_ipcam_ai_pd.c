@@ -80,6 +80,7 @@ static APP_PARAM_AI_PD_CFG_S *pstPdCfg = &stPdCfg;
 static CVI_U32 pd_fps;
 static CVI_U32 Intrusion_Num;
 static CVI_U32 pd_proc;
+static CVI_U32 Rect_Num;
 static float ScaleX, ScaleY;
 static volatile bool bRunning = CVI_FALSE;
 static volatile bool bPause = CVI_FALSE;
@@ -234,68 +235,74 @@ CVI_S32 app_ipcam_Ai_Pd_Intrusion_Init()
         {
             APP_PROF_LOG_PRINT(LEVEL_ERROR, "CVI_AI_Service_Polygon_SetTarget failed with %#x!\n", s32Ret);
         }
-        OsdcCfg->osdcObjNum = OsdcCfg->osdcObjNum + 1;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].bShow = 1;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].type  = 2;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].color = 0xff00ffff;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].x1    = pstPdCfg->region_stRect_x1;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].y1    = pstPdCfg->region_stRect_y1;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].x2    = pstPdCfg->region_stRect_x2;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].y2    = pstPdCfg->region_stRect_y2;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].thickness = 4;      
 
-        OsdcCfg->osdcObjNum = OsdcCfg->osdcObjNum + 1;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].bShow = 1;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].type  = 2;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].color = 0xff00ffff;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].x1    = pstPdCfg->region_stRect_x2;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].y1    = pstPdCfg->region_stRect_y2;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].x2    = pstPdCfg->region_stRect_x3;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].y2    = pstPdCfg->region_stRect_y3;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].thickness = 4;  
+        int iOsdcIndex = 0;
+        Rect_Num = 0;
+        if (OsdcCfg->bShow[iOsdcIndex]) {
+            OsdcCfg->osdcObjNum[iOsdcIndex] = OsdcCfg->osdcObjNum[iOsdcIndex] + 1;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].bShow = 1;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].type  = 2;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].color = 0x83ff;//0xff00ffff;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].x1    = pstPdCfg->region_stRect_x1;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].y1    = pstPdCfg->region_stRect_y1;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].x2    = pstPdCfg->region_stRect_x2;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].y2    = pstPdCfg->region_stRect_y2;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].thickness = 4;      
 
-        OsdcCfg->osdcObjNum = OsdcCfg->osdcObjNum + 1;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].bShow = 1;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].type  = 2;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].color = 0xff00ffff;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].x1    = pstPdCfg->region_stRect_x3;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].y1    = pstPdCfg->region_stRect_y3;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].x2    = pstPdCfg->region_stRect_x4;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].y2    = pstPdCfg->region_stRect_y4;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].thickness = 4;  
+            OsdcCfg->osdcObjNum[iOsdcIndex] = OsdcCfg->osdcObjNum[iOsdcIndex] + 1;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].bShow = 1;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].type  = 2;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].color = 0x83ff;//0xff00ffff;;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].x1    = pstPdCfg->region_stRect_x2;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].y1    = pstPdCfg->region_stRect_y2;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].x2    = pstPdCfg->region_stRect_x3;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].y2    = pstPdCfg->region_stRect_y3;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].thickness = 4;  
 
-        OsdcCfg->osdcObjNum = OsdcCfg->osdcObjNum + 1;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].bShow = 1;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].type  = 2;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].color = 0xff00ffff;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].x1    = pstPdCfg->region_stRect_x4;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].y1    = pstPdCfg->region_stRect_y4;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].x2    = pstPdCfg->region_stRect_x5;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].y2    = pstPdCfg->region_stRect_y5;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].thickness = 4;  
+            OsdcCfg->osdcObjNum[iOsdcIndex] = OsdcCfg->osdcObjNum[iOsdcIndex] + 1;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].bShow = 1;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].type  = 2;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].color = 0x83ff;//0xff00ffff;;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].x1    = pstPdCfg->region_stRect_x3;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].y1    = pstPdCfg->region_stRect_y3;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].x2    = pstPdCfg->region_stRect_x4;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].y2    = pstPdCfg->region_stRect_y4;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].thickness = 4;  
 
-        OsdcCfg->osdcObjNum = OsdcCfg->osdcObjNum + 1;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].bShow = 1;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].type  = 2;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].color = 0xff00ffff;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].x1    = pstPdCfg->region_stRect_x5;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].y1    = pstPdCfg->region_stRect_y5;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].x2    = pstPdCfg->region_stRect_x6;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].y2    = pstPdCfg->region_stRect_y6;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].thickness = 4;
+            OsdcCfg->osdcObjNum[iOsdcIndex] = OsdcCfg->osdcObjNum[iOsdcIndex] + 1;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].bShow = 1;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].type  = 2;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].color = 0x83ff;//0xff00ffff;;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].x1    = pstPdCfg->region_stRect_x4;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].y1    = pstPdCfg->region_stRect_y4;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].x2    = pstPdCfg->region_stRect_x5;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].y2    = pstPdCfg->region_stRect_y5;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].thickness = 4;  
 
-        OsdcCfg->osdcObjNum = OsdcCfg->osdcObjNum + 1;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].bShow = 1;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].type  = 2;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].color = 0xff00ffff;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].x1    = pstPdCfg->region_stRect_x6;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].y1    = pstPdCfg->region_stRect_y6;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].x2    = pstPdCfg->region_stRect_x1;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].y2    = pstPdCfg->region_stRect_y1;
-        OsdcCfg->osdcObj[OsdcCfg->osdcObjNum].thickness = 4; 
+            OsdcCfg->osdcObjNum[iOsdcIndex] = OsdcCfg->osdcObjNum[iOsdcIndex] + 1;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].bShow = 1;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].type  = 2;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].color = 0x83ff;//0xff00ffff;;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].x1    = pstPdCfg->region_stRect_x5;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].y1    = pstPdCfg->region_stRect_y5;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].x2    = pstPdCfg->region_stRect_x6;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].y2    = pstPdCfg->region_stRect_y6;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].thickness = 4;
 
+            OsdcCfg->osdcObjNum[iOsdcIndex] = OsdcCfg->osdcObjNum[iOsdcIndex] + 1;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].bShow = 1;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].type  = 2;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].color = 0x83ff;//0xff00ffff;;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].x1    = pstPdCfg->region_stRect_x6;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].y1    = pstPdCfg->region_stRect_y6;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].x2    = pstPdCfg->region_stRect_x1;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].y2    = pstPdCfg->region_stRect_y1;
+            OsdcCfg->osdcObj[iOsdcIndex][OsdcCfg->osdcObjNum[iOsdcIndex]].thickness = 4; 
+
+            Rect_Num = 6;
+        }
     }
-exit:
+
     free(test_region_0.x);
     free(test_region_0.y);
     return s32Ret;
@@ -336,6 +343,10 @@ static CVI_S32 app_ipcam_Ai_VpssChnAttr_Set(CVI_VOID)
     vpssConfig.chn_attr.u32Depth = u32Depth;
     vpssConfig.chn_attr.stFrameRate.s32SrcFrameRate = s32SrcFrameRate;
     vpssConfig.chn_attr.stFrameRate.s32DstFrameRate = s32DstFrameRate;
+    if ((pastVpssChnAttr->u32Width == 384) && (pastVpssChnAttr->u32Height == 256)) {
+        vpssConfig.chn_attr.stAspectRatio.stVideoRect.u32Width = 384;
+        vpssConfig.chn_attr.stAspectRatio.stVideoRect.u32Height = 216;
+    }
 
     s32Ret = CVI_VPSS_SetChnScaleCoefLevel(VpssGrp, VpssChn, vpssConfig.chn_coeff);
     if (s32Ret != CVI_SUCCESS)
@@ -544,6 +555,7 @@ static CVI_VOID *Thread_PD_PROC(CVI_VOID *arg)
 
         APP_PROF_LOG_PRINT(LEVEL_DEBUG, "PD obj: %d \n", obj_meta.size);
         pd_proc = GetCurTimeInMsec() - iTime_proc;
+        APP_PROF_LOG_PRINT(LEVEL_TRACE, "PD process takes %d\n", pd_proc);
         s32Ret = CVI_VPSS_ReleaseChnFrame(VpssGrp, VpssChn, &stfdFrame);
         if (s32Ret != CVI_SUCCESS)
         {
@@ -678,10 +690,14 @@ int app_ipcam_Ai_PD_Stop(void)
     if (pstPdCfg->Intrusion_bEnable)
     {
         APP_PARAM_OSDC_CFG_S *stOsdcCfg = app_ipcam_Osdc_Param_Get();
-        for(CVI_U32 i = 0; i < stOsdcCfg->osdcObjNum; i++)
-        {
-            stOsdcCfg->osdcObj[stOsdcCfg->osdcObjNum].bShow = 0;
-            stOsdcCfg->osdcObjNum = stOsdcCfg->osdcObjNum - 1;
+        int iOsdcIndex = 0;
+        CVI_U32 i = 0;
+        if (stOsdcCfg->bShow[iOsdcIndex]) {
+            for (i = 0; i < Rect_Num; i++)
+            {
+                stOsdcCfg->osdcObj[iOsdcIndex][stOsdcCfg->osdcObjNum[iOsdcIndex]].bShow = 0;
+                stOsdcCfg->osdcObjNum[iOsdcIndex] = stOsdcCfg->osdcObjNum[iOsdcIndex] - 1;
+            }
         }
     }
 
@@ -774,9 +790,11 @@ CVI_S32 app_ipcam_Pd_threshold_Set(float threshold)
 
 int app_ipcam_CmdTask_Ai_PD_Switch(CVI_MQ_MSG_t *msg, CVI_VOID *userdate)
 {
-    CVI_CHAR param[256] = {0};
+    CVI_CHAR param[512] = {0};
     CVI_S32 s32Ret = CVI_SUCCESS;
-    snprintf(param, sizeof(param), "%s", msg->payload);
+    if (snprintf(param, sizeof(param), "%s", msg->payload) < 0) {
+        APP_PROF_LOG_PRINT(LEVEL_ERROR, "snprintf error!\n");
+	}
     APP_PROF_LOG_PRINT(LEVEL_INFO, "%s param:%s arg2=%d\n", __FUNCTION__, param, msg->arg2);
 
     CVI_CHAR *temp = strtok(param, ":");

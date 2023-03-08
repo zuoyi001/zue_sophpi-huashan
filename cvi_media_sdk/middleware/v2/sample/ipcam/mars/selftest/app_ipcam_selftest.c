@@ -62,7 +62,11 @@ static APP_PARAM_CMD_CB_T CmdCbTbl[] = {
     #ifdef AI_SUPPORT
     {app_ipcam_CmdTask_Ai_PD_Switch,         0},
     {app_ipcam_CmdTask_Ai_MD_Switch,         0},
+    #ifdef FACE_SUPPORT
     {app_ipcam_CmdTask_Ai_FD_Switch,         0},
+    #else
+    {app_ipcam_CmdTask_None,                 0},
+    #endif
     #else
     {app_ipcam_CmdTask_None,                 0},
     {app_ipcam_CmdTask_None,                 0},
@@ -120,7 +124,7 @@ static CVI_S32 _Cmd_Mq_CallBack(
 
         return CmdCbTbl[cmd_id].CmdCallBack(msg, ep_arg);
     } else {
-        printf("cmd_id %d %d out of range\n", cmd_id, (sizeof(CmdCbTbl) / sizeof(APP_PARAM_CMD_CB_T)));
+        printf("cmd_id %d %d out of range\n", cmd_id, (int)(sizeof(CmdCbTbl) / sizeof(APP_PARAM_CMD_CB_T)));
         return 0;
     }
     

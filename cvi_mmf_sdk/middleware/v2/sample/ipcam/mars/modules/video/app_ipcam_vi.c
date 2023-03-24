@@ -478,12 +478,6 @@ static CVI_VOID app_ipcam_RawDump_Unload(CVI_VOID)
 static ISP_SNS_OBJ_S *app_ipcam_SnsObj_Get(SENSOR_TYPE_E enSnsType)
 {
     switch (enSnsType) {
-
-#ifdef SNS0_OV_OV5647
-    case SENSOR_OV_OV5647:
-        return &stSnsOv5647_Obj;
-#endif
-
 #ifdef SNS0_GCORE_GC1054
     case SENSOR_GCORE_GC1054:
         return &stSnsGc1054_Obj;
@@ -527,6 +521,10 @@ static ISP_SNS_OBJ_S *app_ipcam_SnsObj_Get(SENSOR_TYPE_E enSnsType)
 #ifdef SNS1_OV_OS08A20_SLAVE
     case SENSOR_OV_OS08A20_SLAVE:
         return &stSnsOs08a20_Slave_Obj;
+#endif
+#ifdef SNS0_OV_OV5647
+    case SENSOR_OV_OV5647:
+        return &stSnsOv5647_Obj;
 #endif
 #ifdef PICO_384
     case SENSOR_PICO_384:
@@ -785,7 +783,6 @@ CVI_S32 app_ipcam_Vi_PipeAttr_Get(SENSOR_TYPE_E enSnsType, VI_PIPE_ATTR_S *pstVi
     switch (enSnsType) {
     case SENSOR_GCORE_GC1054:
     case SENSOR_GCORE_GC2053:
-    case SENSOR_OV_OV5647:
     case SENSOR_GCORE_GC2053_SLAVE:
     case SENSOR_GCORE_GC2093:
     case SENSOR_GCORE_GC2093_SLAVE:
@@ -798,6 +795,7 @@ CVI_S32 app_ipcam_Vi_PipeAttr_Get(SENSOR_TYPE_E enSnsType, VI_PIPE_ATTR_S *pstVi
         break;
     case SENSOR_OV_OS08A20:
     case SENSOR_OV_OS08A20_SLAVE:
+    case SENSOR_OV_OV5647:
         break;
     case SENSOR_PICO_384:
     case SENSOR_PICO_640:
@@ -854,7 +852,6 @@ CVI_S32 app_ipcam_Vi_ChnAttr_Get(SENSOR_TYPE_E enSnsType, VI_CHN_ATTR_S *pstViCh
 
     switch (enSnsType) {
     case SENSOR_GCORE_GC1054:
-    case SENSOR_OV_OV5647:
     case SENSOR_GCORE_GC2053:
     case SENSOR_GCORE_GC2053_SLAVE:
     case SENSOR_GCORE_GC2093:
@@ -868,6 +865,7 @@ CVI_S32 app_ipcam_Vi_ChnAttr_Get(SENSOR_TYPE_E enSnsType, VI_CHN_ATTR_S *pstViCh
         break;
     case SENSOR_OV_OS08A20:
     case SENSOR_OV_OS08A20_SLAVE:
+    case SENSOR_OV_OV5647:
         break;
     case SENSOR_PICO_384:
     case SENSOR_PICO_640:
@@ -925,7 +923,6 @@ CVI_S32 app_ipcam_Isp_InitAttr_Get(SENSOR_TYPE_E enSnsType, WDR_MODE_E enWDRMode
     switch (enSnsType) {
     case SENSOR_GCORE_GC1054:
     case SENSOR_GCORE_GC2053:
-    case SENSOR_OV_OV5647:
     case SENSOR_GCORE_GC2053_SLAVE:
     case SENSOR_GCORE_GC2093:
     case SENSOR_GCORE_GC2093_SLAVE:
@@ -939,6 +936,8 @@ CVI_S32 app_ipcam_Isp_InitAttr_Get(SENSOR_TYPE_E enSnsType, WDR_MODE_E enWDRMode
         if (enWDRMode == WDR_MODE_2To1_LINE) {
             pstIspInitAttr->enL2SMode = SNS_L2S_MODE_FIX;
         }
+        break;
+    case SENSOR_OV_OV5647:
         break;
     case SENSOR_PICO_384:
     case SENSOR_PICO_640:

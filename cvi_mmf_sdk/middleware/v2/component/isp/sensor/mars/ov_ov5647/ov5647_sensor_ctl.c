@@ -247,7 +247,7 @@ static void ov5647_linear_1080p30_init(VI_PIPE ViPipe)
 	ov5647_write_register(ViPipe, 0x3035, 0x11);
 	ov5647_write_register(ViPipe, 0x3036, 0x64);
 	ov5647_write_register(ViPipe, 0x303c, 0x11);
-	ov5647_write_register(ViPipe, 0x3821, 0x06);
+	ov5647_write_register(ViPipe, 0x3821, 0x00);
 	ov5647_write_register(ViPipe, 0x3820, 0x00);
 	ov5647_write_register(ViPipe, 0x370c, 0x0f);
 	ov5647_write_register(ViPipe, 0x3612, 0x5b);

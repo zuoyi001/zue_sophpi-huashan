@@ -6,7 +6,7 @@ else
 -include $(TOP_DIR)/.config
 endif
 ##
-export SDK_PATH=$(TOP_DIR)/../../cvi_media_sdk/
+export SDK_PATH=$(BUILD_PATH)/../
 export CUSTOMER = $(shell echo $(CONFIG_CUSTOMER))
 
 ifeq ($(CONFIG_CVI_SOC_CV183X), y)

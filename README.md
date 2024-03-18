@@ -1,6 +1,6 @@
 # 华山派
 
-![pic](https://github.com/sophgo/sophpi-huashan/blob/master/document/assets/1.jpg)
+![pic](https://github.com/sophgo-forum-service/sophpi-huashan/blob/master/document/assets/1.jpg)
 
 编译说明
 1. 下载Risc-v编译工具链:  “cd sophpi-huashan; ./download_host-tools.sh”;
